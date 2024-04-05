@@ -1,20 +1,18 @@
 package com.group2.catanbackend.controller;
 
-import com.group2.catanbackend.dto.GameSocketEndpointDto;
-import com.group2.catanbackend.dto.JoinRequestDto;
+import com.group2.catanbackend.dto.*;
 import com.group2.catanbackend.exception.GameException;
-import com.group2.catanbackend.dto.CreateRequestDto;
 import com.group2.catanbackend.service.GameService;
 import com.group2.catanbackend.service.TokenService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @Controller
@@ -44,10 +42,20 @@ public class GameController {
 
         tokenService.pushToken(token, joinRequest);
 
-        simpMessagingTemplate.convertAndSend("/topic/game/" + joinRequest.getGameID() + "/messages", joinRequest.getPlayerName());
+        simpMessagingTemplate.convertAndSend("/topic/game/" + joinRequest.getGameID() + "/messages", joinRequest.getPlayerName() + " joined");
         GameSocketEndpointDto endpoint = new GameSocketEndpointDto(joinRequest.getGameID(), joinRequest.getPlayerName(), token);
         return ResponseEntity.ok(endpoint);
     }
+
+    @GetMapping("/list")
+    private ResponseEntity<ListGameResponse> getGames(){
+        List<Game> games = gameService.getGames();
+        ListGameResponse response = new ListGameResponse();
+        response.setGameList(games);
+        response.setCount(games.size());
+        return ResponseEntity.ok(response);
+    }
+
 
 
 

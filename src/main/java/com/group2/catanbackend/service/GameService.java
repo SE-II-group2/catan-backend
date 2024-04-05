@@ -1,5 +1,6 @@
 package com.group2.catanbackend.service;
 
+import com.group2.catanbackend.dto.Game;
 import com.group2.catanbackend.dto.JoinRequestDto;
 import com.group2.catanbackend.exception.ErrorCode;
 import com.group2.catanbackend.exception.NoSuchGameException;
@@ -9,7 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -34,5 +37,12 @@ public class GameService {
         Player p = new Player(token, request.getPlayerName());
         game.join(p);
         log.info("user " + request.getPlayerName() + " joined game " + game.getId());
+    }
+
+    public List<Game> getGames(){
+        return registeredGames.values()
+                .stream()
+                .map(gameDescriptor -> new Game(gameDescriptor.getId(), gameDescriptor.getPlayerCount()))
+                .toList();
     }
 }

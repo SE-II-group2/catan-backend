@@ -36,4 +36,8 @@ public class GameDescriptor {
         }
         players.add(player);
     }
+
+    public int getPlayerCount(){
+        return players.size();
+    }
 }
