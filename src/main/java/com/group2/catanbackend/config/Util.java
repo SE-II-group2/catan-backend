@@ -4,7 +4,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.ServerHttpRequest;
 
 public class Util {
-    public static final String extractToken(ServerHttpRequest request){
+    public static String extractToken(ServerHttpRequest request){
         HttpHeaders headers = request.getHeaders();
         String token = headers.getFirst(HttpHeaders.AUTHORIZATION);
         if(token == null){

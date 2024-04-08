@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 
-@Controller
+@RestController
 @RequestMapping("/catan/game")
 @AllArgsConstructor
 @Slf4j
@@ -26,7 +26,6 @@ public class GameController {
 
 
     @PostMapping("/create")
-    @ResponseBody
     private ResponseEntity<GameSocketEndpointDto> createGame(@Valid @RequestBody CreateRequestDto request) throws GameException {
         String gameId = gameService.createGame();
         JoinRequestDto joinRequestDto = new JoinRequestDto(request.getPlayerName(), gameId);
@@ -34,7 +33,6 @@ public class GameController {
     }
 
     @PostMapping("/connect")
-    @ResponseBody
     private ResponseEntity<GameSocketEndpointDto> joinGame(@Valid @RequestBody JoinRequestDto joinRequest) throws GameException {
         String token = tokenService.generateToken();
 

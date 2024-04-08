@@ -1,16 +1,13 @@
 package com.group2.catanbackend.model;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 public class Player {
     private String token;
     private String displayName;
-
-    @Override
-    public int hashCode(){
-        return token.hashCode();
-    }
 }

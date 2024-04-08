@@ -1,6 +1,5 @@
 package com.group2.catanbackend.service;
 
-import com.group2.catanbackend.dto.CreateRequestDto;
 import com.group2.catanbackend.dto.JoinRequestDto;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;

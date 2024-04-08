@@ -3,15 +3,12 @@ package com.group2.catanbackend.config;
 import com.group2.catanbackend.exception.SubscriptionDeniedException;
 import com.group2.catanbackend.service.TokenService;
 import jakarta.annotation.Nullable;
-import org.apache.el.parser.Token;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
-import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
 import java.security.Principal;
@@ -26,7 +23,6 @@ public class GameChannelInterceptor implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
-        StompCommand command = accessor.getCommand();
         if(StompCommand.SUBSCRIBE.equals(accessor.getCommand())){
             String token = getToken(accessor.getUser());
             String gameID = extractGameId(accessor.getDestination());
@@ -37,7 +33,6 @@ public class GameChannelInterceptor implements ChannelInterceptor {
                 if(tokenService.validateToken(token, gameID))
                     return message;
                 throw new SubscriptionDeniedException("User " + token + " cannot subscribe to game " + gameID);
-
             }
         }
         return message;

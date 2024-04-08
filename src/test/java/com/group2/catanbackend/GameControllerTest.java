@@ -3,6 +3,8 @@ package com.group2.catanbackend;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.group2.catanbackend.dto.JoinRequestDto;
 import com.group2.catanbackend.service.GameService;
+import com.group2.catanbackend.service.TokenService;
+import org.apache.el.parser.Token;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +29,10 @@ public class GameControllerTest {
     @Autowired
     private GameService gameService;
 
+    @Autowired
+    private TokenService tokenService;
+
+
     @Test
     public void testGamesFoundOnceCreated() throws Exception{
         String createdGameID = gameService.createGame();
@@ -48,6 +54,21 @@ public class GameControllerTest {
                 .andExpect(status().is(404)
 
         );
+    }
+
+    @Test
+    public void testCanCreateGame() throws Exception{
+        JoinRequestDto requestDto = new JoinRequestDto();
+        requestDto.setPlayerName("player");
+
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                        .post("/catan/game/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(requestDto))
+        ).andExpect(status().isOk());
+
+        Assertions.assertEquals(1, gameService.getGames().get(0).getPlayerCount());
     }
 
     @Test

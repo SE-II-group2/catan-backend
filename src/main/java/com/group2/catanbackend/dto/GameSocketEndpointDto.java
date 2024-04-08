@@ -1,9 +1,10 @@
 package com.group2.catanbackend.dto;
 
 import com.group2.catanbackend.config.Constants;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
 public class GameSocketEndpointDto {
     private String playerName;
     private String gameID;

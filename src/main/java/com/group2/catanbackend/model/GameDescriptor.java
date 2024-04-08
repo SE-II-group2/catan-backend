@@ -4,15 +4,13 @@ import com.group2.catanbackend.exception.ErrorCode;
 import com.group2.catanbackend.exception.GameFullException;
 import com.group2.catanbackend.exception.PlayerAlreadyInGameException;
 import lombok.Getter;
-import lombok.Setter;
 
-import java.security.Timestamp;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.UUID;
 
 public class GameDescriptor {
-    private HashSet<Player> players;
+    private final HashSet<Player> players;
     @Getter
     private final String id;
     @Getter
