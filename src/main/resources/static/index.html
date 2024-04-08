@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STOMPJS Client</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+      </head>
+      <body>
+
+      <form id="stompForm">
+          <label for="token">Enter Token:</label><br>
+          <input type="text" id="token" name="message"><br>
+          <button id="connect">Submit</button>
+      </form>
+
+
+
+      <script>
+            var client;
+
+            document.getElementById("connect").addEventListener("click", ()=>connect())
+            function connect() {
+                const token = document.getElementById("token").value
+                let socket = new WebSocket("ws://localhost:8080/catan?" + token)
+
+                client = Stomp.over(socket)
+
+                client.connect()
+
+            }
+
+      </script>
+
+</body>
+</html>
