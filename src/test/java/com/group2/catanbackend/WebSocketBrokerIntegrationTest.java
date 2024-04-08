@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.messaging.converter.StringMessageConverter;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -31,6 +32,9 @@ class WebSocketBrokerIntegrationTest {
 
     @Autowired
     private TokenService tokenService;
+
+    @Autowired
+    private SimpMessagingTemplate simpMessagingTemplate;
 
     private final String WEBSOCKET_URI = "ws://localhost:%d/catan";
     private final String WEBSOCKET_TOPIC_PREFIX = "/topic/game/";
@@ -85,8 +89,9 @@ class WebSocketBrokerIntegrationTest {
     @Test
     public void testSubscriptionAllowedIfPlayerIsInGame() throws Exception{
         String gameID = "GameID";
+        String token = UUID.randomUUID().toString();
 
-        StompSession session = initValidSession("Player", gameID);
+        StompSession session = initValidSession("Player", gameID, token);
 
         String topic = WEBSOCKET_TOPIC_PREFIX + gameID + "/messages";
         session.subscribe(topic, new StompFrameHandlerClientImpl(messages));
@@ -99,7 +104,8 @@ class WebSocketBrokerIntegrationTest {
     public void testSubscriptionNotAllowedIfPlayerIsNotInGame() throws Exception{
         String gameID = "GameID";
 
-        StompSession session = initValidSession("Player", gameID);
+        String token = UUID.randomUUID().toString();
+        StompSession session = initValidSession("Player", gameID, token);
 
         String topic = WEBSOCKET_TOPIC_PREFIX + "notGameID" + "/messages";
         session.subscribe(topic, new StompFrameHandlerClientImpl(messages));
@@ -108,9 +114,43 @@ class WebSocketBrokerIntegrationTest {
         assertThat(messages.poll(1, TimeUnit.SECONDS)).isNull();
     }
 
-    public StompSession initValidSession(String playerName, String gameID) throws Exception{
+    @Test
+    public void testUserCanReceiveMessagesOnPrivateChannel() throws Exception{
+        String token = tokenService.generateToken();
+        StompSession session = initValidSession("playerName", "gameID", token);
+        BlockingQueue<String> messages = new LinkedBlockingQueue<>();
+
+        session.subscribe("/user/queue/messages/", new StompFrameHandlerClientImpl(messages));
+
+        Thread.sleep(1000); //Test failed because message was sent before subscription was processed
+
+        simpMessagingTemplate.convertAndSendToUser(token, "/queue/messages/", "Hello");
+        assertThat(messages.poll(5, TimeUnit.SECONDS)).isEqualTo("Hello");
+    }
+
+    @Test
+    public void testUserACannotReadMessagesFromUserB() throws Exception{
+        String tokenA = tokenService.generateToken();
+        StompSession sessionA = initValidSession("userA", "gameID", tokenA);
+        BlockingQueue<String> messagesA = new LinkedBlockingQueue<>();
+
+        String tokenB = tokenService.generateToken();
+        StompSession sessionB = initValidSession("userB", "gameID", tokenB);
+        BlockingQueue<String> messagesB = new LinkedBlockingQueue<>();
+
+        sessionA.subscribe("/user/queue/messages/", new StompFrameHandlerClientImpl(messagesA));
+        sessionB.subscribe("/user/queue/messages/", new StompFrameHandlerClientImpl(messagesB));
+
+        Thread.sleep(1000); //Test failed because message was sent before subscription was processed
+
+        simpMessagingTemplate.convertAndSendToUser(tokenB, "/queue/messages/", "Hello");
+
+        assertThat(messagesA.poll(5, TimeUnit.SECONDS)).isNull();
+        assertThat(messagesB.poll(5, TimeUnit.SECONDS)).isEqualTo("Hello");
+    }
+
+    public StompSession initValidSession(String playerName, String gameID, String token) throws Exception{
         JoinRequestDto dto = new JoinRequestDto(playerName, gameID);
-        String token = UUID.randomUUID().toString();
         tokenService.pushToken(token, dto);
 
         WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
@@ -119,7 +159,7 @@ class WebSocketBrokerIntegrationTest {
         WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
         stompClient.setMessageConverter(new StringMessageConverter());
         StompSession session = stompClient.connectAsync(String.format(WEBSOCKET_URI, port), headers, new StompSessionHandlerAdapter() {
-        }).get(1, TimeUnit.SECONDS);
+        }).get(2, TimeUnit.SECONDS);
         return session;
     }
 }
