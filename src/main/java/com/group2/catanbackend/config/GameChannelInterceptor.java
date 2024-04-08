@@ -23,17 +23,15 @@ public class GameChannelInterceptor implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
-        if(StompCommand.SUBSCRIBE.equals(accessor.getCommand())){
+        if(StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
             String token = getToken(accessor.getUser());
             String gameID = extractGameId(accessor.getDestination());
 
-            if(gameID != null){
-                if(token == null)
-                    throw new SubscriptionDeniedException("Subscription without user");
-                if(tokenService.validateToken(token, gameID))
-                    return message;
-                throw new SubscriptionDeniedException("User " + token + " cannot subscribe to game " + gameID);
+            if (gameID != null && !tokenService.validateToken(token, gameID)) {
+                  throw new SubscriptionDeniedException("User " + token + " cannot subscribe to game " + gameID);
             }
+
+            return message;
         }
         return message;
     }

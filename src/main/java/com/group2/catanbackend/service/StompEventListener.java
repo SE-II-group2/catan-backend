@@ -19,6 +19,7 @@ public class StompEventListener implements ApplicationListener<SessionConnectedE
         if(principal != null)
             userID = principal.getName();
 
-        log.info("STOMP event: " + sha.getCommand() + " from " + userID);
+        log.info("STOMP message: " + sha.getCommand() + " from " + userID);
+        log.info(event.getMessage().toString());
     }
 }
