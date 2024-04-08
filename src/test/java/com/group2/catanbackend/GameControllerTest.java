@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.group2.catanbackend.dto.JoinRequestDto;
 import com.group2.catanbackend.service.GameService;
 import com.group2.catanbackend.service.TokenService;
-import org.apache.el.parser.Token;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
