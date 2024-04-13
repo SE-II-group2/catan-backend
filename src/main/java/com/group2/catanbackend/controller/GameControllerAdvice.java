@@ -3,6 +3,7 @@ package com.group2.catanbackend.controller;
 import com.group2.catanbackend.dto.ErrorResponse;
 import com.group2.catanbackend.exception.GameException;
 import com.group2.catanbackend.exception.NoSuchGameException;
+import com.group2.catanbackend.exception.NotAuthorizedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -45,5 +46,12 @@ public class GameControllerAdvice extends ResponseEntityExceptionHandler {
                 .body(
                         new ErrorResponse(HttpStatus.NOT_FOUND.value(), ex.getMessage())
                 );
+    }
+
+    @ExceptionHandler(NotAuthorizedException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public @ResponseBody ResponseEntity<ErrorResponse> handleNotAuthorizedException(NotAuthorizedException ex){
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage()));
     }
 }

@@ -1,15 +1,15 @@
 package com.group2.catanbackend;
 
-import com.group2.catanbackend.dto.JoinRequestDto;
+import com.group2.catanbackend.model.Player;
 import com.group2.catanbackend.service.TokenService;
 import com.group2.catanbackend.websocket.StompFrameHandlerClientImpl;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.converter.StringMessageConverter;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompSession;
@@ -20,7 +20,9 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
 import java.util.UUID;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -46,9 +48,9 @@ class WebSocketBrokerIntegrationTest {
 
     @Test
     public void testProtocolUpgradeAllowedIfValidToken() throws Exception{
-        JoinRequestDto dto = new JoinRequestDto("player", "game");
         String token = UUID.randomUUID().toString();
-        tokenService.pushToken(token, dto);
+        Player player = new Player(token, "player", "gameID");
+        tokenService.pushToken(token, player);
 
         WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
         headers.add("authorization", token);
@@ -66,23 +68,21 @@ class WebSocketBrokerIntegrationTest {
         headers.add("authorization", "invalidToken");
 
         WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
-        Assertions.assertThrows(Exception.class, ()->{
-            stompClient.connectAsync(String.format(WEBSOCKET_URI, port),
-                    headers,
-                    new StompSessionHandlerAdapter() {
-        })
-                    .get(1, TimeUnit.SECONDS);});
+        Assertions.assertThrows(Exception.class, ()-> stompClient.connectAsync(String.format(WEBSOCKET_URI, port),
+                headers,
+                new StompSessionHandlerAdapter() {
+    })
+                .get(1, TimeUnit.SECONDS));
 
     }
 
     @Test
     public void testProtocolUpgradeNotAllowedIfNoTokenPresent(){
         WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
-        Assertions.assertThrows(Exception.class, ()->{
-            stompClient.connectAsync(String.format(WEBSOCKET_URI, port),
-                            new StompSessionHandlerAdapter() {
-                            })
-                    .get(1, TimeUnit.SECONDS);});
+        Assertions.assertThrows(Exception.class, ()-> stompClient.connectAsync(String.format(WEBSOCKET_URI, port),
+                        new StompSessionHandlerAdapter() {
+                        })
+                .get(1, TimeUnit.SECONDS));
 
     }
 
@@ -150,16 +150,15 @@ class WebSocketBrokerIntegrationTest {
     }
 
     public StompSession initValidSession(String playerName, String gameID, String token) throws Exception{
-        JoinRequestDto dto = new JoinRequestDto(playerName, gameID);
-        tokenService.pushToken(token, dto);
+        Player player = new Player(token, playerName, gameID);
+        tokenService.pushToken(token, player);
 
         WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
-        headers.add("authorization", token);
+        headers.add(HttpHeaders.AUTHORIZATION, token);
 
         WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
         stompClient.setMessageConverter(new StringMessageConverter());
-        StompSession session = stompClient.connectAsync(String.format(WEBSOCKET_URI, port), headers, new StompSessionHandlerAdapter() {
+        return stompClient.connectAsync(String.format(WEBSOCKET_URI, port), headers, new StompSessionHandlerAdapter() {
         }).get(2, TimeUnit.SECONDS);
-        return session;
     }
 }

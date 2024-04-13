@@ -1,24 +1,26 @@
 package com.group2.catanbackend.model;
 
+import com.group2.catanbackend.dto.game.PlayerDto;
+import com.group2.catanbackend.dto.game.PlayersInLobbyDto;
 import com.group2.catanbackend.exception.ErrorCode;
 import com.group2.catanbackend.exception.GameFullException;
 import com.group2.catanbackend.exception.PlayerAlreadyInGameException;
 import lombok.Getter;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.UUID;
+import java.util.*;
 
 public class GameDescriptor {
-    private final HashSet<Player> players;
+    @Getter
+    private final List<Player> players;
     @Getter
     private final String id;
     @Getter
-    private String adminToken;
+    private Player admin;
     private final Date createdAt;
+    private int nextPlayerID = 1;
 
     public GameDescriptor(){
-        this.players = new HashSet<>();
+        this.players = new LinkedList<>();
         this.id = UUID.randomUUID().toString().substring(0,7);
         this.createdAt = new Date();
     }
@@ -30,12 +32,20 @@ public class GameDescriptor {
         if(players.size() >= 4)
             throw new GameFullException(ErrorCode.ERROR_GAME_FULL + id);
         if(players.isEmpty()){
-            adminToken = player.getToken();
+            admin = player;
         }
         players.add(player);
+        player.setInGameID(nextPlayerID++);
     }
 
     public int getPlayerCount(){
         return players.size();
+    }
+
+    public PlayersInLobbyDto getDtoTemplate(){
+        PlayersInLobbyDto dto = new PlayersInLobbyDto();
+        dto.setPlayers(getPlayers().stream().map(player -> new PlayerDto(player.getDisplayName(), player.getInGameID())).toList());
+        dto.setAdmin(new PlayerDto(getAdmin().getDisplayName(), getAdmin().getInGameID()));
+        return dto;
     }
 }
