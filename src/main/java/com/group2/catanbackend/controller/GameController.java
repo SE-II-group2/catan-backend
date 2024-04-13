@@ -48,11 +48,6 @@ public class GameController {
 
     @PostMapping("/start")
     private ResponseEntity<Object> startGame(@RequestHeader(HttpHeaders.AUTHORIZATION) String token){
-        if(token == null)
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), "No token")
-                    );
         String gameID = tokenService.getPlayerByToken(token).getGameID();
         gameService.startGame(token, gameID);
         return ResponseEntity.ok(null);

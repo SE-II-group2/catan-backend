@@ -110,6 +110,14 @@ public class GameControllerTest {
     }
 
     @Test
+    public void testCannotStartGameWhenNoTokenPresent() throws Exception {
+        mockMvc.perform(
+                        MockMvcRequestBuilders
+                                .post("/catan/game/start"))
+                .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
+    }
+
+    @Test
     public void testCannotStartGameWhenNotAdmin() throws Exception{
         String gameID = gameService.createGame();
 
