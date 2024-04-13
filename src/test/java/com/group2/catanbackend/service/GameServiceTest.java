@@ -81,4 +81,9 @@ class GameServiceTest {
 
         assertThrows(NotAuthorizedException.class, () -> gameService.startGame("token2", gameId));
     }
+
+    @Test
+    void startGameNotExisting(){
+        assertThrows(NoSuchGameException.class, () -> gameService.startGame("someToken", "aNonExistingGame"));
+    }
 }
