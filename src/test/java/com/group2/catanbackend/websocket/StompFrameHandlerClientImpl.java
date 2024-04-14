@@ -4,11 +4,10 @@ import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 
 import java.lang.reflect.Type;
-import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 
 public class StompFrameHandlerClientImpl implements StompFrameHandler {
-    private BlockingQueue<String> messageQueue;
+    private final BlockingQueue<String> messageQueue;
 
     public StompFrameHandlerClientImpl(BlockingQueue<String> receivedMessagesQueue){
         messageQueue = receivedMessagesQueue;

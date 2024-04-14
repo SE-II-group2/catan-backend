@@ -9,5 +9,5 @@ import java.util.List;
 @Setter
 public class ListGameResponse {
     private int count;
-    List<Game> gameList;
+    List<LobbyDto> gameList;
 }

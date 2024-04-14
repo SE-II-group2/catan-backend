@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class Game {
+public class LobbyDto {
     private String gameID;
     private int playerCount;
 }

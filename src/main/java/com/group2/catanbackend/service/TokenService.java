@@ -1,6 +1,6 @@
 package com.group2.catanbackend.service;
 
-import com.group2.catanbackend.dto.JoinRequestDto;
+import com.group2.catanbackend.model.Player;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -12,18 +12,18 @@ import java.util.UUID;
 @Scope("singleton")
 public class TokenService {
 
-    private final Map<String, JoinRequestDto> registeredTokens = new HashMap<>();
+    private final Map<String, Player> registeredTokens = new HashMap<>();
     public String generateToken(){
         return UUID.randomUUID().toString();
     }
 
-    public void pushToken(String token, JoinRequestDto dto){
-        registeredTokens.put(token, dto);
+    public void pushToken(String token, Player player){
+        registeredTokens.put(token, player);
     }
 
     public boolean validateToken(String token, String gameID){
-        JoinRequestDto tokenData = registeredTokens.get(token);
-        return tokenData != null && tokenData.getGameID().equals(gameID);
+        Player player = registeredTokens.get(token);
+        return player != null && player.getGameID().equals(gameID);
 
     }
 
@@ -31,7 +31,7 @@ public class TokenService {
         return registeredTokens.containsKey(token);
     }
 
-    public JoinRequestDto getTokenMetadata(String token){
+    public Player getPlayerByToken(String token){
         return registeredTokens.get(token);
     }
 }

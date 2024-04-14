@@ -20,11 +20,11 @@ class GameDescriptorUnitTest {
     @BeforeEach
     void setUp() {
         gameDescriptor = new GameDescriptor();
-        player1 = new Player("token1", "player1");
-        player2 = new Player("token2", "player2");
-        player3 = new Player("token3", "player3");
-        player4 = new Player("token4", "player4");
-        player5 = new Player("token5", "player5");
+        player1 = new Player("token1", "player1", "gameID");
+        player2 = new Player("token2", "player2", "gameID");
+        player3 = new Player("token3", "player3", "gameID");
+        player4 = new Player("token4", "player4", "gameID");
+        player5 = new Player("token5", "player5", "gameID");
     }
 
     @Test
@@ -36,7 +36,7 @@ class GameDescriptorUnitTest {
     @Test
     void joinGameAsAdmin() {
         gameDescriptor.join(player1);
-        assertEquals("token1", gameDescriptor.getAdminToken());
+        assertEquals("token1", gameDescriptor.getAdmin().getToken());
     }
 
     @Test

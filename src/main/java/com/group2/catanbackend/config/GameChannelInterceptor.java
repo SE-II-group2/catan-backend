@@ -42,6 +42,8 @@ public class GameChannelInterceptor implements ChannelInterceptor {
         return principal.getName();
     }
 
+    //RequestURL looks like "/topic/game/{gameID}/..."
+    //split looks like {"", "topic", "game", gameID, ...}
     private String extractGameId(@Nullable String destination){
         if(destination == null)
             return null;
