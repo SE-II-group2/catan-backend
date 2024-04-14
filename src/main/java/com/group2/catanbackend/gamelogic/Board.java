@@ -1,17 +1,22 @@
 package com.group2.catanbackend.gamelogic;
 
-
 import com.group2.catanbackend.gamelogic.enums.*;
 import com.group2.catanbackend.gamelogic.objects.*;
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class Board {
 
+    @Getter
     private List<Hexagon> hexagonList;
+    @Getter
     private Connection[][] adjacencyMatrix;
+    @Getter
     private Intersection [][] intersections;
+    @Getter
     private int[][] surroundingHexagons;
     private static final int NON_EXISTING_HEXAGON = 19;
     private ArrayList<Integer> setupPhaseTurnOrder;
@@ -20,12 +25,13 @@ public class Board {
     private boolean isSetupPhase = true;
 
     public Board(int numberOfPlayers){
-        hexagonList = generateHexagons();
+        generateHexagons();
         generateAdjacencyMatrix();
         generateIntersectionsStartingArray();
         generateSurroundingHexagonArray();
-        this.numOfPlayers=numberOfPlayers;
         generateSetupPhaseTurnOrder();
+
+        this.numOfPlayers=numberOfPlayers;
     }
 
     public void distributeResourcesByDiceRoll(int diceRoll) {
@@ -58,14 +64,14 @@ public class Board {
         int intersection = translateIntersectionToAdjacencyMatrix(row,col);
 
         if(isSetupPhase && intersections[row][col] != null && noBuildingAdjacent(row, col) && !(intersections[row][col] instanceof Building)){
-            intersections[row][col] = new Building(playerID,Building.BuildingType.VILLAGE);
+            intersections[row][col] = new Building(playerID,BuildingType.VILLAGE);
             Building village = (Building)intersections[row][col];
             addBuildingToSurroundingHexagons(intersection,village);
             return;
         }
 
         if((intersections[row][col] != null) && noBuildingAdjacent(row, col) && isNextToOwnRoad(intersection,playerID) && !(intersections[row][col] instanceof Building)){
-            intersections[row][col] = new Building(playerID,Building.BuildingType.VILLAGE);
+            intersections[row][col] = new Building(playerID,BuildingType.VILLAGE);
             Building village = (Building)intersections[row][col];
             addBuildingToSurroundingHexagons(intersection,village);
         }
@@ -141,8 +147,7 @@ public class Board {
         };
     }
 
-
-    public static List<Hexagon> generateHexagons() {
+    private void generateHexagons() {
         List<Location> locations = new ArrayList<>();
         List<Integer> values = new ArrayList<>();
 
@@ -153,7 +158,7 @@ public class Board {
                 Location.PASTURE, Location.PASTURE, Location.PASTURE, Location.PASTURE, Location.DESERT);
         Collections.addAll(values, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12);
 
-        List<Hexagon> hexagons = new ArrayList<>();
+        hexagonList = new ArrayList<>();
 
         Collections.shuffle(locations);
         Collections.shuffle(values);
@@ -174,13 +179,9 @@ public class Board {
                 case MOUNTAINS -> ResourceDistribution.MOUNTAINS;
                 default -> ResourceDistribution.DESERT;
             };
-
-            hexagons.add(new Hexagon(location.name(), resourceDistribution.getDistribution(), value));
+            hexagonList.add(new Hexagon(location, resourceDistribution, value));
         }
-
-        return hexagons;
     }
-
 
     private void generateAdjacencyMatrix() {
         Connection emptyConnection = new Connection();
@@ -226,22 +227,5 @@ public class Board {
             setupPhaseTurnOrder.add(i);
         }
     }
-
-    public List<Hexagon> getHexagonList() {
-        return hexagonList;
-    }
-
-    public Connection[][] getAdjacencyMatrix() {
-        return adjacencyMatrix;
-    }
-
-    public Intersection[][] getIntersections() {
-        return intersections;
-    }
-
-    public int[][] getSurroundingHexagons() {
-        return surroundingHexagons;
-    }
-
 }
 

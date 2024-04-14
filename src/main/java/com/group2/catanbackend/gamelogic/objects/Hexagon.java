@@ -1,16 +1,24 @@
 package com.group2.catanbackend.gamelogic.objects;
 
+import com.group2.catanbackend.gamelogic.enums.Location;
+import com.group2.catanbackend.gamelogic.enums.ResourceDistribution;
+import lombok.Getter;
+
 public class Hexagon {
-    private final String type;
-    private final int[] resourceValue;
+    @Getter
+    private final Location type;
+    @Getter
+    private final ResourceDistribution distribution;
+    @Getter
     private final int rollValue;
+    @Getter
     private Building[] buildings;
+    @Getter
     private int numOfAdjacentBuildings =0;
 
-
-    public Hexagon(String type, int[] resourceValue, int rollValue) {
+    public Hexagon(Location type, ResourceDistribution distribution, int rollValue) {
         this.type = type;
-        this.resourceValue = resourceValue;
+        this.distribution=distribution;
         this.rollValue = rollValue;
         this.buildings = new Building[3];
     }
@@ -18,7 +26,7 @@ public class Hexagon {
     public void distributeResources() {
         for (Building building : buildings) {
             if (building != null) {
-                building.giveResources(resourceValue);
+                building.giveResources(distribution);
             }
         }
     }
@@ -31,25 +39,6 @@ public class Hexagon {
                 break;
             }
         }
-    }
-    public String getType() {
-        return type;
-    }
-
-    public int[] getResourceValue() {
-        return resourceValue;
-    }
-
-    public int getRollValue() {
-        return rollValue;
-    }
-
-    public Building[] getBuildings() {
-        return buildings;
-    }
-
-    public int getNumOfAdjacentBuildings(){
-        return numOfAdjacentBuildings;
     }
 
     @Override
