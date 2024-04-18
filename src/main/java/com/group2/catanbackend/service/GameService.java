@@ -1,14 +1,13 @@
 package com.group2.catanbackend.service;
 
+import com.group2.catanbackend.dto.CreateRequestDto;
+import com.group2.catanbackend.dto.JoinResponseDto;
 import com.group2.catanbackend.dto.LobbyDto;
 import com.group2.catanbackend.dto.JoinRequestDto;
 import com.group2.catanbackend.dto.game.PlayerDto;
 import com.group2.catanbackend.dto.game.PlayerEventDto;
 import com.group2.catanbackend.dto.game.PlayersInLobbyDto;
-import com.group2.catanbackend.exception.ErrorCode;
-import com.group2.catanbackend.exception.NoSuchGameException;
-import com.group2.catanbackend.exception.NotAuthorizedException;
-import com.group2.catanbackend.exception.NotImplementedException;
+import com.group2.catanbackend.exception.*;
 import com.group2.catanbackend.model.GameDescriptor;
 import com.group2.catanbackend.model.Player;
 import lombok.Getter;
@@ -31,34 +30,43 @@ public class GameService {
     private final Map<String, GameDescriptor> registeredGames = new HashMap<>();
     @Getter
     private final Map<String, RunningInstanceService> runningGames = new HashMap<>();
+    private final TokenService tokenService;
 
     @Autowired
     public GameService(ApplicationContext applicationContext,
-                       MessagingService messagingService){
+                       MessagingService messagingService, TokenService tokenService){
         this.applicationContext = applicationContext;
         this.messagingService = messagingService;
+        this.tokenService = tokenService;
     }
 
-    public String createGame(){
+    public JoinResponseDto createAndJoin(CreateRequestDto requestDto) throws GameException{
         GameDescriptor game = new GameDescriptor();
         String id = game.getId();
-        log.info("Created game: " + id);
         registeredGames.put(id, game);
-        return id;
+        log.info("Created game: " + id);
+        JoinRequestDto joinRequest = new JoinRequestDto(requestDto.getPlayerName(), id);
+        return joinGame(joinRequest);
     }
 
-    public Player joinGame(String token, JoinRequestDto request) throws RuntimeException {
+    public JoinResponseDto joinGame(JoinRequestDto request) throws GameException {
         GameDescriptor game = registeredGames.get(request.getGameID());
         if(game == null)
             throw new NoSuchGameException(ErrorCode.ERROR_GAME_NOT_FOUND + request.getGameID());
 
+        String token = tokenService.generateToken();
+
         Player p = new Player(token, request.getPlayerName(), game.getId());
         game.join(p);
+
+        tokenService.pushToken(token, p);
+
         PlayerDto playerDto = new PlayerDto(p.getDisplayName(), p.getInGameID());
 
         notifyNewPlayer(game, playerDto);
         log.info("user " + request.getPlayerName() + " joined game " + game.getId());
-        return p;
+
+        return new JoinResponseDto(p.getDisplayName(), p.getGameID(), p.getToken(), p.getInGameID());
     }
 
     public void startGame(String token, String gameID){

@@ -3,6 +3,7 @@ package com.group2.catanbackend.model;
 import com.group2.catanbackend.dto.game.PlayerDto;
 import com.group2.catanbackend.dto.game.PlayersInLobbyDto;
 import com.group2.catanbackend.exception.ErrorCode;
+import com.group2.catanbackend.exception.GameException;
 import com.group2.catanbackend.exception.GameFullException;
 import com.group2.catanbackend.exception.PlayerAlreadyInGameException;
 import lombok.Getter;
@@ -26,7 +27,7 @@ public class GameDescriptor {
     }
 
 
-    public void join(Player player){
+    public void join(Player player) throws GameException {
         if(players.contains(player))
             throw new PlayerAlreadyInGameException(ErrorCode.ERROR_PLAYER_ALREADY_IN_GAME);
         if(players.size() >= 4)

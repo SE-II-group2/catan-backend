@@ -2,7 +2,6 @@ package com.group2.catanbackend.controller;
 
 import com.group2.catanbackend.dto.*;
 import com.group2.catanbackend.exception.GameException;
-import com.group2.catanbackend.model.Player;
 import com.group2.catanbackend.service.GameService;
 import com.group2.catanbackend.service.TokenService;
 import jakarta.validation.Valid;
@@ -27,22 +26,13 @@ public class GameController {
 
 
     @PostMapping("/create")
-    private ResponseEntity<GameSocketEndpointDto> createGame(@Valid @RequestBody CreateRequestDto request) throws GameException {
-        String gameId = gameService.createGame();
-        JoinRequestDto joinRequestDto = new JoinRequestDto(request.getPlayerName(), gameId);
-        return joinGame(joinRequestDto);
+    private ResponseEntity<JoinResponseDto> createGame(@Valid @RequestBody CreateRequestDto request) throws GameException {
+        return ResponseEntity.ok(gameService.createAndJoin(request));
     }
 
     @PostMapping("/connect")
-    private ResponseEntity<GameSocketEndpointDto> joinGame(@Valid @RequestBody JoinRequestDto joinRequest) throws GameException {
-        String token = tokenService.generateToken();
-
-        Player p = gameService.joinGame(token, joinRequest);
-        tokenService.pushToken(token, p);
-
-        simpMessagingTemplate.convertAndSend("/topic/game/" + joinRequest.getGameID() + "/messages", joinRequest.getPlayerName() + " joined");
-        GameSocketEndpointDto endpoint = new GameSocketEndpointDto(joinRequest.getGameID(), joinRequest.getPlayerName(), token);
-        return ResponseEntity.ok(endpoint);
+    private ResponseEntity<JoinResponseDto> joinGame(@Valid @RequestBody JoinRequestDto joinRequest) throws GameException {
+        return ResponseEntity.ok(gameService.joinGame(joinRequest));
     }
 
     @PostMapping("/start")

@@ -1,9 +1,10 @@
 package com.group2.catanbackend.service;
 
+import com.group2.catanbackend.dto.CreateRequestDto;
 import com.group2.catanbackend.dto.JoinRequestDto;
+import com.group2.catanbackend.dto.JoinResponseDto;
 import com.group2.catanbackend.exception.NoSuchGameException;
 import com.group2.catanbackend.exception.NotAuthorizedException;
-import com.group2.catanbackend.model.Player;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -30,56 +31,35 @@ class GameServiceTest {
 
     @Test
     void createGameSuccessfully() {
-        String gameId = gameService.createGame();
-        assertNotNull(gameId);
-    }
-
-    @Test
-    void joinGameSuccessfully() {
-        String gameId = gameService.createGame();
-        JoinRequestDto request = new JoinRequestDto();
-        request.setGameID(gameId);
-        request.setPlayerName("player1");
-
-        Player player = gameService.joinGame("token1", request);
-
-        assertEquals("player1", player.getDisplayName());
+        JoinResponseDto responseDto = gameService.createAndJoin(new CreateRequestDto("Player1"));
+        assertEquals("Player1", responseDto.getPlayerName());
+        assertEquals(responseDto.getGameID(), gameService.getRegisteredGames().get(0).getId());
     }
 
     @Test
     void joinGameNoSuchGame() {
-        JoinRequestDto request = new JoinRequestDto();
-        request.setGameID("invalid");
-        request.setPlayerName("player1");
+        JoinRequestDto request = new JoinRequestDto("Player1", "invalid");
 
-        assertThrows(NoSuchGameException.class, () -> gameService.joinGame("token1", request));
+        assertThrows(NoSuchGameException.class, () -> gameService.joinGame(request));
     }
 
     @Test
     void startGameSuccessfully() {
-        String gameId = gameService.createGame();
-        JoinRequestDto request = new JoinRequestDto();
-        request.setGameID(gameId);
-        request.setPlayerName("admin");
+        JoinResponseDto response = gameService.createAndJoin(new CreateRequestDto("Player1"));
+        gameService.startGame(response.getToken(), response.getGameID());
 
-        gameService.joinGame("token1", request);
-        gameService.startGame("token1", gameId);
-
-        assertTrue(gameService.getRunningGames().containsKey(gameId));
-        assertFalse(gameService.getRegisteredGames().containsKey(gameId));
-        Mockito.verify(messagingService).notifyLobby(eq(gameId), any());
+        assertTrue(gameService.getRunningGames().containsKey(response.getGameID()));
+        assertFalse(gameService.getRegisteredGames().containsKey(response.getGameID()));
+        Mockito.verify(messagingService).notifyLobby(eq(response.getGameID()), any());
     }
 
     @Test
     void startGameNotAuthorized() {
-        String gameId = gameService.createGame();
-        JoinRequestDto request = new JoinRequestDto();
-        request.setGameID(gameId);
-        request.setPlayerName("player1");
+        JoinResponseDto responseDto1 = gameService.createAndJoin(new CreateRequestDto("Player1"));
+        JoinResponseDto responseDto2 = gameService.joinGame(new JoinRequestDto("Player2", responseDto1.getGameID()));
 
-        gameService.joinGame("token1", request);
-
-        assertThrows(NotAuthorizedException.class, () -> gameService.startGame("token2", gameId));
+        assertEquals(responseDto1.getToken(), gameService.getRegisteredGames().get(responseDto1.getGameID()).getAdmin().getToken());
+        assertThrows(NotAuthorizedException.class, () -> gameService.startGame(responseDto2.getToken(), responseDto2.getGameID()));
     }
 
     @Test

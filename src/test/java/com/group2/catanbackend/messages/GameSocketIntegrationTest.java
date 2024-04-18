@@ -1,9 +1,10 @@
 package com.group2.catanbackend.messages;
 
 import com.group2.catanbackend.config.Constants;
+import com.group2.catanbackend.dto.CreateRequestDto;
 import com.group2.catanbackend.dto.JoinRequestDto;
+import com.group2.catanbackend.dto.JoinResponseDto;
 import com.group2.catanbackend.dto.game.PlayersInLobbyDto;
-import com.group2.catanbackend.model.Player;
 import com.group2.catanbackend.service.GameService;
 import com.group2.catanbackend.service.TokenService;
 import org.junit.jupiter.api.Test;
@@ -36,25 +37,19 @@ class GameSocketIntegrationTest {
 
     @Test
     public void testReceivesNotificationOnNewPlayerJoined() throws Exception{
-        String gameID = gameService.createGame();
-        JoinRequestDto joinDto1 = new JoinRequestDto("player1", gameID);
-        String token1 = tokenService.generateToken();
-        Player p1 = gameService.joinGame(token1, joinDto1);
-        tokenService.pushToken(token1, p1);
+        JoinResponseDto responseDto = gameService.createAndJoin(new CreateRequestDto("Player1"));
 
-        TestClientImplementation client = new TestClientImplementation(port, token1);
+        TestClientImplementation client = new TestClientImplementation(port, responseDto.getToken());
 
         BlockingQueue<PlayersInLobbyDto> queue = new LinkedBlockingQueue<>();
         StompFrameHandlerImpl<PlayersInLobbyDto> handler = new StompFrameHandlerImpl<>(queue, PlayersInLobbyDto.class);
-        client.subscribe(Constants.TOPIC_GAME_LOBBY.formatted(gameID), handler);
+        client.subscribe(Constants.TOPIC_GAME_LOBBY.formatted(responseDto.getGameID()), handler);
 
         Thread.sleep(1000);
 
-        JoinRequestDto joinDto2 = new JoinRequestDto("player2", gameID);
-        String token2 = tokenService.generateToken();
-        gameService.joinGame(token2, joinDto2);
+        gameService.joinGame(new JoinRequestDto("Player2", responseDto.getGameID()));
         Thread.sleep(1000);
-        System.out.println("test");
+
         PlayersInLobbyDto dto = queue.poll(2, TimeUnit.SECONDS);
         assertThat(dto.getPlayers().size()).isEqualTo(2);
     }

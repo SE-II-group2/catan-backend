@@ -16,5 +16,4 @@ public class Player {
         this.displayName = displayName;
         this.gameID = gameID;
     }
-
 }
