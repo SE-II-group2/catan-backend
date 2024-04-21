@@ -1,7 +1,9 @@
 package com.group2.catanbackend.gamelogic;
+
 import com.group2.catanbackend.gamelogic.enums.BuildingType;
 import com.group2.catanbackend.gamelogic.objects.Building;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class BuildingUnitTest {

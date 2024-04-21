@@ -85,31 +85,31 @@ public class BoardUnitTests {
     }
 
     @Test
-    public void testAddVillageNormalCase(){
-        board.addNewVillage(1,2,5);
+    public void testAddVillageNormalCase() {
+        board.addNewVillage(1, 2, 5);
         board.addNewVillage(1, 2, 7);
         board.addNewVillage(1, 1, 6);
-        List<Hexagon> hexList= board.getHexagonList();
+        List<Hexagon> hexList = board.getHexagonList();
         assertEquals(3, hexList.get(5).getNumOfAdjacentBuildings());
         assertEquals(1, hexList.get(2).getNumOfAdjacentBuildings());
-        assertEquals(0,hexList.get(3).getNumOfAdjacentBuildings());
+        assertEquals(0, hexList.get(3).getNumOfAdjacentBuildings());
 
         board.addNewVillage(1, 2, 6);
         assertEquals(3, hexList.get(5).getNumOfAdjacentBuildings());
     }
 
     @Test
-    public void testAddVillageEdgeOfBoard(){
+    public void testAddVillageEdgeOfBoard() {
         board.addNewVillage(1, 2, 0);
         board.addNewVillage(1, 1, 1);
 
-        List<Hexagon> hexList= board.getHexagonList();
+        List<Hexagon> hexList = board.getHexagonList();
         assertEquals(1, hexList.get(7).getNumOfAdjacentBuildings());
-        assertEquals(1,hexList.get(3).getNumOfAdjacentBuildings());
+        assertEquals(1, hexList.get(3).getNumOfAdjacentBuildings());
     }
 
     @Test
-    public void testAddRoad(){
+    public void testAddRoad() {
         board.addNewRoad(1, 0, 1);
         assertTrue(board.isNextToOwnRoad(1, 1));
         assertTrue(board.isNextToOwnRoad(0, 1));

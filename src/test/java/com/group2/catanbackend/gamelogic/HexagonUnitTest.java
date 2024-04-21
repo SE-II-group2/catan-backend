@@ -4,6 +4,7 @@ import com.group2.catanbackend.gamelogic.enums.*;
 import com.group2.catanbackend.gamelogic.objects.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;

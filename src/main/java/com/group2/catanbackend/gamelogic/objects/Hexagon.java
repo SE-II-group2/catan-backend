@@ -14,11 +14,11 @@ public class Hexagon {
     @Getter
     private Building[] buildings;
     @Getter
-    private int numOfAdjacentBuildings =0;
+    private int numOfAdjacentBuildings = 0;
 
     public Hexagon(Location type, ResourceDistribution distribution, int rollValue) {
         this.type = type;
-        this.distribution=distribution;
+        this.distribution = distribution;
         this.rollValue = rollValue;
         this.buildings = new Building[3];
     }
@@ -43,6 +43,6 @@ public class Hexagon {
 
     @Override
     public String toString() {
-        return String.format("Hexagon Type: %s; Rollvalue: %d; Number of Buildings adjecent: %d\n",type, rollValue, numOfAdjacentBuildings);
+        return String.format("Hexagon Type: %s; Rollvalue: %d; Number of Buildings adjecent: %d\n", type, rollValue, numOfAdjacentBuildings);
     }
 }
