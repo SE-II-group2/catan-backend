@@ -66,6 +66,7 @@ public class GameService {
         notifyLobbyNewPlayer(game, playerDto);
         log.info("user " + request.getPlayerName() + " joined game " + game.getId());
 
+
         return new JoinResponseDto(p.getDisplayName(), p.getGameID(), p.getToken(), p.getInGameID());
     }
 
@@ -125,16 +126,13 @@ public class GameService {
     private void notifyLobbyNewPlayer(GameDescriptor gameDescriptor, PlayerDto newPlayer){
         PlayersInLobbyDto data = gameDescriptor.getDtoTemplate();
         data.setEvent(new PlayerEventDto(PlayerEventDto.Type.PLAYER_JOINED, newPlayer));
-
-        MessageDto payload = MessageDto.builder().type(MessageType.PLAYERS_CHANGED).data(data).build();
-        messagingService.notifyLobby(gameDescriptor.getId(), payload);
+        messagingService.notifyLobby(gameDescriptor.getId(), data);
     }
 
     private void notifyLobbyPlayerLeft(GameDescriptor descriptor, Player p){
         PlayersInLobbyDto data = descriptor.getDtoTemplate();
         data.setEvent(new PlayerEventDto(PlayerEventDto.Type.PLAYER_LEFT, p.toPlayerDto()));
 
-        MessageDto payload = MessageDto.builder().type(MessageType.PLAYERS_CHANGED).data(data).build();
-        messagingService.notifyLobby(descriptor.getId(), payload);
+        messagingService.notifyLobby(descriptor.getId(), data);
     }
 }

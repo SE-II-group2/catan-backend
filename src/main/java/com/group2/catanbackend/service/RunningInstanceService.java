@@ -1,9 +1,6 @@
 package com.group2.catanbackend.service;
 
-import com.group2.catanbackend.dto.game.MessageDto;
-import com.group2.catanbackend.dto.game.MessageType;
-import com.group2.catanbackend.dto.game.PlayerEventDto;
-import com.group2.catanbackend.dto.game.PlayersInLobbyDto;
+import com.group2.catanbackend.dto.game.*;
 import com.group2.catanbackend.exception.ErrorCode;
 import com.group2.catanbackend.exception.NotImplementedException;
 import com.group2.catanbackend.model.Player;
@@ -55,17 +52,12 @@ public class RunningInstanceService {
         dto.setAdmin(null);
         dto.setEvent(new PlayerEventDto(PlayerEventDto.Type.PLAYER_LEFT, p.toPlayerDto()));
 
-        MessageDto payload = MessageDto.builder()
-                                .type(MessageType.PLAYERS_CHANGED)
-                                .data(dto)
-                                .build();
 
-
-        messagingService.notifyLobby(gameId, payload);
+        messagingService.notifyLobby(gameId, dto);
     }
 
     public void notifyGameStart(){
-        MessageDto dto = MessageDto.builder().type(MessageType.GAME_STARTED).build();
+        GameStartedDto dto = new GameStartedDto();
         //maybe add the initialized gameBoard here?
         messagingService.notifyLobby(gameId, dto);
     }

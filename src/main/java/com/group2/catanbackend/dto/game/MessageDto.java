@@ -1,16 +1,22 @@
 package com.group2.catanbackend.dto.game;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.*;
 
 /**
  * Defines the Basic Structure of a Stomp Message to the client
  */
-@Builder
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
+        property = "eventType"
+)
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = PlayersInLobbyDto.class, name = MessageType.PLAYERS_CHANGED)
+})
 @Getter
 @Setter
-public class MessageDto {
-    private MessageType type;
-    private Object data;
+public abstract class MessageDto {
+    private String eventType;
 }

@@ -22,6 +22,8 @@ class GameServiceTest {
 
     @Mock
     private ApplicationContext applicationContext;
+    @Mock
+    private TokenService tokenService;
 
     @Mock
     private MessagingService messagingService;
