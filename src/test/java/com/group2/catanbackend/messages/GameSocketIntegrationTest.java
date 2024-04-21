@@ -5,10 +5,7 @@ import com.group2.catanbackend.config.Constants;
 import com.group2.catanbackend.dto.CreateRequestDto;
 import com.group2.catanbackend.dto.JoinRequestDto;
 import com.group2.catanbackend.dto.JoinResponseDto;
-import com.group2.catanbackend.dto.game.MessageDto;
-import com.group2.catanbackend.dto.game.MessageType;
-import com.group2.catanbackend.dto.game.PlayerEventDto;
-import com.group2.catanbackend.dto.game.PlayersInLobbyDto;
+import com.group2.catanbackend.dto.game.*;
 import com.group2.catanbackend.service.GameService;
 import com.group2.catanbackend.service.TokenService;
 import org.junit.jupiter.api.Test;
@@ -85,5 +82,22 @@ class GameSocketIntegrationTest {
         assertThat(playersInLobbyDto.getEvent().getType()).isEqualTo(PlayerEventDto.Type.PLAYER_LEFT);
         assertThat(playersInLobbyDto.getEvent().getPlayer().getInGameID()).isEqualTo(player1.getInGameID());
     }
+
+    @Test
+    public void testReceivesNotificationOnGameStart() throws Exception{
+        JoinResponseDto player1 = gameService.createAndJoin(new CreateRequestDto("Player1"));
+        JoinResponseDto player2 = gameService.joinGame(new JoinRequestDto("Player2", player1.getGameID()));
+
+        TestClientImplementation client = new TestClientImplementation(port, player2.getToken());
+        BlockingQueue<MessageDto> queue = new LinkedBlockingQueue<>();
+        StompFrameHandlerImpl<MessageDto> handler = new StompFrameHandlerImpl<>(queue, MessageDto.class);
+        client.subscribe(Constants.TOPIC_GAME_LOBBY.formatted(player2.getGameID()), handler);
+
+        gameService.startGame(player1.getToken()); //as Player1 is admin
+        Thread.sleep(1000);
+        MessageDto dto = queue.poll(2, TimeUnit.SECONDS);
+        assertThat(dto.getClass()).isEqualTo(GameStartedDto.class);
+    }
+
 
 }

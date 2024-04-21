@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @Setter
 @Getter
-public class JoinRequestDto extends CreateRequestDto{
+public class JoinRequestDto{
     @NotNull
     @NotEmpty
     private String playerName;

@@ -103,6 +103,9 @@ public class GameService {
             gameDescriptor.leave(player);
             tokenService.revokeToken(token);
             notifyLobbyPlayerLeft(gameDescriptor, player);
+            if(gameDescriptor.getPlayerCount() == 0){
+                registeredGames.remove(gameDescriptor.getId());
+            }
         }
         //As a running Game is a service, the notification is handled by it.
         if(game != null){

@@ -13,7 +13,8 @@ import lombok.*;
         property = "eventType"
 )
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = PlayersInLobbyDto.class, name = MessageType.PLAYERS_CHANGED)
+        @JsonSubTypes.Type(value = PlayersInLobbyDto.class, name = MessageType.PLAYERS_CHANGED),
+        @JsonSubTypes.Type(value = GameStartedDto.class, name = MessageType.GAME_STARTED)
 })
 @Getter
 @Setter

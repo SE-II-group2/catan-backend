@@ -122,6 +122,19 @@ public class GameControllerTest {
         Assertions.assertEquals(0, gameService.getRunningGames().size());
     }
 
+    @Test
+    public void testGameRemovedWhenLastPlayerLeaves() throws Exception{
+        JoinResponseDto player1 = gameService.createAndJoin(new CreateRequestDto("Player1"));
+
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                        .post("/catan/game/leave")
+                        .header(HttpHeaders.AUTHORIZATION, player1.getToken())
+                )
+                .andExpect(status().isOk());
+        Assertions.assertNull(gameService.getRegisteredGames().get(player1.getGameID()));
+    }
+
 
     private String toJson(final Object obj){
         try {
