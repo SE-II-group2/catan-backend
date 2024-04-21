@@ -39,14 +39,26 @@ public class GameDescriptor {
         player.setInGameID(nextPlayerID++);
     }
 
+    public boolean leave(Player player){
+        if(players.remove(player)) {
+            if (players.isEmpty())
+                admin = null;
+            else if (player.equals(admin)) {
+                admin = players.get(0);
+            }
+            return true;
+        }
+        return false;
+    }
+
     public int getPlayerCount(){
         return players.size();
     }
 
     public PlayersInLobbyDto getDtoTemplate(){
         PlayersInLobbyDto dto = new PlayersInLobbyDto();
-        dto.setPlayers(getPlayers().stream().map(player -> new PlayerDto(player.getDisplayName(), player.getInGameID())).toList());
-        dto.setAdmin(new PlayerDto(getAdmin().getDisplayName(), getAdmin().getInGameID()));
+        dto.setPlayers(getPlayers().stream().map(Player::toPlayerDto).toList());
+        dto.setAdmin(getAdmin() != null ? getAdmin().toPlayerDto() : null);
         return dto;
     }
 }

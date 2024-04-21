@@ -14,7 +14,7 @@ import lombok.Setter;
  */
 public class PlayerEventDto {
     Type type;
-    PlayerDto playerDto;
+    PlayerDto player;
     public enum Type {
         PLAYER_JOINED,
         PLAYER_LEFT,

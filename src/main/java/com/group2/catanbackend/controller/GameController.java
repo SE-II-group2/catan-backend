@@ -35,10 +35,15 @@ public class GameController {
         return ResponseEntity.ok(gameService.joinGame(joinRequest));
     }
 
+    @PostMapping("/leave")
+    private ResponseEntity<Object> leaveGame(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+        gameService.leaveGame(token);
+        return ResponseEntity.ok(null);
+    }
+
     @PostMapping("/start")
     private ResponseEntity<Object> startGame(@RequestHeader(HttpHeaders.AUTHORIZATION) String token){
-        String gameID = tokenService.getPlayerByToken(token).getGameID();
-        gameService.startGame(token, gameID);
+        gameService.startGame(token);
         return ResponseEntity.ok(null);
     }
 

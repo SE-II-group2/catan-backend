@@ -46,7 +46,7 @@ class GameServiceTest {
     @Test
     void startGameSuccessfully() {
         JoinResponseDto response = gameService.createAndJoin(new CreateRequestDto("Player1"));
-        gameService.startGame(response.getToken(), response.getGameID());
+        gameService.startGame(response.getToken());
 
         assertTrue(gameService.getRunningGames().containsKey(response.getGameID()));
         assertFalse(gameService.getRegisteredGames().containsKey(response.getGameID()));
@@ -59,11 +59,6 @@ class GameServiceTest {
         JoinResponseDto responseDto2 = gameService.joinGame(new JoinRequestDto("Player2", responseDto1.getGameID()));
 
         assertEquals(responseDto1.getToken(), gameService.getRegisteredGames().get(responseDto1.getGameID()).getAdmin().getToken());
-        assertThrows(NotAuthorizedException.class, () -> gameService.startGame(responseDto2.getToken(), responseDto2.getGameID()));
-    }
-
-    @Test
-    void startGameNotExisting(){
-        assertThrows(NoSuchGameException.class, () -> gameService.startGame("someToken", "aNonExistingGame"));
+        assertThrows(NotAuthorizedException.class, () -> gameService.startGame(responseDto2.getToken()));
     }
 }
