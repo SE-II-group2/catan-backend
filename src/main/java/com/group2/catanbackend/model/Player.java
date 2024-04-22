@@ -12,6 +12,8 @@ public class Player {
     private Integer inGameID = null; //used for Player in GameState
     @Setter
     private PlayerState playerState;
+    @Getter
+    private final int[] resources = new int[]{0,0,0,0,0};
     public Player(String token, String displayName, String gameID){
         this.token = token;
         this.displayName = displayName;
@@ -22,4 +24,11 @@ public class Player {
         return new PlayerDto(getDisplayName(), getInGameID(), playerState);
     }
 
+    public void adjustResources(int[] resources){
+        if(resources!=null&&resources.length == 5){
+            for (int i = 0; i < resources.length; i++) {
+                this.resources[i]+= resources[i];
+            }
+        }
+    }
 }

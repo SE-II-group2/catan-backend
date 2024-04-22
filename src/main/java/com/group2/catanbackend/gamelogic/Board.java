@@ -42,20 +42,20 @@ public class Board {
         }
     }
 
-    public void addNewRoad(int playerID, int row, int col){
+    public void addNewRoad(int playerID, int fromIntersection, int toIntersection){
         // player has enough Resources
 
-        if(isSetupPhase && adjacencyMatrix[row][col] != null && !(adjacencyMatrix[row][col] instanceof Road)){
+        if(isSetupPhase && adjacencyMatrix[fromIntersection][toIntersection] != null && !(adjacencyMatrix[fromIntersection][toIntersection] instanceof Road)){
             Road road = new Road(playerID);
-            adjacencyMatrix[row][col] = road;
-            adjacencyMatrix[col][row] = road;
+            adjacencyMatrix[fromIntersection][toIntersection] = road;
+            adjacencyMatrix[toIntersection][fromIntersection] = road;
             return;
         }
 
-        if((adjacencyMatrix[row][col] != null && !(adjacencyMatrix[row][col] instanceof Road)) && isNextToOwnRoad(col,playerID)){
+        if((adjacencyMatrix[fromIntersection][toIntersection] != null && !(adjacencyMatrix[fromIntersection][toIntersection] instanceof Road)) && isNextToOwnRoad(toIntersection,playerID)){
             Road road = new Road(playerID);
-            adjacencyMatrix[row][col] = road;
-            adjacencyMatrix[col][row] = road;
+            adjacencyMatrix[fromIntersection][toIntersection] = road;
+            adjacencyMatrix[toIntersection][fromIntersection] = road;
         }
     }
 

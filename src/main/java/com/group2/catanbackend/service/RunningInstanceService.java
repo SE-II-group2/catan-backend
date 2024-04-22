@@ -3,6 +3,7 @@ package com.group2.catanbackend.service;
 import com.group2.catanbackend.dto.game.*;
 import com.group2.catanbackend.exception.ErrorCode;
 import com.group2.catanbackend.exception.NotImplementedException;
+import com.group2.catanbackend.gamelogic.GameLogicController;
 import com.group2.catanbackend.model.Player;
 import com.group2.catanbackend.model.PlayerState;
 import lombok.Getter;
@@ -21,7 +22,7 @@ public class RunningInstanceService {
     private List<Player> players;
     private final MessagingService messagingService;
     private boolean started = false;
-    //TODO: Game Board
+    private GameLogicController gameLogicController;
 
     @Autowired
     public RunningInstanceService(MessagingService messagingService){
@@ -32,16 +33,19 @@ public class RunningInstanceService {
         //TODO: Implement
         throw new NotImplementedException(ErrorCode.ERROR_NOT_IMPLEMENTED);
     }
+
     public void addPlayers(List<Player> players){
         this.players = players;
         players.forEach(player -> player.setPlayerState(PlayerState.PLAYING));
     }
 
     public void start(){
-        if(!started){
-            notifyGameStart();
-            started = true;
+        if(started){
+            return;
         }
+        notifyGameStart();
+        started = true;
+        gameLogicController = new GameLogicController(players, this, gameId);
     }
 
     //Players are not removed once the game is started.
