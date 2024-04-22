@@ -1,16 +1,14 @@
 package com.group2.catanbackend.service;
 
+import com.group2.catanbackend.dto.CreateRequestDto;
+import com.group2.catanbackend.dto.JoinResponseDto;
 import com.group2.catanbackend.dto.LobbyDto;
 import com.group2.catanbackend.dto.JoinRequestDto;
-import com.group2.catanbackend.dto.game.PlayerDto;
-import com.group2.catanbackend.dto.game.PlayerEventDto;
-import com.group2.catanbackend.dto.game.PlayersInLobbyDto;
-import com.group2.catanbackend.exception.ErrorCode;
-import com.group2.catanbackend.exception.NoSuchGameException;
-import com.group2.catanbackend.exception.NotAuthorizedException;
-import com.group2.catanbackend.exception.NotImplementedException;
+import com.group2.catanbackend.dto.game.*;
+import com.group2.catanbackend.exception.*;
 import com.group2.catanbackend.model.GameDescriptor;
 import com.group2.catanbackend.model.Player;
+import com.group2.catanbackend.model.PlayerState;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,48 +29,91 @@ public class GameService {
     private final Map<String, GameDescriptor> registeredGames = new HashMap<>();
     @Getter
     private final Map<String, RunningInstanceService> runningGames = new HashMap<>();
+    private final TokenService tokenService;
 
     @Autowired
     public GameService(ApplicationContext applicationContext,
-                       MessagingService messagingService){
+                       MessagingService messagingService, TokenService tokenService){
         this.applicationContext = applicationContext;
         this.messagingService = messagingService;
+        this.tokenService = tokenService;
     }
 
-    public String createGame(){
+    public JoinResponseDto createAndJoin(CreateRequestDto requestDto) throws GameException{
         GameDescriptor game = new GameDescriptor();
         String id = game.getId();
-        log.info("Created game: " + id);
         registeredGames.put(id, game);
-        return id;
+        log.info("Created game: " + id);
+        JoinRequestDto joinRequest = new JoinRequestDto(requestDto.getPlayerName(), id);
+        return joinGame(joinRequest);
     }
 
-    public Player joinGame(String token, JoinRequestDto request) throws RuntimeException {
+    public JoinResponseDto joinGame(JoinRequestDto request) throws GameException {
         GameDescriptor game = registeredGames.get(request.getGameID());
         if(game == null)
             throw new NoSuchGameException(ErrorCode.ERROR_GAME_NOT_FOUND + request.getGameID());
 
-        Player p = new Player(token, request.getPlayerName(), game.getId());
-        game.join(p);
-        PlayerDto playerDto = new PlayerDto(p.getDisplayName(), p.getInGameID());
+        String token = tokenService.generateToken();
 
-        notifyNewPlayer(game, playerDto);
+        Player p = new Player(token, request.getPlayerName(), game.getId());
+        p.setPlayerState(PlayerState.IN_LOBBY);
+        game.join(p);
+
+        tokenService.pushToken(token, p);
+
+        PlayerDto playerDto = new PlayerDto(p.getDisplayName(), p.getInGameID(), PlayerState.IN_LOBBY);
+
+        notifyLobbyNewPlayer(game, playerDto);
         log.info("user " + request.getPlayerName() + " joined game " + game.getId());
-        return p;
+
+
+        return new JoinResponseDto(p.getDisplayName(), p.getGameID(), p.getToken(), p.getInGameID());
     }
 
-    public void startGame(String token, String gameID){
-        GameDescriptor game = registeredGames.get(gameID);
+    public void startGame(String token){
+        Player player = tokenService.getPlayerByToken(token);
+        if(player == null)
+            throw new NoSuchTokenException(ErrorCode.ERROR_NO_SUCH_TOKEN);
+
+        GameDescriptor game = registeredGames.get(player.getGameID());
         if(game == null)
-            throw new NoSuchGameException(ErrorCode.ERROR_GAME_NOT_FOUND + gameID);
+            throw new NoSuchGameException(ErrorCode.ERROR_GAME_NOT_FOUND.formatted(player.getGameID()));
         if(!game.getAdmin().getToken().equals(token))
             throw new NotAuthorizedException(ErrorCode.ERROR_NOT_AUTHORIZED.formatted("Start Game: Not Admin}"));
 
         RunningInstanceService service = (RunningInstanceService) applicationContext.getBean("runningInstanceService");
         runningGames.put(game.getId(), service);
         registeredGames.remove(game.getId());
+        service.addPlayers(game.getPlayers());
+        service.setGameId(game.getId());
+        service.start();
     }
 
+    public void leaveGame(String token){
+        Player player = tokenService.getPlayerByToken(token);
+        if(player == null)
+            throw new NoSuchTokenException(ErrorCode.ERROR_NO_SUCH_TOKEN);
+        GameDescriptor gameDescriptor = registeredGames.get(player.getGameID());
+        RunningInstanceService game = runningGames.get(player.getGameID());
+
+        if(gameDescriptor == null && game == null)
+            throw new NoSuchGameException(ErrorCode.ERROR_GAME_NOT_FOUND.formatted(player.getGameID()));
+
+        if(gameDescriptor != null){
+            gameDescriptor.leave(player);
+            tokenService.revokeToken(token);
+            notifyLobbyPlayerLeft(gameDescriptor, player);
+            if(gameDescriptor.getPlayerCount() == 0){
+                registeredGames.remove(gameDescriptor.getId());
+            }
+        }
+        //As a running Game is a service, the notification is handled by it.
+        if(game != null){
+            tokenService.revokeToken(token);
+            game.removePlayer(player);
+        }
+
+    }
     public void makeMove(String token, String gameID, Object gameMove){
         //TODO: Implement
         throw new NotImplementedException(ErrorCode.ERROR_NOT_IMPLEMENTED);
@@ -85,14 +126,16 @@ public class GameService {
                 .toList();
     }
 
-    private void notifyNewPlayer(GameDescriptor gameDescriptor, PlayerDto newPlayer){
-        PlayersInLobbyDto payload = gameDescriptor.getDtoTemplate();
+    private void notifyLobbyNewPlayer(GameDescriptor gameDescriptor, PlayerDto newPlayer){
+        PlayersInLobbyDto data = gameDescriptor.getDtoTemplate();
+        data.setEvent(new PlayerEventDto(PlayerEventDto.Type.PLAYER_JOINED, newPlayer));
+        messagingService.notifyLobby(gameDescriptor.getId(), data);
+    }
 
-        PlayerEventDto playerEventDto = new PlayerEventDto();
-        playerEventDto.setType(PlayerEventDto.Type.PLAYER_JOINED);
-        playerEventDto.setPlayerDto(newPlayer);
+    private void notifyLobbyPlayerLeft(GameDescriptor descriptor, Player p){
+        PlayersInLobbyDto data = descriptor.getDtoTemplate();
+        data.setEvent(new PlayerEventDto(PlayerEventDto.Type.PLAYER_LEFT, p.toPlayerDto()));
 
-        payload.setEvent(playerEventDto);
-        messagingService.notifyLobby(gameDescriptor.getId(), payload);
+        messagingService.notifyLobby(descriptor.getId(), data);
     }
 }

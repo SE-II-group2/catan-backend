@@ -1,10 +1,10 @@
 package com.group2.catanbackend;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.group2.catanbackend.dto.CreateRequestDto;
 import com.group2.catanbackend.dto.JoinRequestDto;
-import com.group2.catanbackend.model.Player;
+import com.group2.catanbackend.dto.JoinResponseDto;
 import com.group2.catanbackend.service.GameService;
-import com.group2.catanbackend.service.TokenService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,17 +33,14 @@ public class GameControllerTest {
     @Autowired
     private GameService gameService;
 
-    @Autowired
-    private TokenService tokenService;
-
 
     @Test
     public void testGamesFoundOnceCreated() throws Exception{
-        String createdGameID = gameService.createGame();
+        JoinResponseDto response = gameService.createAndJoin(new CreateRequestDto("Player"));
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/catan/game/list"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString(createdGameID)));
+                .andExpect(content().string(containsString(response.getGameID())));
     }
 
     @Test
@@ -62,8 +59,7 @@ public class GameControllerTest {
 
     @Test
     public void testCanCreateGame() throws Exception{
-        JoinRequestDto requestDto = new JoinRequestDto();
-        requestDto.setPlayerName("player");
+        CreateRequestDto requestDto = new CreateRequestDto("Player");
 
         mockMvc.perform(
                 MockMvcRequestBuilders
@@ -77,9 +73,8 @@ public class GameControllerTest {
 
     @Test
     public void testCanJoinExistingGame() throws Exception {
-        String gameID = gameService.createGame();
-        JoinRequestDto requestDto = new JoinRequestDto("player", gameID);
-
+        String gameID = gameService.createAndJoin(new CreateRequestDto("Player1")).getGameID();
+        JoinRequestDto requestDto = new JoinRequestDto("Player2", gameID);
         mockMvc.perform(
                 MockMvcRequestBuilders
                         .post("/catan/game/connect")
@@ -89,21 +84,17 @@ public class GameControllerTest {
                 .andExpect(status().isOk());
 
         Assertions.assertEquals(1, gameService.getLobbies().size());
-        Assertions.assertEquals(1, gameService.getLobbies().get(0).getPlayerCount());
+        Assertions.assertEquals(2, gameService.getLobbies().get(0).getPlayerCount());
     }
 
     @Test
     public void testCanStartGameWhenAdmin() throws Exception {
-        String gameID = gameService.createGame();
-        JoinRequestDto requestDto = new JoinRequestDto("player1", gameID);
-        String token = tokenService.generateToken();
-        Player p = gameService.joinGame(token, requestDto);
-        tokenService.pushToken(token, p);
+        JoinResponseDto joinResponse = gameService.createAndJoin(new CreateRequestDto("Player1"));
 
         mockMvc.perform(
                 MockMvcRequestBuilders
                         .post("/catan/game/start")
-                        .header(HttpHeaders.AUTHORIZATION, token))
+                        .header(HttpHeaders.AUTHORIZATION, joinResponse.getToken()))
                 .andExpect(status().isOk());
         Assertions.assertEquals(0, gameService.getRegisteredGames().size());
         Assertions.assertEquals(1, gameService.getRunningGames().size());
@@ -119,26 +110,29 @@ public class GameControllerTest {
 
     @Test
     public void testCannotStartGameWhenNotAdmin() throws Exception{
-        String gameID = gameService.createGame();
-
-        JoinRequestDto requestDto1 = new JoinRequestDto("player1", gameID);
-        String token1 = tokenService.generateToken();
-        Player p1 = gameService.joinGame(token1, requestDto1);
-        tokenService.pushToken(token1, p1);
-
-        JoinRequestDto requestDto2 = new JoinRequestDto("player2", gameID);
-        String token2 = tokenService.generateToken();
-        Player p2 = gameService.joinGame(token2, requestDto2);
-        tokenService.pushToken(token2, p2);
-
+        JoinResponseDto player1 = gameService.createAndJoin(new CreateRequestDto("Player1"));
+        JoinResponseDto player2 = gameService.joinGame(new JoinRequestDto("Player2", player1.getGameID()));
 
         mockMvc.perform(
                         MockMvcRequestBuilders
                                 .post("/catan/game/start")
-                                .header(HttpHeaders.AUTHORIZATION, token2))
+                                .header(HttpHeaders.AUTHORIZATION, player2.getToken()))
                 .andExpect(status().is(HttpStatus.UNAUTHORIZED.value()));
         Assertions.assertEquals(1, gameService.getRegisteredGames().size());
         Assertions.assertEquals(0, gameService.getRunningGames().size());
+    }
+
+    @Test
+    public void testGameRemovedWhenLastPlayerLeaves() throws Exception{
+        JoinResponseDto player1 = gameService.createAndJoin(new CreateRequestDto("Player1"));
+
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                        .post("/catan/game/leave")
+                        .header(HttpHeaders.AUTHORIZATION, player1.getToken())
+                )
+                .andExpect(status().isOk());
+        Assertions.assertNull(gameService.getRegisteredGames().get(player1.getGameID()));
     }
 
 
