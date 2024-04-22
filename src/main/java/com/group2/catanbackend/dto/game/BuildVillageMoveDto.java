@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @AllArgsConstructor
-public class BuildVillageMoveDto {
+public class BuildVillageMoveDto extends GameMoveDto{
     @Getter
     private int row;
     @Getter

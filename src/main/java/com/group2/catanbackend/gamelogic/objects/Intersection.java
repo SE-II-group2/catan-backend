@@ -1,9 +1,11 @@
 package com.group2.catanbackend.gamelogic.objects;
 
-public class Intersection {
-    int playerID;
+import com.group2.catanbackend.model.Player;
 
-    public int getPlayerID(){
-        return playerID;
+public class Intersection {
+    Player player;
+
+    public Player getPlayer(){
+        return player;
     }
 }

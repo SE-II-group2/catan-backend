@@ -2,7 +2,9 @@ package com.group2.catanbackend.gamelogic;
 
 import com.group2.catanbackend.gamelogic.enums.*;
 import com.group2.catanbackend.gamelogic.objects.*;
+import com.group2.catanbackend.model.Player;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,19 +21,14 @@ public class Board {
     @Getter
     private int[][] surroundingHexagons;
     private static final int NON_EXISTING_HEXAGON = 19;
-    private ArrayList<Integer> setupPhaseTurnOrder;
-    private int setupPhaseTurnCounter;
-    private int numOfPlayers;
+    @Setter
     private boolean isSetupPhase = true;
 
-    public Board(int numberOfPlayers){
+    public Board(){
         generateHexagons();
         generateAdjacencyMatrix();
         generateIntersectionsStartingArray();
         generateSurroundingHexagonArray();
-        generateSetupPhaseTurnOrder();
-
-        this.numOfPlayers=numberOfPlayers;
     }
 
     public void distributeResourcesByDiceRoll(int diceRoll) {
@@ -42,40 +39,40 @@ public class Board {
         }
     }
 
-    public void addNewRoad(int playerID, int fromIntersection, int toIntersection){
-        // player has enough Resources
-
+    public boolean addNewRoad(Player player, int fromIntersection, int toIntersection){
         if(isSetupPhase && adjacencyMatrix[fromIntersection][toIntersection] != null && !(adjacencyMatrix[fromIntersection][toIntersection] instanceof Road)){
-            Road road = new Road(playerID);
+            Road road = new Road(player);
             adjacencyMatrix[fromIntersection][toIntersection] = road;
             adjacencyMatrix[toIntersection][fromIntersection] = road;
-            return;
+            return true;
         }
 
-        if((adjacencyMatrix[fromIntersection][toIntersection] != null && !(adjacencyMatrix[fromIntersection][toIntersection] instanceof Road)) && isNextToOwnRoad(toIntersection,playerID)){
-            Road road = new Road(playerID);
+        if((adjacencyMatrix[fromIntersection][toIntersection] != null && !(adjacencyMatrix[fromIntersection][toIntersection] instanceof Road)) && isNextToOwnRoad(toIntersection,player)){
+            Road road = new Road(player);
             adjacencyMatrix[fromIntersection][toIntersection] = road;
             adjacencyMatrix[toIntersection][fromIntersection] = road;
+            return true;
         }
+        return false;
     }
 
-    public void addNewVillage(int playerID, int row, int col){
-        // player has enough Resources
+    public boolean addNewVillage(Player player, int row, int col){
         int intersection = translateIntersectionToAdjacencyMatrix(row,col);
 
         if(isSetupPhase && intersections[row][col] != null && noBuildingAdjacent(row, col) && !(intersections[row][col] instanceof Building)){
-            intersections[row][col] = new Building(playerID,BuildingType.VILLAGE);
+            intersections[row][col] = new Building(player,BuildingType.VILLAGE);
             Building village = (Building)intersections[row][col];
             addBuildingToSurroundingHexagons(intersection,village);
-            return;
+            return true;
         }
 
-        if((intersections[row][col] != null) && noBuildingAdjacent(row, col) && isNextToOwnRoad(intersection,playerID) && !(intersections[row][col] instanceof Building)){
-            intersections[row][col] = new Building(playerID,BuildingType.VILLAGE);
+        if((intersections[row][col] != null) && noBuildingAdjacent(row, col) && isNextToOwnRoad(intersection,player) && !(intersections[row][col] instanceof Building)){
+            intersections[row][col] = new Building(player,BuildingType.VILLAGE);
             Building village = (Building)intersections[row][col];
             addBuildingToSurroundingHexagons(intersection,village);
+            return true;
         }
-
+        return false;
     }
 
     private void addBuildingToSurroundingHexagons(int intersection, Building building){
@@ -124,10 +121,10 @@ public class Board {
         return !nextToBuilding;
     }
 
-    public boolean isNextToOwnRoad(int intersection, int playerID){
+    public boolean isNextToOwnRoad(int intersection, Player player){
         //check the specific intersection in the adjacencyMatrix if there are any roads, and if it belongs to the playerID who wants to build
         for(int i = 0; i < 54; i++){
-            if((adjacencyMatrix[i][intersection] instanceof Road) && (adjacencyMatrix[i][intersection].getPlayerID() == playerID)){
+            if((adjacencyMatrix[i][intersection] instanceof Road) && (adjacencyMatrix[i][intersection].getPlayer() == player)){
                 return true;
             }
         }
@@ -218,14 +215,6 @@ public class Board {
         surroundingHexagons[3] = new int[] {19,19,19,19,19,19,19,19,19,0,4 ,5 ,5 ,6 ,19,19,19,19,3 ,8 ,9 ,9 ,10,10,11,19,19,19,19,12,13,13,14,14,15,15,19,19,19,19,16,17,17,18,18,19,19,19,19,19,19,19,19,19};
     }
 
-    private void generateSetupPhaseTurnOrder() {
-        ArrayList<Integer> setupPhaseTurnOrder = new ArrayList<>();
-        for (int i = 0; i < numOfPlayers; i++) {
-            setupPhaseTurnOrder.add(i);
-        }
-        for (int i = numOfPlayers - 2; i >= 0; i--) {
-            setupPhaseTurnOrder.add(i);
-        }
-    }
+
 }
 

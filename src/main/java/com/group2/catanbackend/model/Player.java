@@ -14,6 +14,7 @@ public class Player {
     private PlayerState playerState;
     @Getter
     private final int[] resources = new int[]{0,0,0,0,0};
+
     public Player(String token, String displayName, String gameID){
         this.token = token;
         this.displayName = displayName;

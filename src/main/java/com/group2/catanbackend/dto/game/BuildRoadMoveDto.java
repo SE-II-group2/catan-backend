@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @AllArgsConstructor
-public class BuildRoadMoveDto {
+public class BuildRoadMoveDto extends GameMoveDto{
     @Getter
     private int fromIntersection;
     @Getter

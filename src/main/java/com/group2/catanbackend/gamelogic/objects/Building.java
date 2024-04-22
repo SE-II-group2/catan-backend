@@ -2,15 +2,18 @@ package com.group2.catanbackend.gamelogic.objects;
 
 import com.group2.catanbackend.gamelogic.enums.BuildingType;
 import com.group2.catanbackend.gamelogic.enums.ResourceDistribution;
+import com.group2.catanbackend.model.Player;
 import lombok.Getter;
 
 public class Building extends Intersection {
 
     @Getter
     private final BuildingType type;
+    @Getter
+    private final Player owner;
 
-    public Building(int playerID, BuildingType type) {
-        this.playerID = playerID;
+    public Building(Player player, BuildingType type) {
+        this.owner=player;
         this.type = type;
     }
 
@@ -21,7 +24,7 @@ public class Building extends Intersection {
                 resources[i] *= 2; // Multiply the resources by 2 for cities
             }
         }
-        //Give resources to the controlling player
+        owner.adjustResources(resources);
     }
 
 }

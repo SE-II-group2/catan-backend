@@ -29,9 +29,8 @@ public class RunningInstanceService {
         this.messagingService = messagingService;
     }
 
-    public void makeMove(Object gameMove)  {
-        //TODO: Implement
-        throw new NotImplementedException(ErrorCode.ERROR_NOT_IMPLEMENTED);
+    public void makeMove(GameMoveDto gameMove, Player player)  {
+        if(gameLogicController!=null)gameLogicController.makeMove(gameMove, player);
     }
 
     public void addPlayers(List<Player> players){
@@ -45,7 +44,7 @@ public class RunningInstanceService {
         }
         notifyGameStart();
         started = true;
-        gameLogicController = new GameLogicController(players, this, gameId);
+        gameLogicController = new GameLogicController(players, messagingService, gameId);
     }
 
     //Players are not removed once the game is started.

@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @AllArgsConstructor
-public class RollDiceDto {
+public class RollDiceDto extends GameMoveDto{
     @Getter
     private int diceRoll;
 }

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.group2.catanbackend.gamelogic.enums.*;
 import com.group2.catanbackend.gamelogic.objects.*;
+import com.group2.catanbackend.model.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -17,13 +18,15 @@ import java.util.List;
 public class BoardUnitTests {
 
     private Board board;
+    private Player player;
 
     @Mock
     private Building buildingMock;
 
     @BeforeEach
     public void setUp() {
-        board = new Board(1);
+        player = new Player("Token", "Displayname", "this");
+        board = new Board();
         buildingMock = mock(Building.class); // Create a mock object for Building
     }
 
@@ -86,22 +89,22 @@ public class BoardUnitTests {
 
     @Test
     public void testAddVillageNormalCase() {
-        board.addNewVillage(1, 2, 5);
-        board.addNewVillage(1, 2, 7);
-        board.addNewVillage(1, 1, 6);
+        board.addNewVillage(player, 2, 5);
+        board.addNewVillage(player, 2, 7);
+        board.addNewVillage(player, 1, 6);
         List<Hexagon> hexList = board.getHexagonList();
         assertEquals(3, hexList.get(5).getNumOfAdjacentBuildings());
         assertEquals(1, hexList.get(2).getNumOfAdjacentBuildings());
         assertEquals(0, hexList.get(3).getNumOfAdjacentBuildings());
 
-        board.addNewVillage(1, 2, 6);
+        board.addNewVillage(player, 2, 6);
         assertEquals(3, hexList.get(5).getNumOfAdjacentBuildings());
     }
 
     @Test
     public void testAddVillageEdgeOfBoard() {
-        board.addNewVillage(1, 2, 0);
-        board.addNewVillage(1, 1, 1);
+        board.addNewVillage(player, 2, 0);
+        board.addNewVillage(player, 1, 1);
 
         List<Hexagon> hexList = board.getHexagonList();
         assertEquals(1, hexList.get(7).getNumOfAdjacentBuildings());
@@ -110,11 +113,9 @@ public class BoardUnitTests {
 
     @Test
     public void testAddRoad() {
-        board.addNewRoad(1, 0, 1);
-        assertTrue(board.isNextToOwnRoad(1, 1));
-        assertTrue(board.isNextToOwnRoad(0, 1));
-        assertFalse(board.isNextToOwnRoad(8, 1));
+        board.addNewRoad(player, 0, 1);
+        assertTrue(board.isNextToOwnRoad(1, player));
+        assertTrue(board.isNextToOwnRoad(0, player));
+        assertFalse(board.isNextToOwnRoad(8, player));
     }
 }
-
-
