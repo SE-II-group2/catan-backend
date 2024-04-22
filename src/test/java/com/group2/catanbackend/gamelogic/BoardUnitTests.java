@@ -18,14 +18,16 @@ import java.util.List;
 public class BoardUnitTests {
 
     private Board board;
-    private Player player;
+    private Player player1;
+    private Player player2;
 
     @Mock
     private Building buildingMock;
 
     @BeforeEach
     public void setUp() {
-        player = new Player("Token", "Displayname", "this");
+        player1 = new Player("Token1", "Player One(1)", "this");
+        player1 = new Player("Token2", "Player Two(2)", "this");
         board = new Board();
         buildingMock = mock(Building.class); // Create a mock object for Building
     }
@@ -89,22 +91,22 @@ public class BoardUnitTests {
 
     @Test
     public void testAddVillageNormalCase() {
-        board.addNewVillage(player, 2, 5);
-        board.addNewVillage(player, 2, 7);
-        board.addNewVillage(player, 1, 6);
+        board.addNewVillage(player1, 2, 5);
+        board.addNewVillage(player1, 2, 7);
+        board.addNewVillage(player1, 1, 6);
         List<Hexagon> hexList = board.getHexagonList();
         assertEquals(3, hexList.get(5).getNumOfAdjacentBuildings());
         assertEquals(1, hexList.get(2).getNumOfAdjacentBuildings());
         assertEquals(0, hexList.get(3).getNumOfAdjacentBuildings());
 
-        board.addNewVillage(player, 2, 6);
+        board.addNewVillage(player1, 2, 6);
         assertEquals(3, hexList.get(5).getNumOfAdjacentBuildings());
     }
 
     @Test
     public void testAddVillageEdgeOfBoard() {
-        board.addNewVillage(player, 2, 0);
-        board.addNewVillage(player, 1, 1);
+        board.addNewVillage(player1, 2, 0);
+        board.addNewVillage(player1, 1, 1);
 
         List<Hexagon> hexList = board.getHexagonList();
         assertEquals(1, hexList.get(7).getNumOfAdjacentBuildings());
@@ -113,9 +115,9 @@ public class BoardUnitTests {
 
     @Test
     public void testAddRoad() {
-        board.addNewRoad(player, 0, 1);
-        assertTrue(board.isNextToOwnRoad(1, player));
-        assertTrue(board.isNextToOwnRoad(0, player));
-        assertFalse(board.isNextToOwnRoad(8, player));
+        board.addNewRoad(player1, 0, 1);
+        assertTrue(board.isNextToOwnRoad(1, player1));
+        assertTrue(board.isNextToOwnRoad(0, player1));
+        assertFalse(board.isNextToOwnRoad(8, player1));
     }
 }

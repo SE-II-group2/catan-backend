@@ -15,13 +15,15 @@ import java.util.List;
 
 public class GameLogicController {
     @Getter
-    private Board board;
+    private final Board board;
     @Getter
-    private List<Player> players;
+    private final List<Player> players;
     private MessagingService messagingService;
     @Getter
-    private String gameId;
-    private ArrayList<String> setupPhaseTurnOrder;
+    private final String gameId;
+    @Getter
+    private ArrayList<Player> setupPhaseTurnOrder;
+    @Getter
     private ArrayList<Player> turnOrder;
     private boolean isSetupPhase = true;
 
@@ -62,7 +64,7 @@ public class GameLogicController {
 
     private void makeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
         if (isSetupPhase) {
-            if (!setupPhaseTurnOrder.get(0).equalsIgnoreCase(player.getToken()))
+            if (!(setupPhaseTurnOrder.get(0) == player))
                 throw new NotActivePlayerException("Not the active player right now");
             if (board.addNewRoad(player, buildRoadMove.getFromIntersection(), buildRoadMove.getToIntersection())) {
                 setupPhaseTurnOrder.remove(0); //after you set down your road your turn ends during the setup phase
@@ -83,16 +85,17 @@ public class GameLogicController {
 
     private void makeBuildVillageMove(BuildVillageMoveDto buildVillageMove, Player player) {
         if (isSetupPhase) {
-            if (!setupPhaseTurnOrder.get(0).equalsIgnoreCase(player.getToken()))
+            if (!(setupPhaseTurnOrder.get(0) == player))
                 throw new NotActivePlayerException("Not the active player right now");
             if (!board.addNewVillage(player, buildVillageMove.getRow(), buildVillageMove.getCol())) {
                 throw new InvalidGameMoveException("cant build a Village here!");
             }
+            return;
         }
         if(turnOrder.get(0)!=player)throw new NotActivePlayerException("Not the active player right now");
         if(player.resourcesSufficient(ResourceCost.VILLAGE.getCost())){
-            if(board.addNewVillage(player, buildVillageMove.getCol(), buildVillageMove.getRow())){
-                player.adjustResources(ResourceCost.ROAD.getCost());
+            if(board.addNewVillage(player, buildVillageMove.getRow(), buildVillageMove.getCol())){
+                player.adjustResources(ResourceCost.VILLAGE.getCost());
             }
         }
     }
@@ -102,14 +105,14 @@ public class GameLogicController {
     }
 
     private void generateSetupPhaseTurnOrder(int numOfPlayers) {
-        ArrayList<String> setupPhaseTurnOrder = new ArrayList<>();
-        ArrayList<Player> turnOrder = new ArrayList<>();
+        setupPhaseTurnOrder = new ArrayList<>();
+        turnOrder = new ArrayList<>();
         for (int i = 0; i < numOfPlayers; i++) {
-            setupPhaseTurnOrder.add(players.get(i).getToken());
+            setupPhaseTurnOrder.add(players.get(i));
             turnOrder.add(players.get(i));
         }
-        for (int i = numOfPlayers - 2; i >= 0; i--) {
-            setupPhaseTurnOrder.add(players.get(i).getToken());
+        for (int i = numOfPlayers - 1; i >= 0; i--) {
+            setupPhaseTurnOrder.add(players.get(i));
         }
     }
 }

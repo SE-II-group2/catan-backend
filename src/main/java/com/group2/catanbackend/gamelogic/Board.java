@@ -47,7 +47,7 @@ public class Board {
             return true;
         }
 
-        if((adjacencyMatrix[fromIntersection][toIntersection] != null && !(adjacencyMatrix[fromIntersection][toIntersection] instanceof Road)) && isNextToOwnRoad(toIntersection,player)){
+        if((adjacencyMatrix[fromIntersection][toIntersection] != null && !(adjacencyMatrix[fromIntersection][toIntersection] instanceof Road)) && isNextToOwnRoad(fromIntersection,player)){
             Road road = new Road(player);
             adjacencyMatrix[fromIntersection][toIntersection] = road;
             adjacencyMatrix[toIntersection][fromIntersection] = road;

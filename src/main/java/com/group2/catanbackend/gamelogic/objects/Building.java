@@ -9,11 +9,9 @@ public class Building extends Intersection {
 
     @Getter
     private final BuildingType type;
-    @Getter
-    private final Player owner;
 
     public Building(Player player, BuildingType type) {
-        this.owner=player;
+        this.player = player;
         this.type = type;
     }
 
@@ -24,7 +22,7 @@ public class Building extends Intersection {
                 resources[i] *= 2; // Multiply the resources by 2 for cities
             }
         }
-        owner.adjustResources(resources);
+        player.adjustResources(resources);
     }
 
 }
