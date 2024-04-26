@@ -3,12 +3,18 @@ package com.group2.catanbackend.dto.game;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@AllArgsConstructor
+
 public class BuildVillageMoveDto extends GameMoveDto{
+    public BuildVillageMoveDto(int row, int col) {
+        this.row = row;
+        this.col = col;
+        this.setEventType(MessageType.GAME_MOVE);
+    }
+
     @Getter
-    private int row;
+    private final int row;
     @Getter
-    private int col;
+    private final int col;
 
 }
 

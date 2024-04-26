@@ -2,6 +2,7 @@ package com.group2.catanbackend.service;
 
 import com.group2.catanbackend.dto.game.*;
 import com.group2.catanbackend.exception.ErrorCode;
+import com.group2.catanbackend.exception.GameException;
 import com.group2.catanbackend.exception.NotImplementedException;
 import com.group2.catanbackend.gamelogic.GameLogicController;
 import com.group2.catanbackend.model.Player;
@@ -30,7 +31,13 @@ public class RunningInstanceService {
     }
 
     public void makeMove(GameMoveDto gameMove, Player player)  {
-        if(gameLogicController!=null)gameLogicController.makeMove(gameMove, player);
+        try {
+            if(gameLogicController!=null)gameLogicController.makeMove(gameMove, player);
+        }
+        catch (GameException e){
+            messagingService.notifyUser(player.getToken(), new InvalidMoveDto(e.getMessage()));
+        }
+
     }
 
     public void addPlayers(List<Player> players){
@@ -64,6 +71,4 @@ public class RunningInstanceService {
         //maybe add the initialized gameBoard here?
         messagingService.notifyLobby(gameId, dto);
     }
-
-    //TODO: Bootstrap game. Create board etc.
 }

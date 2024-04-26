@@ -8,6 +8,7 @@ import com.group2.catanbackend.exception.UnsupportedGameMoveException;
 import com.group2.catanbackend.gamelogic.enums.ResourceCost;
 import com.group2.catanbackend.model.Player;
 import com.group2.catanbackend.service.MessagingService;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ public class GameLogicController {
     private final Board board;
     @Getter
     private final List<Player> players;
-    private MessagingService messagingService;
+    private final MessagingService messagingService;
     @Getter
     private final String gameId;
     @Getter
@@ -27,11 +28,10 @@ public class GameLogicController {
     private ArrayList<Player> turnOrder;
     private boolean isSetupPhase = true;
 
-    public GameLogicController(List<Player> players, MessagingService runningInstanceService, String gameId) {
+    public GameLogicController(@NotNull List<Player> players, @NotNull MessagingService runningInstanceService, @NotNull String gameId) {
         this.players = players;
         this.messagingService = runningInstanceService;
         this.gameId = gameId;
-
         board = new Board();
         generateSetupPhaseTurnOrder(players.size());
     }
@@ -40,9 +40,9 @@ public class GameLogicController {
         switch (gameMove.getClass().getSimpleName()) {
             case "RollDiceDto" -> {
                 if (isSetupPhase) throw new InvalidGameMoveException("cant roll dice during setupPhase");
-                if(turnOrder.get(0)!=player)throw new NotActivePlayerException("Not the active player right now");
+                if (turnOrder.get(0) != player) throw new NotActivePlayerException("Not the active player right now");
                 RollDiceDto rollDiceMove = (RollDiceDto) gameMove;
-                makeRollDiceMove(rollDiceMove);
+                makeRollDiceMove(rollDiceMove, player);
             }
             case "BuildRoadMoveDto" -> {
                 BuildRoadMoveDto buildRoadMove = (BuildRoadMoveDto) gameMove;
@@ -52,11 +52,13 @@ public class GameLogicController {
                 BuildVillageMoveDto buildVillageMove = (BuildVillageMoveDto) gameMove;
                 makeBuildVillageMove(buildVillageMove, player);
             }
-            case "EndTurnMoveDto" ->{
-                if(isSetupPhase)throw new InvalidGameMoveException("the Turn is automatically passed after setting down your road, no need to send this");
-                if(turnOrder.get(0)!=player)throw new NotActivePlayerException("Not the active player right now");
+            case "EndTurnMoveDto" -> {
+                if (isSetupPhase)
+                    throw new InvalidGameMoveException("the Turn is automatically passed after setting down your road, no need to send this");
+                if (turnOrder.get(0) != player) throw new NotActivePlayerException("Not the active player right now");
                 turnOrder.remove(0);
                 turnOrder.add(player);
+                messagingService.notifyGameProgress(gameId, new GameProgressDto(gameMove, new PlayerDto(player.getDisplayName(), player.getInGameID(), player.getPlayerState())));
             }
             default -> throw new UnsupportedGameMoveException("Not a valid Dto Format");
         }
@@ -72,36 +74,45 @@ public class GameLogicController {
                     isSetupPhase = false;
                     board.setSetupPhase(false);
                 }
-            }
+                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildRoadMove, new PlayerDto(player.getDisplayName(), player.getInGameID(), player.getPlayerState())));
+            } else throw new InvalidGameMoveException("Not a valid place to build a Road!");
             return;
         }
-        if(turnOrder.get(0)!=player)throw new NotActivePlayerException("Not the active player right now");
-        if(player.resourcesSufficient(ResourceCost.ROAD.getCost())){
-            if(board.addNewRoad(player, buildRoadMove.getFromIntersection(), buildRoadMove.getToIntersection())){
+        if (turnOrder.get(0) != player) throw new NotActivePlayerException("Not the active player right now");
+        if (player.resourcesSufficient(ResourceCost.ROAD.getCost())) {
+            if (board.addNewRoad(player, buildRoadMove.getFromIntersection(), buildRoadMove.getToIntersection())) {
                 player.adjustResources(ResourceCost.ROAD.getCost());
-            }
-        }
+                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildRoadMove, new PlayerDto(player.getDisplayName(), player.getInGameID(), player.getPlayerState())));
+            } else throw new InvalidGameMoveException("Not a valid place to build a Road!");
+        } else throw new InvalidGameMoveException("Not enough Resources!");
     }
 
     private void makeBuildVillageMove(BuildVillageMoveDto buildVillageMove, Player player) {
         if (isSetupPhase) {
             if (!(setupPhaseTurnOrder.get(0) == player))
                 throw new NotActivePlayerException("Not the active player right now");
-            if (!board.addNewVillage(player, buildVillageMove.getRow(), buildVillageMove.getCol())) {
-                throw new InvalidGameMoveException("cant build a Village here!");
-            }
+            if (board.addNewVillage(player, buildVillageMove.getRow(), buildVillageMove.getCol())) {
+                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, new PlayerDto(player.getDisplayName(), player.getInGameID(), player.getPlayerState())));
+            } else throw new InvalidGameMoveException("Cant build a Village here!");
+
             return;
         }
-        if(turnOrder.get(0)!=player)throw new NotActivePlayerException("Not the active player right now");
-        if(player.resourcesSufficient(ResourceCost.VILLAGE.getCost())){
-            if(board.addNewVillage(player, buildVillageMove.getRow(), buildVillageMove.getCol())){
+        if (turnOrder.get(0) != player) throw new NotActivePlayerException("Not the active player right now");
+        if (player.resourcesSufficient(ResourceCost.VILLAGE.getCost())) {
+            if (board.addNewVillage(player, buildVillageMove.getRow(), buildVillageMove.getCol())) {
                 player.adjustResources(ResourceCost.VILLAGE.getCost());
+                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, new PlayerDto(player.getDisplayName(), player.getInGameID(), player.getPlayerState())));
+            }
+            else {
+                throw new InvalidGameMoveException("Cant build a Village here!");
             }
         }
+        else throw new InvalidGameMoveException("Not enough Resources!");
     }
 
-    private void makeRollDiceMove(RollDiceDto rollDiceDto) {
+    private void makeRollDiceMove(RollDiceDto rollDiceDto, Player player) {
         board.distributeResourcesByDiceRoll(rollDiceDto.getDiceRoll());
+        messagingService.notifyGameProgress(gameId, new GameProgressDto(rollDiceDto, new PlayerDto(player.getDisplayName(), player.getInGameID(), player.getPlayerState())));
     }
 
     private void generateSetupPhaseTurnOrder(int numOfPlayers) {
