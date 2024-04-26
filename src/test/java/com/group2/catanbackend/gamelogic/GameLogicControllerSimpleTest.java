@@ -6,11 +6,15 @@ import com.group2.catanbackend.exception.NotActivePlayerException;
 import com.group2.catanbackend.gamelogic.objects.Building;
 import com.group2.catanbackend.gamelogic.objects.Road;
 import com.group2.catanbackend.model.Player;
+import com.group2.catanbackend.service.MessagingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 
 public class GameLogicControllerSimpleTest {
@@ -21,14 +25,19 @@ public class GameLogicControllerSimpleTest {
     GameMoveDto moveDto;
     private final ArrayList<Player> playersList = new ArrayList<>();
 
+    @Mock
+    MessagingService messagingService;
 
     @BeforeEach
     public void setUp() {
         player1 = new Player("Token1", "Player One(1)", "this");
+        player1.setInGameID(1);
         player2 = new Player("Token2", "Player Two(2)", "this");
+        player2.setInGameID(1);
         playersList.add(player1);
         playersList.add(player2);
-        gameLogicController = new GameLogicController(playersList, null, "this");
+        messagingService = mock(MessagingService.class);
+        gameLogicController = new GameLogicController(playersList, messagingService, "this");
 
     }
 

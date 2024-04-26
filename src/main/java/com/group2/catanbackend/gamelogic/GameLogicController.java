@@ -65,7 +65,7 @@ public class GameLogicController {
                 if (turnOrder.get(0) != player) throw new NotActivePlayerException("Not the active player right now");
                 turnOrder.remove(0);
                 turnOrder.add(player);
-                messagingService.notifyGameProgress(gameId, new GameProgressDto(gameMove, new PlayerDto(player.getDisplayName(), player.getInGameID(), player.getPlayerState())));
+                messagingService.notifyGameProgress(gameId, new GameProgressDto(gameMove, player.toPlayerDto()));
             }
             default -> throw new UnsupportedGameMoveException("Unknown DTO Format");
         }
@@ -81,7 +81,7 @@ public class GameLogicController {
                     isSetupPhase = false;
                     board.setSetupPhase(false);
                 }
-                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildRoadMove, new PlayerDto(player.getDisplayName(), player.getInGameID(), player.getPlayerState())));
+                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildRoadMove, player.toPlayerDto()));
             } else throw new InvalidGameMoveException("Not a valid place to build a Road!");
             return;
         }
@@ -89,7 +89,7 @@ public class GameLogicController {
         if (player.resourcesSufficient(ResourceCost.ROAD.getCost())) {
             if (board.addNewRoad(player, buildRoadMove.getFromIntersection(), buildRoadMove.getToIntersection())) {
                 player.adjustResources(ResourceCost.ROAD.getCost());
-                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildRoadMove, new PlayerDto(player.getDisplayName(), player.getInGameID(), player.getPlayerState())));
+                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildRoadMove, player.toPlayerDto()));
             } else throw new InvalidGameMoveException("Not a valid place to build a Road!");
         } else throw new InvalidGameMoveException("Not enough Resources!");
     }
@@ -99,7 +99,7 @@ public class GameLogicController {
             if (!(setupPhaseTurnOrder.get(0) == player))
                 throw new NotActivePlayerException("Not the active player right now");
             if (board.addNewVillage(player, buildVillageMove.getRow(), buildVillageMove.getCol())) {
-                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, new PlayerDto(player.getDisplayName(), player.getInGameID(), player.getPlayerState())));
+                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, player.toPlayerDto()));
             } else throw new InvalidGameMoveException("Cant build a Village here!");
 
             return;
@@ -108,7 +108,7 @@ public class GameLogicController {
         if (player.resourcesSufficient(ResourceCost.VILLAGE.getCost())) {
             if (board.addNewVillage(player, buildVillageMove.getRow(), buildVillageMove.getCol())) {
                 player.adjustResources(ResourceCost.VILLAGE.getCost());
-                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, new PlayerDto(player.getDisplayName(), player.getInGameID(), player.getPlayerState())));
+                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, player.toPlayerDto()));
             }
             else {
                 throw new InvalidGameMoveException("Cant build a Village here!");
@@ -119,7 +119,7 @@ public class GameLogicController {
 
     private void makeRollDiceMove(RollDiceDto rollDiceDto, Player player) {
         board.distributeResourcesByDiceRoll(rollDiceDto.getDiceRoll());
-        messagingService.notifyGameProgress(gameId, new GameProgressDto(rollDiceDto, new PlayerDto(player.getDisplayName(), player.getInGameID(), player.getPlayerState())));
+        messagingService.notifyGameProgress(gameId, new GameProgressDto(rollDiceDto, player.toPlayerDto()));
     }
 
     private void generateSetupPhaseTurnOrder(int numOfPlayers) {
