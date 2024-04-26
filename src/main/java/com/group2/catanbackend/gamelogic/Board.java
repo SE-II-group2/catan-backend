@@ -148,7 +148,7 @@ public class Board {
         List<Location> locations = new ArrayList<>();
         List<Integer> values = new ArrayList<>();
 
-        // Copy locations and values lists to ensure original lists remain unchanged
+        // Copy locations and values lists to ensure original lists remain unchanged (19 locations total)
         Collections.addAll(locations, Location.HILLS, Location.HILLS, Location.HILLS, Location.FOREST,
                 Location.FOREST, Location.FOREST, Location.FOREST, Location.MOUNTAINS, Location.MOUNTAINS,
                 Location.MOUNTAINS, Location.FIELDS, Location.FIELDS, Location.FIELDS, Location.FIELDS,
@@ -160,7 +160,8 @@ public class Board {
         Collections.shuffle(locations);
         Collections.shuffle(values);
 
-        for (Location location : locations) {
+        for (int i = 0; i<locations.size(); i++) {
+            Location location = locations.get(i);
             int value;
             if (location == Location.DESERT) {
                 value = 0; // Desert location should have value 0
@@ -176,7 +177,7 @@ public class Board {
                 case MOUNTAINS -> ResourceDistribution.MOUNTAINS;
                 default -> ResourceDistribution.DESERT;
             };
-            hexagonList.add(new Hexagon(location, resourceDistribution, value));
+            hexagonList.add(new Hexagon(location, resourceDistribution, value, i));
         }
     }
 

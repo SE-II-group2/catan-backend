@@ -27,7 +27,7 @@ public class BoardUnitTests {
     @BeforeEach
     public void setUp() {
         player1 = new Player("Token1", "Player One(1)", "this");
-        player1 = new Player("Token2", "Player Two(2)", "this");
+        player2 = new Player("Token2", "Player Two(2)", "this");
         board = new Board();
         buildingMock = mock(Building.class); // Create a mock object for Building
     }
@@ -53,7 +53,7 @@ public class BoardUnitTests {
         List<Integer> valuesActual = new ArrayList<>();
 
         for (Hexagon hexagon : board.getHexagonList()) {
-            locationsActual.add(hexagon.getType());
+            locationsActual.add(hexagon.getLocation());
             valuesActual.add(hexagon.getRollValue());
         }
 
@@ -69,7 +69,7 @@ public class BoardUnitTests {
     public void testGenerateHexagonsDesertTileCorrectness() {
         boolean hasDesertTile = false;
         for (Hexagon hexagon : board.getHexagonList()) {
-            if (hexagon.getType().equals(Location.DESERT)) {
+            if (hexagon.getLocation().equals(Location.DESERT)) {
                 assertEquals(0, hexagon.getRollValue());
                 assertArrayEquals(new int[]{0, 0, 0, 0, 0}, hexagon.getDistribution().getDistribution());
                 hasDesertTile = true;

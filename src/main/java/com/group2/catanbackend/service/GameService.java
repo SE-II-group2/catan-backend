@@ -123,7 +123,6 @@ public class GameService {
         if(game == null)
             throw new NoSuchGameException(ErrorCode.ERROR_GAME_NOT_FOUND.formatted(player.getGameID()));
         game.makeMove(gameMove, player);
-        throw new NotImplementedException(ErrorCode.ERROR_NOT_IMPLEMENTED);
     }
 
     public List<LobbyDto> getLobbies(){

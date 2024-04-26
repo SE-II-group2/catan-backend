@@ -19,7 +19,7 @@ public class GameLogicControllerSimpleTest {
     private Player player1;
     private Player player2;
     GameMoveDto moveDto;
-    private ArrayList<Player> playersList = new ArrayList<Player>();
+    private final ArrayList<Player> playersList = new ArrayList<>();
 
 
     @BeforeEach
@@ -29,6 +29,7 @@ public class GameLogicControllerSimpleTest {
         playersList.add(player1);
         playersList.add(player2);
         gameLogicController = new GameLogicController(playersList, null, "this");
+
     }
 
     @Test

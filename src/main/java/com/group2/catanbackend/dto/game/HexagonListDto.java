@@ -1,14 +1,18 @@
 package com.group2.catanbackend.dto.game;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.List;
 
-@AllArgsConstructor
-public class HexagonListDto {
+
+public class HexagonListDto extends MessageDto{
+    public HexagonListDto(List<HexagonDto> hexagons) {
+        this.hexagons = hexagons;
+        this.setEventType(MessageType.GAME_OBJECT);
+    }
+
     @Getter
-    private List<HexagonDto> hexagons;
+    private final List<HexagonDto> hexagons;
 }
 
 

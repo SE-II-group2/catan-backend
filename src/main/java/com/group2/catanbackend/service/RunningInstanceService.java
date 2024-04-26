@@ -1,9 +1,7 @@
 package com.group2.catanbackend.service;
 
 import com.group2.catanbackend.dto.game.*;
-import com.group2.catanbackend.exception.ErrorCode;
 import com.group2.catanbackend.exception.GameException;
-import com.group2.catanbackend.exception.NotImplementedException;
 import com.group2.catanbackend.gamelogic.GameLogicController;
 import com.group2.catanbackend.model.Player;
 import com.group2.catanbackend.model.PlayerState;

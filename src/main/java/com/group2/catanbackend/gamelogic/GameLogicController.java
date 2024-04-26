@@ -6,6 +6,7 @@ import com.group2.catanbackend.exception.InvalidGameMoveException;
 import com.group2.catanbackend.exception.NotActivePlayerException;
 import com.group2.catanbackend.exception.UnsupportedGameMoveException;
 import com.group2.catanbackend.gamelogic.enums.ResourceCost;
+import com.group2.catanbackend.gamelogic.objects.Hexagon;
 import com.group2.catanbackend.model.Player;
 import com.group2.catanbackend.service.MessagingService;
 import jakarta.validation.constraints.NotNull;
@@ -28,12 +29,18 @@ public class GameLogicController {
     private ArrayList<Player> turnOrder;
     private boolean isSetupPhase = true;
 
-    public GameLogicController(@NotNull List<Player> players, @NotNull MessagingService runningInstanceService, @NotNull String gameId) {
+    public GameLogicController(@NotNull List<Player> players, @NotNull MessagingService messagingService, @NotNull String gameId) {
         this.players = players;
-        this.messagingService = runningInstanceService;
+        this.messagingService = messagingService;
         this.gameId = gameId;
         board = new Board();
         generateSetupPhaseTurnOrder(players.size());
+
+        List<HexagonDto> hexagonDtos = new ArrayList<>();
+        for(Hexagon hexagon : board.getHexagonList()){
+            hexagonDtos.add(new HexagonDto(hexagon.getLocation(), hexagon.getDistribution(), hexagon.getRollValue(), hexagon.getId()));
+        }
+        messagingService.notifyLobby(gameId, new HexagonListDto(hexagonDtos));
     }
 
     public void makeMove(GameMoveDto gameMove, Player player) throws GameException {
@@ -60,7 +67,7 @@ public class GameLogicController {
                 turnOrder.add(player);
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(gameMove, new PlayerDto(player.getDisplayName(), player.getInGameID(), player.getPlayerState())));
             }
-            default -> throw new UnsupportedGameMoveException("Not a valid Dto Format");
+            default -> throw new UnsupportedGameMoveException("Unknown DTO Format");
         }
     }
 

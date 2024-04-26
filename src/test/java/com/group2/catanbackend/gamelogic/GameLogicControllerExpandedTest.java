@@ -141,7 +141,8 @@ public class GameLogicControllerExpandedTest {
                 Location.MOUNTAINS, Location.PASTURE, Location.FOREST);
         Collections.addAll(values, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12);
 
-        for (Location location : locations) {
+        for (int i = 0; i<locations.size(); i++) {
+            Location location = locations.get(i);
             int value;
             if (location == Location.DESERT) {
                 value = 0; // Desert location should have value 0
@@ -157,7 +158,7 @@ public class GameLogicControllerExpandedTest {
                 case MOUNTAINS -> ResourceDistribution.MOUNTAINS;
                 default -> ResourceDistribution.DESERT;
             };
-            hexagonList.add(new Hexagon(location, resourceDistribution, value));
+            hexagonList.add(new Hexagon(location, resourceDistribution, value, i));
         }
 
         try {
