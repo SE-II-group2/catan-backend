@@ -29,6 +29,7 @@ public class GameLogicController {
     private ArrayList<Player> turnOrder;
     private boolean isSetupPhase = true;
     private static final int VICTORYPOINTSFORVICTORY = 10;
+    @Getter
     private boolean gameover = false;
 
     public GameLogicController(@NotNull List<Player> players, @NotNull MessagingService messagingService, @NotNull String gameId) {
@@ -109,7 +110,7 @@ public class GameLogicController {
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, player.toPlayerDto()));
                 if(player.getVictoryPoints()>=VICTORYPOINTSFORVICTORY){
                     gameover=true;
-                    messagingService.notifyLobby(gameId, new GameoverDto(player.toPlayerDto()));
+                    messagingService.notifyGameProgress(gameId, new GameoverDto(player.toPlayerDto()));
                 }
             } else throw new InvalidGameMoveException("Cant build a Village here!");
             return;
@@ -122,7 +123,7 @@ public class GameLogicController {
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, player.toPlayerDto()));
                 if(player.getVictoryPoints()>=VICTORYPOINTSFORVICTORY){
                     gameover=true;
-                    messagingService.notifyLobby(gameId, new GameoverDto(player.toPlayerDto()));
+                    messagingService.notifyGameProgress(gameId, new GameoverDto(player.toPlayerDto()));
                 }
             }
             else {

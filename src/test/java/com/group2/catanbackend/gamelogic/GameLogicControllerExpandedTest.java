@@ -1,6 +1,7 @@
 package com.group2.catanbackend.gamelogic;
 
 import com.group2.catanbackend.dto.game.*;
+import com.group2.catanbackend.exception.GameException;
 import com.group2.catanbackend.gamelogic.enums.Location;
 import com.group2.catanbackend.gamelogic.enums.ResourceDistribution;
 import com.group2.catanbackend.gamelogic.objects.Building;
@@ -10,7 +11,9 @@ import com.group2.catanbackend.model.Player;
 import com.group2.catanbackend.service.MessagingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.springframework.messaging.Message;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -27,6 +30,7 @@ public class GameLogicControllerExpandedTest {
     private Player player2;
     GameMoveDto moveDto;
     private final ArrayList<Player> playersList = new ArrayList<>();
+    private ArgumentCaptor<MessageDto> argumentCaptor;
     @Mock
     MessagingService messagingMock;
 
@@ -44,6 +48,9 @@ public class GameLogicControllerExpandedTest {
         verify(messagingMock, times(1)).notifyLobby(any(), any());
         createPreSetupBoard();
         finishSetUpPhase();
+
+        argumentCaptor = ArgumentCaptor.forClass(MessageDto.class);
+
     }
 
     @Test
@@ -65,6 +72,92 @@ public class GameLogicControllerExpandedTest {
 
         assertArrayEquals(new int[]{0, 1, 1, 2, 1}, player1.getResources());
         assertArrayEquals(new int[]{0, 0, 0, 0, 0}, player2.getResources());
+    }
+
+    @Test
+    public void testInvalidBuildVillageMove() {
+        moveDto = new BuildVillageMoveDto(2, 5);
+        assertThrows(GameException.class, () -> gameLogicController.makeMove(moveDto, player1));
+
+        try {
+            Field privateField = Player.class.getDeclaredField("resources");
+            privateField.setAccessible(true); // This allows us to modify private fields
+            privateField.set(player1, new int[]{5, 5, 5, 5, 5});
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        moveDto = new BuildVillageMoveDto(1, 3);
+        assertThrows(GameException.class, () -> gameLogicController.makeMove(moveDto, player1));
+    }
+
+    @Test
+    public void testCommunicationFromServerOnValidMoves() {
+        moveDto = new RollDiceDto(2);
+        gameLogicController.makeMove(moveDto, player1);
+        moveDto = new EndTurnMoveDto();
+        gameLogicController.makeMove(moveDto, player1);
+
+        moveDto = new RollDiceDto(4);
+        gameLogicController.makeMove(moveDto, player2);
+        moveDto = new EndTurnMoveDto();
+        gameLogicController.makeMove(moveDto, player2);
+        verify(messagingMock, times(12)).notifyGameProgress(eq(gameLogicController.getGameId()), argumentCaptor.capture()); //4 moves here, already 8 from setup phase
+
+        try {
+            List<MessageDto> allValues = argumentCaptor.getAllValues();
+            GameProgressDto argument = (GameProgressDto) allValues.get(allValues.size() - 2); //get the last rollDiceDto
+            RollDiceDto argumentRollDiceDto = (RollDiceDto) argument.getMoveDto();
+            assertEquals(4, argumentRollDiceDto.getDiceRoll());
+            assertEquals(player2.getDisplayName(), argument.getPlayerDto().getDisplayName());
+
+            argument = (GameProgressDto) allValues.get(allValues.size() - 6); //get the last buildVillageMoveDto io the setup phase
+            //moveDto = new BuildVillageMoveDto(3, 2);
+            BuildVillageMoveDto argumentBuildVillageMoveDto = (BuildVillageMoveDto) argument.getMoveDto();
+            assertEquals(3, argumentBuildVillageMoveDto.getRow());
+            assertEquals(2, argumentBuildVillageMoveDto.getCol());
+            assertEquals(player1.getDisplayName(), argument.getPlayerDto().getDisplayName());
+
+            argument = (GameProgressDto) allValues.get(allValues.size() - 5); //get the last buildRoadMoveDto io the setup phase
+            //moveDto = new BuildRoadMoveDto(29, 30);
+            BuildRoadMoveDto argumentBuildRoadMoveDto = (BuildRoadMoveDto) argument.getMoveDto();
+            assertEquals(29, argumentBuildRoadMoveDto.getFromIntersection());
+            assertEquals(30, argumentBuildRoadMoveDto.getToIntersection());
+            assertEquals(player1.getDisplayName(), argument.getPlayerDto().getDisplayName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testVictoryCondition() {
+        try {
+            Field privateFieldVictoryPoints = Player.class.getDeclaredField("victoryPoints");
+            privateFieldVictoryPoints.setAccessible(true); // This allows us to modify private fields
+            privateFieldVictoryPoints.set(player1, 9);
+
+            Field privateFieldResources = Player.class.getDeclaredField("resources");
+            privateFieldResources.setAccessible(true); // This allows us to modify private fields
+            privateFieldResources.set(player1, new int[]{5, 5, 5, 5, 5});
+
+            moveDto = new BuildRoadMoveDto(10, 11);
+            gameLogicController.makeMove(moveDto, player1);
+
+            moveDto = new BuildVillageMoveDto(1, 5);
+            gameLogicController.makeMove(moveDto, player1);
+
+
+            assertTrue(gameLogicController.isGameover());
+            verify(messagingMock, times(11)).notifyGameProgress(eq(gameLogicController.getGameId()), argumentCaptor.capture()); // 8 for setup phase, 2 for road and village and 1 for victory
+
+            List<MessageDto> allValues = argumentCaptor.getAllValues();
+            GameoverDto lastArgument =  (GameoverDto) allValues.get(allValues.size() - 1); //get the last Dto sent
+            assertEquals(lastArgument.getWinner().getDisplayName(), player1.getDisplayName());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Test
@@ -150,7 +243,7 @@ public class GameLogicControllerExpandedTest {
                 Location.MOUNTAINS, Location.PASTURE, Location.FOREST);
         Collections.addAll(values, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12);
 
-        for (int i = 0; i<locations.size(); i++) {
+        for (int i = 0; i < locations.size(); i++) {
             Location location = locations.get(i);
             int value;
             if (location == Location.DESERT) {
