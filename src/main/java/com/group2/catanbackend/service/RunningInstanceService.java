@@ -29,6 +29,10 @@ public class RunningInstanceService {
     }
 
     public void makeMove(GameMoveDto gameMove, Player player)  {
+        if(gameMove==null){
+            messagingService.notifyUser(player.getToken(), new InvalidMoveDto("Error transporting message"));
+            return;
+        }
         try {
             if(gameLogicController!=null)gameLogicController.makeMove(gameMove, player);
         }
@@ -66,7 +70,6 @@ public class RunningInstanceService {
 
     public void notifyGameStart(){
         GameStartedDto dto = new GameStartedDto();
-        //maybe add the initialized gameBoard here?
         messagingService.notifyLobby(gameId, dto);
     }
 }

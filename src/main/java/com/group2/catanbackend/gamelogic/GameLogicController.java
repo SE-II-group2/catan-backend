@@ -28,6 +28,8 @@ public class GameLogicController {
     @Getter
     private ArrayList<Player> turnOrder;
     private boolean isSetupPhase = true;
+    private static final int VICTORYPOINTSFORVICTORY = 10;
+    private boolean gameover = false;
 
     public GameLogicController(@NotNull List<Player> players, @NotNull MessagingService messagingService, @NotNull String gameId) {
         this.players = players;
@@ -44,6 +46,10 @@ public class GameLogicController {
     }
 
     public void makeMove(GameMoveDto gameMove, Player player) throws GameException {
+        if(gameover){
+            messagingService.notifyUser(player.getToken(), new InvalidMoveDto("Game is already over!"));
+            return;
+        }
         switch (gameMove.getClass().getSimpleName()) {
             case "RollDiceDto" -> {
                 if (isSetupPhase) throw new InvalidGameMoveException("cant roll dice during setupPhase");
@@ -99,16 +105,25 @@ public class GameLogicController {
             if (!(setupPhaseTurnOrder.get(0) == player))
                 throw new NotActivePlayerException("Not the active player right now");
             if (board.addNewVillage(player, buildVillageMove.getRow(), buildVillageMove.getCol())) {
+                player.increaseVictoryPoints(1);
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, player.toPlayerDto()));
+                if(player.getVictoryPoints()>=VICTORYPOINTSFORVICTORY){
+                    gameover=true;
+                    messagingService.notifyLobby(gameId, new GameoverDto(player.toPlayerDto()));
+                }
             } else throw new InvalidGameMoveException("Cant build a Village here!");
-
             return;
         }
         if (turnOrder.get(0) != player) throw new NotActivePlayerException("Not the active player right now");
         if (player.resourcesSufficient(ResourceCost.VILLAGE.getCost())) {
             if (board.addNewVillage(player, buildVillageMove.getRow(), buildVillageMove.getCol())) {
                 player.adjustResources(ResourceCost.VILLAGE.getCost());
+                player.increaseVictoryPoints(1);
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, player.toPlayerDto()));
+                if(player.getVictoryPoints()>=VICTORYPOINTSFORVICTORY){
+                    gameover=true;
+                    messagingService.notifyLobby(gameId, new GameoverDto(player.toPlayerDto()));
+                }
             }
             else {
                 throw new InvalidGameMoveException("Cant build a Village here!");
@@ -118,6 +133,7 @@ public class GameLogicController {
     }
 
     private void makeRollDiceMove(RollDiceDto rollDiceDto, Player player) {
+        if(rollDiceDto.getDiceRoll()<2 || rollDiceDto.getDiceRoll()>12) throw new InvalidGameMoveException("Cant roll more than 12 or less than 2");
         board.distributeResourcesByDiceRoll(rollDiceDto.getDiceRoll());
         messagingService.notifyGameProgress(gameId, new GameProgressDto(rollDiceDto, player.toPlayerDto()));
     }

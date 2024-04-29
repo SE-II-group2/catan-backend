@@ -18,7 +18,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 public class GameLogicControllerExpandedTest {
 
@@ -28,7 +28,7 @@ public class GameLogicControllerExpandedTest {
     GameMoveDto moveDto;
     private final ArrayList<Player> playersList = new ArrayList<>();
     @Mock
-    MessagingService messagingService;
+    MessagingService messagingMock;
 
 
     @BeforeEach
@@ -39,8 +39,9 @@ public class GameLogicControllerExpandedTest {
         player2.setInGameID(1);
         playersList.add(player1);
         playersList.add(player2);
-        messagingService = mock(MessagingService.class);
-        gameLogicController = new GameLogicController(playersList, messagingService, "this");
+        messagingMock = mock(MessagingService.class);
+        gameLogicController = new GameLogicController(playersList, messagingMock, "this");
+        verify(messagingMock, times(1)).notifyLobby(any(), any());
         createPreSetupBoard();
         finishSetUpPhase();
     }
