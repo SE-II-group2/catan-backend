@@ -129,6 +129,7 @@ public class GameLogicControllerExpandedTest {
         }
     }
 
+
     @Test
     public void testVictoryCondition() {
         try {

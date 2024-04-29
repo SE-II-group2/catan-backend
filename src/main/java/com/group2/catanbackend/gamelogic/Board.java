@@ -104,7 +104,6 @@ public class Board {
         if(nextToBuilding) {
             return false;
         }
-
         //if even even check or uneven uneven check below, else above if there is a building next to the position where it should be built
         if((evenRow && evenCol) || (!evenRow && !evenCol)){
             if(row!=0 && intersections[row-1][col] instanceof Building){

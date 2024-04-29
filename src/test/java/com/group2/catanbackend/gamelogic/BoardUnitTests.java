@@ -86,7 +86,6 @@ public class BoardUnitTests {
         board.distributeResourcesByDiceRoll(6);
 
         verify(buildingMock, times(2)).giveResources(any());
-
     }
 
     @Test
@@ -119,5 +118,13 @@ public class BoardUnitTests {
         assertTrue(board.isNextToOwnRoad(1, player1));
         assertTrue(board.isNextToOwnRoad(0, player1));
         assertFalse(board.isNextToOwnRoad(8, player1));
+    }
+
+    @Test
+    public void testAddRoadInvalidPlacement(){
+        assertFalse(board.addNewRoad(player1, 0, 19));
+        board.addNewRoad(player1, 0, 1);
+        assertFalse(board.addNewRoad(player1, 0, 1));
+
     }
 }
