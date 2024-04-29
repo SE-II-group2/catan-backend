@@ -44,8 +44,4 @@ public class Hexagon {
         }
     }
 
-    @Override
-    public String toString() {
-        return String.format("Hexagon Type: %s; Rollvalue: %d; Number of Buildings adjecent: %d; id: %d\n", location, rollValue, numOfAdjacentBuildings, id);
-    }
 }

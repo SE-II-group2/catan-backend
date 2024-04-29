@@ -18,7 +18,6 @@ import java.util.List;
 public class GameLogicController {
     @Getter
     private final Board board;
-    @Getter
     private final List<Player> players;
     private final MessagingService messagingService;
     @Getter
@@ -108,10 +107,6 @@ public class GameLogicController {
             if (board.addNewVillage(player, buildVillageMove.getRow(), buildVillageMove.getCol())) {
                 player.increaseVictoryPoints(1);
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, player.toPlayerDto()));
-                if(player.getVictoryPoints()>=VICTORYPOINTSFORVICTORY){
-                    gameover=true;
-                    messagingService.notifyGameProgress(gameId, new GameoverDto(player.toPlayerDto()));
-                }
             } else throw new InvalidGameMoveException("Cant build a Village here!");
             return;
         }

@@ -18,7 +18,6 @@ public class Board {
     private Connection[][] adjacencyMatrix;
     @Getter
     private Intersection [][] intersections;
-    @Getter
     private int[][] surroundingHexagons;
     private static final int NON_EXISTING_HEXAGON = 19;
     @Setter

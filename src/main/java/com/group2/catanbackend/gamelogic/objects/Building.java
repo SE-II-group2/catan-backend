@@ -7,7 +7,6 @@ import lombok.Getter;
 
 public class Building extends Intersection {
 
-    @Getter
     private final BuildingType type;
 
     public Building(Player player, BuildingType type) {
