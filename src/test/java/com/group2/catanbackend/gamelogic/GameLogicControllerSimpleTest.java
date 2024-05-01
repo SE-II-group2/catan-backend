@@ -120,7 +120,7 @@ public class GameLogicControllerSimpleTest {
         assertThrows(NotActivePlayerException.class , ()->gameLogicController.makeMove(moveDto, player1));
 
         moveDto = new EndTurnMoveDto();
-        assertThrows(InvalidGameMoveException.class , ()->gameLogicController.makeMove(moveDto, player1));
+        assertThrows(NotActivePlayerException.class , ()->gameLogicController.makeMove(moveDto, player1));
     }
 
     @Test
