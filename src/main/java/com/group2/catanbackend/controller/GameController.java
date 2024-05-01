@@ -1,6 +1,7 @@
 package com.group2.catanbackend.controller;
 
 import com.group2.catanbackend.dto.*;
+import com.group2.catanbackend.dto.game.GameMoveDto;
 import com.group2.catanbackend.exception.GameException;
 import com.group2.catanbackend.service.GameService;
 import com.group2.catanbackend.service.TokenService;
@@ -45,6 +46,11 @@ public class GameController {
     private ResponseEntity<Object> startGame(@RequestHeader(HttpHeaders.AUTHORIZATION) String token){
         gameService.startGame(token);
         return ResponseEntity.ok(null);
+    }
+
+    @PostMapping("/gamemove")
+    private ResponseEntity<Object> makeMove(@Valid @RequestBody GameMoveDto gameMoveDto, @RequestHeader(HttpHeaders.AUTHORIZATION) String token) throws GameException{
+        return ResponseEntity.ok(gameService.makeMove(token, gameMoveDto));
     }
 
     @GetMapping("/list")

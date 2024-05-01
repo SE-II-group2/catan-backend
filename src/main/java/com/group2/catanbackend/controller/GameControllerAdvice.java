@@ -1,10 +1,7 @@
 package com.group2.catanbackend.controller;
 
 import com.group2.catanbackend.dto.ErrorResponse;
-import com.group2.catanbackend.exception.GameException;
-import com.group2.catanbackend.exception.NoSuchGameException;
-import com.group2.catanbackend.exception.NoSuchTokenException;
-import com.group2.catanbackend.exception.NotAuthorizedException;
+import com.group2.catanbackend.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -25,7 +22,6 @@ public class GameControllerAdvice extends ResponseEntityExceptionHandler {
     @ResponseBody
     public ResponseEntity<Object> handleException(GameException gx){
         log.error(gx.getMessage());
-
         return new ResponseEntity<>(gx.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
@@ -62,5 +58,12 @@ public class GameControllerAdvice extends ResponseEntityExceptionHandler {
     public @ResponseBody ResponseEntity<ErrorResponse> handleNotAuthorizedException(NotAuthorizedException ex){
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(GameMoveException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ResponseEntity<ErrorResponse> handleGameMoveException(GameMoveException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
     }
 }

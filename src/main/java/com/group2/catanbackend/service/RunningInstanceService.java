@@ -1,7 +1,10 @@
 package com.group2.catanbackend.service;
 
 import com.group2.catanbackend.dto.game.*;
+import com.group2.catanbackend.exception.ErrorCode;
 import com.group2.catanbackend.exception.GameException;
+import com.group2.catanbackend.exception.InvalidGameMoveException;
+import com.group2.catanbackend.exception.NoSuchGameException;
 import com.group2.catanbackend.gamelogic.GameLogicController;
 import com.group2.catanbackend.model.Player;
 import com.group2.catanbackend.model.PlayerState;
@@ -16,7 +19,8 @@ import java.util.List;
 @Service
 @Scope("prototype")
 public class RunningInstanceService {
-    @Getter @Setter
+    @Getter
+    @Setter
     private String gameId;
     private List<Player> players;
     private final MessagingService messagingService;
@@ -24,31 +28,25 @@ public class RunningInstanceService {
     private GameLogicController gameLogicController;
 
     @Autowired
-    public RunningInstanceService(MessagingService messagingService){
+    public RunningInstanceService(MessagingService messagingService) {
         this.messagingService = messagingService;
     }
 
-    public void makeMove(GameMoveDto gameMove, Player player)  {
-        if(gameMove==null){
-            messagingService.notifyUser(player.getToken(), new InvalidMoveDto("Error transporting message"));
-            return;
-        }
-        try {
-            if(gameLogicController!=null)gameLogicController.makeMove(gameMove, player);
-        }
-        catch (GameException e){
-            messagingService.notifyUser(player.getToken(), new InvalidMoveDto(e.getMessage()));
-        }
+    public void makeMove(GameMoveDto gameMove, Player player) {
+        if (gameMove == null)
+            throw new InvalidGameMoveException(ErrorCode.ERROR_DTO_WAS_NULL);
 
+        if (gameLogicController != null) gameLogicController.makeMove(gameMove, player);
+        else throw new NoSuchGameException(ErrorCode.ERROR_GAME_NOT_FOUND);
     }
 
-    public void addPlayers(List<Player> players){
+    public void addPlayers(List<Player> players) {
         this.players = players;
         players.forEach(player -> player.setPlayerState(PlayerState.PLAYING));
     }
 
-    public void start(){
-        if(started){
+    public void start() {
+        if (started) {
             return;
         }
         notifyGameStart();
@@ -57,7 +55,7 @@ public class RunningInstanceService {
     }
 
     //Players are not removed once the game is started.
-    public void removePlayer(Player p){
+    public void removePlayer(Player p) {
         p.setPlayerState(PlayerState.DISCONNECTED);
         PlayersInLobbyDto dto = new PlayersInLobbyDto();
         dto.setPlayers(players.stream().map(Player::toPlayerDto).toList());
@@ -68,7 +66,7 @@ public class RunningInstanceService {
         messagingService.notifyLobby(gameId, dto);
     }
 
-    public void notifyGameStart(){
+    public void notifyGameStart() {
         GameStartedDto dto = new GameStartedDto();
         messagingService.notifyLobby(gameId, dto);
     }
