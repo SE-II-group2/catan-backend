@@ -90,22 +90,28 @@ public class BoardUnitTests {
 
     @Test
     public void testAddVillageNormalCase() {
-        board.addNewVillage(player1, 2, 5);
-        board.addNewVillage(player1, 2, 7);
-        board.addNewVillage(player1, 1, 6);
+        board.addNewRoad(player1,14);
+        board.addNewRoad(player1,28);
+        board.addNewRoad(player1,29);
+
+        board.addNewVillage(player1, 21);
+        board.addNewVillage(player1, 23);
+        board.addNewVillage(player1, 12);
+
         List<Hexagon> hexList = board.getHexagonList();
+
         assertEquals(3, hexList.get(5).getNumOfAdjacentBuildings());
         assertEquals(1, hexList.get(2).getNumOfAdjacentBuildings());
         assertEquals(0, hexList.get(3).getNumOfAdjacentBuildings());
-
-        board.addNewVillage(player1, 2, 6);
-        assertEquals(3, hexList.get(5).getNumOfAdjacentBuildings());
     }
 
     @Test
     public void testAddVillageEdgeOfBoard() {
-        board.addNewVillage(player1, 2, 0);
-        board.addNewVillage(player1, 1, 1);
+        board.addNewRoad(player1,18);
+        board.addNewRoad(player1,23);
+
+        board.addNewVillage(player1, 16);
+        board.addNewVillage(player1, 7);
 
         List<Hexagon> hexList = board.getHexagonList();
         assertEquals(1, hexList.get(7).getNumOfAdjacentBuildings());
@@ -113,8 +119,20 @@ public class BoardUnitTests {
     }
 
     @Test
+    public void testAddVillageSetupUpPhase(){
+        assertTrue(board.addNewVillage(player1, 16));
+        assertTrue(board.addNewRoad(player1,23));
+
+        board.setSetupPhase(false);
+
+        assertFalse(board.addNewVillage(player1,7));
+        assertTrue(board.addNewRoad(player1,18));
+        assertTrue(board.addNewVillage(player1,7));
+    }
+
+    @Test
     public void testAddRoad() {
-        board.addNewRoad(player1, 0, 1);
+        board.addNewRoad(player1, 0);
         assertTrue(board.isNextToOwnRoad(1, player1));
         assertTrue(board.isNextToOwnRoad(0, player1));
         assertFalse(board.isNextToOwnRoad(8, player1));
@@ -122,9 +140,13 @@ public class BoardUnitTests {
 
     @Test
     public void testAddRoadInvalidPlacement(){
-        assertFalse(board.addNewRoad(player1, 0, 19));
-        board.addNewRoad(player1, 0, 1);
-        assertFalse(board.addNewRoad(player1, 0, 1));
+        assertTrue(board.addNewRoad(player1, 0));
+        assertFalse(board.addNewRoad(player1, 0));
 
+        board.setSetupPhase(false);
+
+        assertTrue(board.addNewRoad(player1,1));
+        assertFalse(board.addNewRoad(player1,3));
     }
+
 }

@@ -76,7 +76,7 @@ public class GameLogicControllerExpandedTest {
 
     @Test
     public void testInvalidBuildVillageMove() {
-        moveDto = new BuildVillageMoveDto(2, 5);
+        moveDto = new BuildVillageMoveDto(21);
         assertThrows(GameException.class, () -> gameLogicController.makeMove(moveDto, player1));
 
         try {
@@ -87,7 +87,7 @@ public class GameLogicControllerExpandedTest {
             e.printStackTrace();
         }
 
-        moveDto = new BuildVillageMoveDto(1, 3);
+        moveDto = new BuildVillageMoveDto(9);
         assertThrows(GameException.class, () -> gameLogicController.makeMove(moveDto, player1));
     }
 
@@ -114,15 +114,13 @@ public class GameLogicControllerExpandedTest {
             argument = (GameProgressDto) allValues.get(allValues.size() - 6); //get the last buildVillageMoveDto io the setup phase
             //moveDto = new BuildVillageMoveDto(3, 2);
             BuildVillageMoveDto argumentBuildVillageMoveDto = (BuildVillageMoveDto) argument.getMoveDto();
-            assertEquals(3, argumentBuildVillageMoveDto.getRow());
-            assertEquals(2, argumentBuildVillageMoveDto.getCol());
+            assertEquals(29, argumentBuildVillageMoveDto.getIntersection());
             assertEquals(player1.getDisplayName(), argument.getPlayerDto().getDisplayName());
 
             argument = (GameProgressDto) allValues.get(allValues.size() - 5); //get the last buildRoadMoveDto io the setup phase
             //moveDto = new BuildRoadMoveDto(29, 30);
             BuildRoadMoveDto argumentBuildRoadMoveDto = (BuildRoadMoveDto) argument.getMoveDto();
-            assertEquals(29, argumentBuildRoadMoveDto.getFromIntersection());
-            assertEquals(30, argumentBuildRoadMoveDto.getToIntersection());
+            assertEquals(36, argumentBuildRoadMoveDto.getConnection());
             assertEquals(player1.getDisplayName(), argument.getPlayerDto().getDisplayName());
         } catch (Exception e) {
             e.printStackTrace();
@@ -141,10 +139,10 @@ public class GameLogicControllerExpandedTest {
             privateFieldResources.setAccessible(true); // This allows us to modify private fields
             privateFieldResources.set(player1, new int[]{5, 5, 5, 5, 5});
 
-            moveDto = new BuildRoadMoveDto(10, 11);
+            moveDto = new BuildRoadMoveDto(13);
             gameLogicController.makeMove(moveDto, player1);
 
-            moveDto = new BuildVillageMoveDto(1, 5);
+            moveDto = new BuildVillageMoveDto(11);
             gameLogicController.makeMove(moveDto, player1);
 
 
@@ -176,7 +174,7 @@ public class GameLogicControllerExpandedTest {
         moveDto = new RollDiceDto(6);
         gameLogicController.makeMove(moveDto, player1);
 
-        moveDto = new BuildRoadMoveDto(10, 11);
+        moveDto = new BuildRoadMoveDto(13);
         gameLogicController.makeMove(moveDto, player1);
 
         assertTrue(gameLogicController.getBoard().getAdjacencyMatrix()[10][11] instanceof Road);
@@ -196,10 +194,10 @@ public class GameLogicControllerExpandedTest {
         assertArrayEquals(new int[]{1, 1, 1, 2, 1}, player1.getResources());
         assertArrayEquals(new int[]{0, 0, 0, 0, 0}, player2.getResources());
 
-        moveDto = new BuildVillageMoveDto(1, 5);
+        moveDto = new BuildVillageMoveDto(11);
         gameLogicController.makeMove(moveDto, player1);
 
-        assertTrue(gameLogicController.getBoard().getIntersections()[1][5] instanceof Building);
+        assertInstanceOf(Building.class, gameLogicController.getBoard().getIntersections()[1][5]);
         assertArrayEquals(new int[]{0, 0, 0, 1, 1}, player1.getResources());
 
 
@@ -208,24 +206,24 @@ public class GameLogicControllerExpandedTest {
 
     //#####################################################################################################
     private void finishSetUpPhase() {
-        moveDto = new BuildVillageMoveDto(1, 3);
+        moveDto = new BuildVillageMoveDto(9);
         gameLogicController.makeMove(moveDto, player1);
-        moveDto = new BuildRoadMoveDto(9, 10);
+        moveDto = new BuildRoadMoveDto(12);
         gameLogicController.makeMove(moveDto, player1);
 
-        moveDto = new BuildVillageMoveDto(1, 7);
+        moveDto = new BuildVillageMoveDto(13);
         gameLogicController.makeMove(moveDto, player2);
-        moveDto = new BuildRoadMoveDto(13, 23);
-        gameLogicController.makeMove(moveDto, player2);
-
-        moveDto = new BuildVillageMoveDto(2, 6);
-        gameLogicController.makeMove(moveDto, player2);
-        moveDto = new BuildRoadMoveDto(22, 33);
+        moveDto = new BuildRoadMoveDto(21);
         gameLogicController.makeMove(moveDto, player2);
 
-        moveDto = new BuildVillageMoveDto(3, 2);
+        moveDto = new BuildVillageMoveDto(22);
+        gameLogicController.makeMove(moveDto, player2);
+        moveDto = new BuildRoadMoveDto(29);
+        gameLogicController.makeMove(moveDto, player2);
+
+        moveDto = new BuildVillageMoveDto(29);
         gameLogicController.makeMove(moveDto, player1);
-        moveDto = new BuildRoadMoveDto(29, 30);
+        moveDto = new BuildRoadMoveDto(36);
         gameLogicController.makeMove(moveDto, player1);
     }
 
