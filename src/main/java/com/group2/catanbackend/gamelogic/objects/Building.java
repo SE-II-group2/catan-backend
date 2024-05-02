@@ -5,8 +5,10 @@ import com.group2.catanbackend.gamelogic.enums.ResourceDistribution;
 import com.group2.catanbackend.model.Player;
 import lombok.Getter;
 
+@Getter
 public class Building extends Intersection {
 
+    Player player;
     private final BuildingType type;
 
     public Building(Player player, BuildingType type) {
@@ -23,5 +25,4 @@ public class Building extends Intersection {
         }
         player.adjustResources(resources);
     }
-
 }

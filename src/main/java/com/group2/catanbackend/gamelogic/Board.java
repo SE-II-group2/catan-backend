@@ -92,13 +92,19 @@ public class Board {
     public boolean addNewCity(Player player, int intersectionID){
         //TODO: check if player has enough Resources
 
-        int[] intersectionCoordinates = translateIntersectionToMatrixCoordinates(intersectionID);
-        int row = intersectionCoordinates[0];
-        int col = intersectionCoordinates[1];
+        if(isSetupPhase){
+            return false;
+        } else {
+            int[] intersectionCoordinates = translateIntersectionToMatrixCoordinates(intersectionID);
+            int row = intersectionCoordinates[0];
+            int col = intersectionCoordinates[1];
 
-        if(intersections[row][col].getType() == BuildingType.VILLAGE && intersections[row][col].getPlayer() == player){
-            intersections[row][col] = new Building(player,BuildingType.CITY);
-            return true;
+            if(intersections[row][col].getType() == BuildingType.VILLAGE && intersections[row][col].getPlayer() == player){
+                intersections[row][col] = new Building(player,BuildingType.CITY);
+                Building city = (Building)intersections[row][col];
+                addBuildingToSurroundingHexagons(intersectionID,city);
+                return true;
+            }
         }
         return false;
     }

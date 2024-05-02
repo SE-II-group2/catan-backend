@@ -131,6 +131,41 @@ public class BoardUnitTests {
     }
 
     @Test
+    public void testAddCityToVillage() {
+        board.addNewRoad(player1,27);
+        assertSame(BuildingType.EMPTY,board.getIntersections()[2][5].getType());
+        board.setSetupPhase(false);
+
+        assertFalse(board.addNewCity(player1, 21));
+        assertFalse(board.getIntersections()[2][5] instanceof Building);
+
+        board.addNewVillage(player1, 21);
+        assertSame(BuildingType.VILLAGE, board.getIntersections()[2][5].getType());
+
+        board.addNewCity(player1, 21);
+        assertSame(BuildingType.CITY, board.getIntersections()[2][5].getType());
+    }
+
+    @Test
+    public void testAddCityNormalCase() {
+        board.addNewRoad(player1,14);
+        board.addNewRoad(player1,28);
+        board.addNewRoad(player1,29);
+        board.addNewVillage(player1, 21);
+        board.addNewVillage(player1, 23);
+        board.addNewVillage(player1, 12);
+        board.addNewCity(player1, 21);
+        board.addNewCity(player1, 23);
+        board.addNewCity(player1, 12);
+
+        List<Hexagon> hexList = board.getHexagonList();
+
+        assertEquals(3, hexList.get(5).getNumOfAdjacentBuildings());
+        assertEquals(1, hexList.get(2).getNumOfAdjacentBuildings());
+        assertEquals(0, hexList.get(3).getNumOfAdjacentBuildings());
+    }
+
+    @Test
     public void testAddRoad() {
         board.addNewRoad(player1, 0);
         assertTrue(board.isNextToOwnRoad(1, player1));

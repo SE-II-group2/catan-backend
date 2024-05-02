@@ -7,5 +7,5 @@ import lombok.Getter;
 @Getter
 public class Intersection {
     Player player;
-    BuildingType type;
+    BuildingType type = BuildingType.EMPTY;
 }
