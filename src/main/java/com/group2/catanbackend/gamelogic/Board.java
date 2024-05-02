@@ -19,6 +19,7 @@ public class Board {
     @Getter
     private Intersection [][] intersections;
     private int[][] surroundingHexagons;
+    private int[][] connectedIntersections;
     private static final int NON_EXISTING_HEXAGON = 19;
     @Setter
     private boolean isSetupPhase = true;
@@ -28,6 +29,7 @@ public class Board {
         generateAdjacencyMatrix();
         generateIntersectionsStartingArray();
         generateSurroundingHexagonArray();
+        generateConnectedIntersections();
     }
 
     public void distributeResourcesByDiceRoll(int diceRoll) {
@@ -38,7 +40,14 @@ public class Board {
         }
     }
 
-    public boolean addNewRoad(Player player, int fromIntersection, int toIntersection){
+    public boolean addNewRoad(Player player, int connectionID){
+        //TODO: check if player has enough Resources
+
+        // translate connection to two Intersections
+        int[] connectionIntersections = getConnectedIntersections(connectionID);
+        int fromIntersection = connectionIntersections[0];
+        int toIntersection = connectionIntersections[1];
+
         if(isSetupPhase && adjacencyMatrix[fromIntersection][toIntersection] != null && !(adjacencyMatrix[fromIntersection][toIntersection] instanceof Road)){
             Road road = new Road(player);
             adjacencyMatrix[fromIntersection][toIntersection] = road;
@@ -46,7 +55,8 @@ public class Board {
             return true;
         }
 
-        if((adjacencyMatrix[fromIntersection][toIntersection] != null && !(adjacencyMatrix[fromIntersection][toIntersection] instanceof Road)) && isNextToOwnRoad(fromIntersection,player)){
+        if(adjacencyMatrix[fromIntersection][toIntersection] != null && !(adjacencyMatrix[fromIntersection][toIntersection] instanceof Road) // check if null or road already
+                && (isNextToOwnRoad(fromIntersection,player) || isNextToOwnRoad(toIntersection,player))){ //check if a road is next to one of the intersections
             Road road = new Road(player);
             adjacencyMatrix[fromIntersection][toIntersection] = road;
             adjacencyMatrix[toIntersection][fromIntersection] = road;
@@ -55,20 +65,39 @@ public class Board {
         return false;
     }
 
-    public boolean addNewVillage(Player player, int row, int col){
-        int intersection = translateIntersectionToAdjacencyMatrix(row,col);
+    public boolean addNewVillage(Player player, int intersectionID){
+        //TODO: check if player has enough Resources
+
+        int[] intersectionCoordinates = translateIntersectionToMatrixCoordinates(intersectionID);
+        int row = intersectionCoordinates[0];
+        int col = intersectionCoordinates[1];
 
         if(isSetupPhase && intersections[row][col] != null && noBuildingAdjacent(row, col) && !(intersections[row][col] instanceof Building)){
             intersections[row][col] = new Building(player,BuildingType.VILLAGE);
             Building village = (Building)intersections[row][col];
-            addBuildingToSurroundingHexagons(intersection,village);
+            addBuildingToSurroundingHexagons(intersectionID,village);
             return true;
         }
 
-        if((intersections[row][col] != null) && noBuildingAdjacent(row, col) && isNextToOwnRoad(intersection,player) && !(intersections[row][col] instanceof Building)){
+        if((intersections[row][col] != null) && !(intersections[row][col] instanceof Building) && noBuildingAdjacent(row,col) && isNextToOwnRoad(intersectionID,player)){
             intersections[row][col] = new Building(player,BuildingType.VILLAGE);
             Building village = (Building)intersections[row][col];
-            addBuildingToSurroundingHexagons(intersection,village);
+
+            addBuildingToSurroundingHexagons(intersectionID,village);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean addNewCity(Player player, int intersectionID){
+        //TODO: check if player has enough Resources
+
+        int[] intersectionCoordinates = translateIntersectionToMatrixCoordinates(intersectionID);
+        int row = intersectionCoordinates[0];
+        int col = intersectionCoordinates[1];
+
+        if(intersections[row][col].getType() == BuildingType.VILLAGE && intersections[row][col].getPlayer() == player){
+            intersections[row][col] = new Building(player,BuildingType.CITY);
             return true;
         }
         return false;
@@ -129,17 +158,49 @@ public class Board {
         return false;
     }
 
-    public int translateIntersectionToAdjacencyMatrix(int row, int col) {
+    public int[] translateIntersectionToMatrixCoordinates(int intersectionID) {
+        int[] coordinates = new int[2];
+        int firstRowIntersections = 7;
+        int secondRowIntersections = firstRowIntersections + 9;
+        int thirdRowIntersections = secondRowIntersections + 11;
+        int fourthRowIntersections = thirdRowIntersections + 11;
+        int fifthRowIntersections = fourthRowIntersections + 9;
 
-        return switch (row) {
-            case 0 -> col - 2;
-            case 1 -> 6 + col;
-            case 2 -> 16 + col;
-            case 3 -> 27 + col;
-            case 4 -> 37 + col;
-            case 5 -> 45 + col;
-            default -> 0;
-        };
+        if(intersectionID < firstRowIntersections){
+            coordinates[1] = intersectionID + 2;
+        } else if(intersectionID < secondRowIntersections){
+            coordinates[0] = 1;
+            coordinates[1] = intersectionID - firstRowIntersections + 1;
+        } else if(intersectionID < thirdRowIntersections){
+            coordinates[0] = 2;
+            coordinates[1] = intersectionID - secondRowIntersections;
+        } else if(intersectionID < fourthRowIntersections){
+            coordinates[0] = 3;
+            coordinates[1] = intersectionID - thirdRowIntersections;
+        } else if(intersectionID < fifthRowIntersections){
+            coordinates[0] = 4;
+            coordinates[1] = intersectionID - fourthRowIntersections + 1;
+        } else{
+            coordinates[0] = 5;
+            coordinates[1] = intersectionID - fifthRowIntersections + 2;
+        }
+
+        return coordinates;
+    }
+
+    private int[] getConnectedIntersections(int connectionID) {
+        int[] connectionIntersections = new int[2];
+
+        connectionIntersections[0] = connectedIntersections[0][connectionID];
+        connectionIntersections[1] = connectedIntersections[1][connectionID];
+
+        return connectionIntersections;
+    }
+
+    public void generateConnectedIntersections(){ // shows which connection is connected to which 2 intersections
+        connectedIntersections = new int[2][72];
+        connectedIntersections[0] = new int[] {0,1,2,3,4,5,0,2 ,4 ,6 ,7,8,9 ,10,11,12,13,14,7 ,9 ,11,13,15,16,17,18,19,20,21,22,23,24,25,28,27,30,29,32,31,34,33,36,35,16,18,20,22,24,26,39,38,41,40,43,42,45,44,28,30,32,34,36,48,47,50,49,52,51,39,41,43,45};
+        connectedIntersections[1] = new int[] {1,2,3,4,5,6,8,10,12,14,8,9,10,11,12,13,14,15,17,19,21,23,25,17,18,19,20,21,22,23,24,25,26,29,28,31,30,33,32,35,34,37,36,27,29,31,33,35,37,40,39,42,41,44,43,46,45,38,40,42,44,46,49,48,51,50,53,52,47,49,51,53};
     }
 
     private void generateHexagons() {
@@ -189,7 +250,6 @@ public class Board {
         for (int i = 0; i < rows.length; i++) {
             adjacencyMatrix[rows[i]][cols[i]] = emptyConnection;
         }
-
     }
 
     private void generateIntersectionsStartingArray() {
@@ -203,7 +263,6 @@ public class Board {
                 intersections[intersections.length - 1 - i][j] = intersection;
             }
         }
-
     }
 
     private void generateSurroundingHexagonArray() {
