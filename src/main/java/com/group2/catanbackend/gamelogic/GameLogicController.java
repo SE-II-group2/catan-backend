@@ -68,6 +68,7 @@ public class GameLogicController {
                 turnOrder.add(player);
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(gameMove, player.toPlayerDto()));
             }
+            //TODO To implement other moves create MoveDto and include it here
             default -> throw new UnsupportedGameMoveException("Unknown DTO Format");
         }
     }

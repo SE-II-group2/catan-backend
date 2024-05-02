@@ -27,34 +27,34 @@ public class GameController {
 
 
     @PostMapping("/create")
-    private ResponseEntity<JoinResponseDto> createGame(@Valid @RequestBody CreateRequestDto request) throws GameException {
+    public ResponseEntity<JoinResponseDto> createGame(@Valid @RequestBody CreateRequestDto request) throws GameException {
         return ResponseEntity.ok(gameService.createAndJoin(request));
     }
 
     @PostMapping("/connect")
-    private ResponseEntity<JoinResponseDto> joinGame(@Valid @RequestBody JoinRequestDto joinRequest) throws GameException {
+    public ResponseEntity<JoinResponseDto> joinGame(@Valid @RequestBody JoinRequestDto joinRequest) throws GameException {
         return ResponseEntity.ok(gameService.joinGame(joinRequest));
     }
 
     @PostMapping("/leave")
-    private ResponseEntity<Object> leaveGame(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+    public ResponseEntity<Object> leaveGame(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         gameService.leaveGame(token);
         return ResponseEntity.ok(null);
     }
 
     @PostMapping("/start")
-    private ResponseEntity<Object> startGame(@RequestHeader(HttpHeaders.AUTHORIZATION) String token){
+    public ResponseEntity<Object> startGame(@RequestHeader(HttpHeaders.AUTHORIZATION) String token){
         gameService.startGame(token);
         return ResponseEntity.ok(null);
     }
 
     @PostMapping("/gamemove")
-    private ResponseEntity<Object> makeMove(@Valid @RequestBody GameMoveDto gameMoveDto, @RequestHeader(HttpHeaders.AUTHORIZATION) String token) throws GameException{
+    public ResponseEntity<Object> makeMove(@Valid @RequestBody GameMoveDto gameMoveDto, @RequestHeader(HttpHeaders.AUTHORIZATION) String token) throws GameException{
         return ResponseEntity.ok(gameService.makeMove(token, gameMoveDto));
     }
 
     @GetMapping("/list")
-    private ResponseEntity<ListGameResponse> getGames(){
+    public ResponseEntity<ListGameResponse> getGames(){
         List<LobbyDto> lobbies = gameService.getLobbies();
         ListGameResponse response = new ListGameResponse();
         response.setGameList(lobbies);
