@@ -114,9 +114,16 @@ public class GameService {
         }
 
     }
-    public void makeMove(String token, String gameID, Object gameMove){
-        //TODO: Implement
-        throw new NotImplementedException(ErrorCode.ERROR_NOT_IMPLEMENTED);
+    public GameMoveDto makeMove(String token, GameMoveDto gameMove){
+        Player player = tokenService.getPlayerByToken(token);
+        if(player == null)
+            throw new NoSuchTokenException(ErrorCode.ERROR_NO_SUCH_TOKEN);
+
+        RunningInstanceService game = runningGames.get(player.getGameID());
+        if(game == null)
+            throw new NoSuchGameException(ErrorCode.ERROR_GAME_NOT_FOUND.formatted(player.getGameID()));
+        game.makeMove(gameMove, player);
+        return new GameMoveValidDto("Move Ok!");
     }
 
     public List<LobbyDto> getLobbies(){

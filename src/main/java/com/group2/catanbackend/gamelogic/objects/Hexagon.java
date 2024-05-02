@@ -6,21 +6,24 @@ import lombok.Getter;
 
 public class Hexagon {
     @Getter
-    private final Location type;
+    private final int id;
+    @Getter
+    private final Location location;
     @Getter
     private final ResourceDistribution distribution;
     @Getter
     private final int rollValue;
     @Getter
-    private Building[] buildings;
+    private final Building[] buildings;
     @Getter
     private int numOfAdjacentBuildings = 0;
 
-    public Hexagon(Location type, ResourceDistribution distribution, int rollValue) {
-        this.type = type;
+    public Hexagon(Location type, ResourceDistribution distribution, int rollValue, int id) {
+        this.location = type;
         this.distribution = distribution;
         this.rollValue = rollValue;
         this.buildings = new Building[3];
+        this.id=id;
     }
 
     public void distributeResources() {
@@ -41,8 +44,4 @@ public class Hexagon {
         }
     }
 
-    @Override
-    public String toString() {
-        return String.format("Hexagon Type: %s; Rollvalue: %d; Number of Buildings adjecent: %d\n", type, rollValue, numOfAdjacentBuildings);
-    }
 }

@@ -1,9 +1,11 @@
 package com.group2.catanbackend.gamelogic.objects;
 
-public class Intersection {
-    int playerID;
+import com.group2.catanbackend.gamelogic.enums.BuildingType;
+import com.group2.catanbackend.model.Player;
+import lombok.Getter;
 
-    public int getPlayerID(){
-        return playerID;
-    }
+@Getter
+public class Intersection {
+    Player player;
+    BuildingType type = BuildingType.EMPTY;
 }
