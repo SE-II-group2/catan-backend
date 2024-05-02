@@ -61,9 +61,9 @@ public class GameControllerAdvice extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(GameMoveException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     public @ResponseBody ResponseEntity<ErrorResponse> handleGameMoveException(GameMoveException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY.value(), ex.getMessage()));
     }
 }
