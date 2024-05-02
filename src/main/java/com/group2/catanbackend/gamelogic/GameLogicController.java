@@ -76,19 +76,23 @@ public class GameLogicController {
         if (isSetupPhase) {
             if (!(setupPhaseTurnOrder.get(0) == player))
                 throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
-            if (board.addNewRoad(player, buildRoadMove.getFromIntersection(), buildRoadMove.getToIntersection())) {
+
+            if (board.addNewRoad(player, buildRoadMove.getConnection())) {
                 setupPhaseTurnOrder.remove(0); //after you set down your road your turn ends during the setup phase
-                if (setupPhaseTurnOrder.size() == 0) {
+                if (setupPhaseTurnOrder.isEmpty()) {
                     isSetupPhase = false;
                     board.setSetupPhase(false);
                 }
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(buildRoadMove, player.toPlayerDto()));
+
             } else throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildRoadMove.getClass().getSimpleName()));
             return;
         }
+
         if (turnOrder.get(0) != player) throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+
         if (player.resourcesSufficient(ResourceCost.ROAD.getCost())) {
-            if (board.addNewRoad(player, buildRoadMove.getFromIntersection(), buildRoadMove.getToIntersection())) {
+            if (board.addNewRoad(player, buildRoadMove.getConnection())) {
                 player.adjustResources(ResourceCost.ROAD.getCost());
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(buildRoadMove, player.toPlayerDto()));
             } else throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildRoadMove.getClass().getSimpleName()));
@@ -99,19 +103,23 @@ public class GameLogicController {
         if (isSetupPhase) {
             if (!(setupPhaseTurnOrder.get(0) == player))
                 throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
-            if (board.addNewVillage(player, buildVillageMove.getRow(), buildVillageMove.getCol())) {
+
+            if (board.addNewVillage(player, buildVillageMove.getIntersection())) {
                 player.increaseVictoryPoints(1);
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, player.toPlayerDto()));
             } else throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildVillageMove.getClass().getSimpleName()));
             return;
         }
+
         if (turnOrder.get(0) != player) throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+
         if (player.resourcesSufficient(ResourceCost.VILLAGE.getCost())) {
-            if (board.addNewVillage(player, buildVillageMove.getRow(), buildVillageMove.getCol())) {
+            if (board.addNewVillage(player, buildVillageMove.getIntersection())) {
                 player.adjustResources(ResourceCost.VILLAGE.getCost());
                 player.increaseVictoryPoints(1);
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, player.toPlayerDto()));
-                if(player.getVictoryPoints()>=VICTORYPOINTSFORVICTORY){
+
+                if(player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY){
                     gameover=true;
                     messagingService.notifyGameProgress(gameId, new GameoverDto(player.toPlayerDto()));
                 }
