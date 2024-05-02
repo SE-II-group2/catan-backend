@@ -96,6 +96,7 @@ public class BoardUnitTests {
 
         board.addNewVillage(player1, 21);
         board.addNewVillage(player1, 23);
+        assertFalse(board.addNewVillage(player1, 22));
         board.addNewVillage(player1, 12);
 
         List<Hexagon> hexList = board.getHexagonList();
@@ -182,6 +183,21 @@ public class BoardUnitTests {
 
         assertTrue(board.addNewRoad(player1,1));
         assertFalse(board.addNewRoad(player1,3));
+    }
+
+    @Test
+    public void testAddVillageNextToVillage(){
+        board.addNewRoad(player1,0);
+        board.addNewRoad(player1,6);
+        board.addNewRoad(player1,1);
+        board.addNewRoad(player1,2);
+        board.addNewRoad(player1,7);
+        board.addNewRoad(player1,13);
+
+        assertTrue(board.addNewVillage(player1, 0));
+        assertFalse(board.addNewVillage(player1, 8));
+        assertTrue(board.addNewVillage(player1, 3));
+        assertTrue(board.addNewVillage(player1, 11));
     }
 
 }

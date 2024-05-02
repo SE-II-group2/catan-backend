@@ -41,8 +41,6 @@ public class Board {
     }
 
     public boolean addNewRoad(Player player, int connectionID){
-        //TODO: check if player has enough Resources
-
         // translate connection to two Intersections
         int[] connectionIntersections = getConnectedIntersections(connectionID);
         int fromIntersection = connectionIntersections[0];
@@ -66,7 +64,6 @@ public class Board {
     }
 
     public boolean addNewVillage(Player player, int intersectionID){
-        //TODO: check if player has enough Resources
 
         int[] intersectionCoordinates = translateIntersectionToMatrixCoordinates(intersectionID);
         int row = intersectionCoordinates[0];
@@ -90,7 +87,6 @@ public class Board {
     }
 
     public boolean addNewCity(Player player, int intersectionID){
-        //TODO: check if player has enough Resources
 
         if(isSetupPhase){
             return false;
@@ -139,9 +135,10 @@ public class Board {
         if(nextToBuilding) {
             return false;
         }
-        //if even even check or uneven uneven check below, else above if there is a building next to the position where it should be built
-        if((evenRow && evenCol) || (!evenRow && !evenCol)){
-            if(row!=0 && intersections[row-1][col] instanceof Building){
+
+        //if even uneven or uneven even check below, else above if there is a building
+        if((evenRow && !evenCol) || (!evenRow && evenCol)){
+            if(row != 0 && intersections[row-1][col] instanceof Building){
                 nextToBuilding = true;
             }
 
