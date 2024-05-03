@@ -18,7 +18,6 @@ public class GameDescriptor {
     @Getter
     private Player admin;
     private final Date createdAt;
-    private int nextPlayerID = 1;
     private final boolean[] availableIDs = new boolean[Constants.MAX_PLAYER_COUNT];
 
     public GameDescriptor(){
@@ -26,9 +25,7 @@ public class GameDescriptor {
         this.id = UUID.randomUUID().toString().substring(0,7);
         this.createdAt = new Date();
         availableIDs[0] = false;
-        for(int i = 0; i < Constants.MAX_PLAYER_COUNT; i++){
-            availableIDs[i] = true;
-        }
+        Arrays.fill(availableIDs, true);
     }
 
 
