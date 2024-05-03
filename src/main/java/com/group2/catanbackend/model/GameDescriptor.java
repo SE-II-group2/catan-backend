@@ -1,6 +1,6 @@
 package com.group2.catanbackend.model;
 
-import com.group2.catanbackend.dto.game.PlayerDto;
+import com.group2.catanbackend.config.Constants;
 import com.group2.catanbackend.dto.game.PlayersInLobbyDto;
 import com.group2.catanbackend.exception.ErrorCode;
 import com.group2.catanbackend.exception.GameException;
@@ -19,28 +19,34 @@ public class GameDescriptor {
     private Player admin;
     private final Date createdAt;
     private int nextPlayerID = 1;
+    private final boolean[] availableIDs = new boolean[Constants.MAX_PLAYER_COUNT];
 
     public GameDescriptor(){
         this.players = new LinkedList<>();
         this.id = UUID.randomUUID().toString().substring(0,7);
         this.createdAt = new Date();
+        availableIDs[0] = false;
+        for(int i = 0; i < Constants.MAX_PLAYER_COUNT; i++){
+            availableIDs[i] = true;
+        }
     }
 
 
     public void join(Player player) throws GameException {
         if(players.contains(player))
             throw new PlayerAlreadyInGameException(ErrorCode.ERROR_PLAYER_ALREADY_IN_GAME);
-        if(players.size() >= 4)
+        if(players.size() >= Constants.MAX_PLAYER_COUNT)
             throw new GameFullException(ErrorCode.ERROR_GAME_FULL + id);
         if(players.isEmpty()){
             admin = player;
         }
         players.add(player);
-        player.setInGameID(nextPlayerID++);
+        player.setInGameID(useNextGameID());
     }
 
     public boolean leave(Player player){
         if(players.remove(player)) {
+            availableIDs[player.getInGameID()] = true;
             if (players.isEmpty())
                 admin = null;
             else if (player.equals(admin)) {
@@ -54,8 +60,20 @@ public class GameDescriptor {
     public int getPlayerCount(){
         return players.size();
     }
+    private int getNextPlayerID(){
+        for(int i = 0; i < Constants.MAX_PLAYER_COUNT; i++){
+            if(availableIDs[i])
+                return i;
+        }
+        return -1;
+    }
+    private int useNextGameID(){
+        int next = getNextPlayerID();
+        availableIDs[next] = false;
+        return next;
+    }
 
-    public PlayersInLobbyDto getDtoTemplate(){
+    public PlayersInLobbyDto getPlayersInLobbyDto(){
         PlayersInLobbyDto dto = new PlayersInLobbyDto();
         dto.setPlayers(getPlayers().stream().map(Player::toPlayerDto).toList());
         dto.setAdmin(getAdmin() != null ? getAdmin().toPlayerDto() : null);

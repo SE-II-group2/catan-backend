@@ -6,6 +6,7 @@ import com.group2.catanbackend.dto.CreateRequestDto;
 import com.group2.catanbackend.dto.JoinRequestDto;
 import com.group2.catanbackend.dto.JoinResponseDto;
 import com.group2.catanbackend.dto.game.*;
+import com.group2.catanbackend.model.PlayerState;
 import com.group2.catanbackend.service.GameService;
 import com.group2.catanbackend.service.TokenService;
 import org.junit.jupiter.api.Test;
@@ -40,7 +41,7 @@ class GameSocketIntegrationTest {
     private ObjectMapper mapper = new ObjectMapper();
 
     @Test
-    public void testReceivesNotificationOnNewPlayerJoined() throws Exception{
+    void testReceivesNotificationOnNewPlayerJoined() throws Exception{
         JoinResponseDto responseDto = gameService.createAndJoin(new CreateRequestDto("Player1"));
 
         TestClientImplementation client = new TestClientImplementation(port, responseDto.getToken());
@@ -56,12 +57,11 @@ class GameSocketIntegrationTest {
         assertThat(dto.getClass()).isEqualTo(PlayersInLobbyDto.class);
         PlayersInLobbyDto playersDto = (PlayersInLobbyDto) dto;
         assertThat(playersDto.getPlayers().size()).isEqualTo(2);
-        PlayerEventDto eventDto = playersDto.getEvent();
-        assertThat(eventDto.getType()).isEqualTo(PlayerEventDto.Type.PLAYER_JOINED);
+        assertThat(playersDto.getPlayers().get(1).getState()).isEqualTo(PlayerState.SOFT_JOINED);
     }
 
     @Test
-    public void testReceivesNotificationOnPlayerLeft() throws Exception{
+    void testReceivesNotificationOnPlayerLeft() throws Exception{
         JoinResponseDto player1 = gameService.createAndJoin(new CreateRequestDto("Player1"));
         JoinResponseDto player2 = gameService.joinGame(new JoinRequestDto("Player1", player1.getGameID()));
 
@@ -79,12 +79,41 @@ class GameSocketIntegrationTest {
         PlayersInLobbyDto playersInLobbyDto = (PlayersInLobbyDto) dto;
         assertThat(playersInLobbyDto.getPlayers().size()).isEqualTo(1);
         assertThat(playersInLobbyDto.getAdmin().getInGameID()).isEqualTo(player2.getInGameID());
-        assertThat(playersInLobbyDto.getEvent().getType()).isEqualTo(PlayerEventDto.Type.PLAYER_LEFT);
-        assertThat(playersInLobbyDto.getEvent().getPlayer().getInGameID()).isEqualTo(player1.getInGameID());
+    }
+    @Test
+    void testReceivesPlayerStateConnectOnSocketEstablished() throws Exception{
+        JoinResponseDto player1 = gameService.createAndJoin(new CreateRequestDto("Player1"));
+        JoinResponseDto player2 = gameService.joinGame(new JoinRequestDto("Player1", player1.getGameID()));
+
+        TestClientImplementation client = new TestClientImplementation(port, player1.getToken());
+        BlockingQueue<MessageDto> queue = new LinkedBlockingQueue<>();
+        StompFrameHandlerImpl<MessageDto> handler = new StompFrameHandlerImpl<>(queue, MessageDto.class);
+        client.subscribe(Constants.TOPIC_GAME_LOBBY.formatted(player1.getGameID()), handler);
+
+        TestClientImplementation client2 = new TestClientImplementation(port, player2.getToken());
+        BlockingQueue<MessageDto> queue2 = new LinkedBlockingQueue<>();
+        StompFrameHandlerImpl<MessageDto> handler2 = new StompFrameHandlerImpl<>(queue, MessageDto.class);
+        client2.subscribe(Constants.FULL_USER_QUEUE_PATH, handler);
+
+        MessageDto dto = queue.poll(2, TimeUnit.SECONDS);
+        assertThat(dto.getClass()).isEqualTo(PlayersInLobbyDto.class);
+        PlayersInLobbyDto playersInLobbyDto = (PlayersInLobbyDto) dto;
+        assertThat(playersInLobbyDto.getPlayers().get(1).getState()).isEqualTo(PlayerState.CONNECTED);
     }
 
     @Test
-    public void testReceivesNotificationOnGameStart() throws Exception{
+    void testOnceConnectionLostPlayerLeaves() throws Exception{
+        JoinResponseDto player1 = gameService.createAndJoin(new CreateRequestDto("Player1"));
+        TestClientImplementation clientImplementation = new TestClientImplementation(port, player1.getToken());
+        clientImplementation.disconnect();
+
+        Thread.sleep(2000);
+        assertThat(gameService.getRegisteredGames().get(player1.getGameID())).isNull(); //as the game is deleted
+    }
+
+
+    @Test
+    void testReceivesNotificationOnGameStart() throws Exception{
         JoinResponseDto player1 = gameService.createAndJoin(new CreateRequestDto("Player1"));
         JoinResponseDto player2 = gameService.joinGame(new JoinRequestDto("Player2", player1.getGameID()));
 

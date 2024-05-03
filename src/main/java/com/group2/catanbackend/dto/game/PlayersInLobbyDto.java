@@ -10,7 +10,6 @@ import java.util.List;
 public class PlayersInLobbyDto extends MessageDto {
     List<PlayerDto> players;
     PlayerDto admin;
-    PlayerEventDto event;
 
     public PlayersInLobbyDto(){
         super();
