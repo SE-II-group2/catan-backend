@@ -56,16 +56,12 @@ public class GameService {
         String token = tokenService.generateToken();
 
         Player p = new Player(token, request.getPlayerName(), game.getId());
-        p.setPlayerState(PlayerState.IN_LOBBY);
+        p.setPlayerState(PlayerState.SOFT_JOINED);
         game.join(p);
 
         tokenService.pushToken(token, p);
-
-        PlayerDto playerDto = new PlayerDto(p.getDisplayName(), p.getInGameID(), PlayerState.IN_LOBBY);
-
-        notifyLobbyNewPlayer(game, playerDto);
+        notifyPlayersChanged(game);
         log.info("user " + request.getPlayerName() + " joined game " + game.getId());
-
 
         return new JoinResponseDto(p.getDisplayName(), p.getGameID(), p.getToken(), p.getInGameID());
     }
@@ -102,7 +98,7 @@ public class GameService {
         if(gameDescriptor != null){
             gameDescriptor.leave(player);
             tokenService.revokeToken(token);
-            notifyLobbyPlayerLeft(gameDescriptor, player);
+            notifyPlayersChanged(gameDescriptor);
             if(gameDescriptor.getPlayerCount() == 0){
                 registeredGames.remove(gameDescriptor.getId());
             }
@@ -112,8 +108,27 @@ public class GameService {
             tokenService.revokeToken(token);
             game.removePlayer(player);
         }
+    }
+
+    public void handleConnectionEstablished(String token){
+        Player p = tokenService.getPlayerByToken(token);
+        GameDescriptor gameDescriptor = registeredGames.get(p.getGameID());
+        if(gameDescriptor != null){
+            p.setPlayerState(PlayerState.CONNECTED);
+            notifyPlayersChanged(gameDescriptor);
+        }
+        //TODO: for running game;
+    }
+
+    public void handleConnectionLost(String token){
+        Player p = tokenService.getPlayerByToken(token);
+        if(p == null) return; //no information cannot process
+        if (registeredGames.get(p.getGameID()) != null) {
+            leaveGame(token); //connection loss in lobby state is equivalent to leaving
+        }
 
     }
+
     public GameMoveDto makeMove(String token, GameMoveDto gameMove){
         Player player = tokenService.getPlayerByToken(token);
         if(player == null)
@@ -133,16 +148,7 @@ public class GameService {
                 .toList();
     }
 
-    private void notifyLobbyNewPlayer(GameDescriptor gameDescriptor, PlayerDto newPlayer){
-        PlayersInLobbyDto data = gameDescriptor.getDtoTemplate();
-        data.setEvent(new PlayerEventDto(PlayerEventDto.Type.PLAYER_JOINED, newPlayer));
-        messagingService.notifyLobby(gameDescriptor.getId(), data);
-    }
-
-    private void notifyLobbyPlayerLeft(GameDescriptor descriptor, Player p){
-        PlayersInLobbyDto data = descriptor.getDtoTemplate();
-        data.setEvent(new PlayerEventDto(PlayerEventDto.Type.PLAYER_LEFT, p.toPlayerDto()));
-
-        messagingService.notifyLobby(descriptor.getId(), data);
+    private void notifyPlayersChanged(GameDescriptor gameDescriptor){
+        messagingService.notifyLobby(gameDescriptor.getId(), gameDescriptor.getPlayersInLobbyDto());
     }
 }

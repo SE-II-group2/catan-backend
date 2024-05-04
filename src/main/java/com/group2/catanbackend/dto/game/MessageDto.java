@@ -9,7 +9,7 @@ import lombok.*;
  */
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
+        include = JsonTypeInfo.As.EXISTING_PROPERTY,
         property = "eventType"
 )
 @JsonSubTypes({

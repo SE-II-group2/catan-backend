@@ -42,7 +42,7 @@ public class RunningInstanceService {
 
     public void addPlayers(List<Player> players) {
         this.players = players;
-        players.forEach(player -> player.setPlayerState(PlayerState.PLAYING));
+        //players.forEach(player -> player.setPlayerState(PlayerState.PLAYING)); maybe don't needed
     }
 
     public void start() {
@@ -60,9 +60,6 @@ public class RunningInstanceService {
         PlayersInLobbyDto dto = new PlayersInLobbyDto();
         dto.setPlayers(players.stream().map(Player::toPlayerDto).toList());
         dto.setAdmin(null);
-        dto.setEvent(new PlayerEventDto(PlayerEventDto.Type.PLAYER_LEFT, p.toPlayerDto()));
-
-
         messagingService.notifyLobby(gameId, dto);
     }
 

@@ -28,4 +28,6 @@ public class TestClientImplementation {
     public void subscribe(String destination, StompFrameHandler handler){
         session.subscribe(destination, handler);
     }
+
+    public void disconnect(){session.disconnect();}
 }
