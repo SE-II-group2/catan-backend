@@ -1,5 +1,6 @@
 package com.group2.catanbackend.dto.game;
 
+import com.group2.catanbackend.model.PlayerState;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,4 +16,5 @@ import lombok.Setter;
 public class PlayerDto {
     private String displayName;
     private int inGameID;
+    private PlayerState state;
 }

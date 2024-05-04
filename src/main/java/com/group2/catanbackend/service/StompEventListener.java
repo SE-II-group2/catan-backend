@@ -1,25 +1,40 @@
 package com.group2.catanbackend.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationListener;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.messaging.SessionConnectedEvent;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
 import java.security.Principal;
+
+import static com.group2.catanbackend.config.Constants.FULL_USER_QUEUE_PATH;
+
 @Slf4j
 @Component
-public class StompEventListener implements ApplicationListener<SessionConnectedEvent> {
-    @Override
-    public void onApplicationEvent(SessionConnectedEvent event){
-        StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
-        String userID = null;
+public class StompEventListener {
+    GameService gameService;
+    private static final String KEY_SUBSCRIPTION_PATH = "simpDestination";
 
-        Principal principal = sha.getUser();
-        if(principal != null)
-            userID = principal.getName();
+    public StompEventListener(@Autowired GameService gameService){
+        this.gameService = gameService;
+    }
+    @EventListener
+    public void onClientSubscribe(SessionSubscribeEvent event){
+        String destination = event.getMessage().getHeaders().get(KEY_SUBSCRIPTION_PATH, String.class);
+        Principal user = event.getUser();
+        if(FULL_USER_QUEUE_PATH.equals(destination) && user != null){
+           String token = user.getName();
+           gameService.handleConnectionEstablished(token);
+        }
+    }
 
-        log.info("STOMP message: " + sha.getCommand() + " from " + userID);
-        log.info(event.getMessage().toString());
+    @EventListener
+    public void onClientDisconnect(SessionDisconnectEvent event){
+        Principal user = event.getUser();
+        if(user != null){
+            gameService.handleConnectionLost(user.getName());
+        }
     }
 }

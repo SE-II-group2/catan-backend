@@ -1,9 +1,7 @@
 package com.group2.catanbackend.controller;
 
 import com.group2.catanbackend.dto.ErrorResponse;
-import com.group2.catanbackend.exception.GameException;
-import com.group2.catanbackend.exception.NoSuchGameException;
-import com.group2.catanbackend.exception.NotAuthorizedException;
+import com.group2.catanbackend.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,7 +22,6 @@ public class GameControllerAdvice extends ResponseEntityExceptionHandler {
     @ResponseBody
     public ResponseEntity<Object> handleException(GameException gx){
         log.error(gx.getMessage());
-
         return new ResponseEntity<>(gx.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
@@ -37,6 +34,14 @@ public class GameControllerAdvice extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(status).headers(headers).body(
                 new ErrorResponse(status.value(), ex.getFieldError().getDefaultMessage() )
         );
+    }
+    @ExceptionHandler(NoSuchTokenException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public @ResponseBody ResponseEntity<ErrorResponse> handleNoSuchTokenException(NoSuchTokenException ex){
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(
+                        new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage())
+                );
     }
 
     @ExceptionHandler(NoSuchGameException.class)
@@ -53,5 +58,12 @@ public class GameControllerAdvice extends ResponseEntityExceptionHandler {
     public @ResponseBody ResponseEntity<ErrorResponse> handleNotAuthorizedException(NotAuthorizedException ex){
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(GameMoveException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    public @ResponseBody ResponseEntity<ErrorResponse> handleGameMoveException(GameMoveException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY.value(), ex.getMessage()));
     }
 }
