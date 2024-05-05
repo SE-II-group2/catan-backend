@@ -149,12 +149,37 @@ public class GameControllerTest {
                                 .post(URLGAMEMOVE)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header(HttpHeaders.AUTHORIZATION, token)
-                                .content(toJson(new BuildRoadMoveDto(42)))
+                                .content(toJson(new EndTurnMoveDto()))
                 )
                 .andExpect(status().is(HttpStatus.UNPROCESSABLE_ENTITY.value()));
     }
 
+    @Test
+    public void testMakeValidGameMove()throws Exception {
+        String token = gameService.createAndJoin(new CreateRequestDto("Player1")).getToken();
+        gameService.startGame(token);
 
+        mockMvc.perform(
+                        MockMvcRequestBuilders
+                                .post(URLGAMEMOVE)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                .content(toJson(new BuildVillageMoveDto(42)))
+                )
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testCannotMakeGameMoveWithoutGame()throws Exception {
+        mockMvc.perform(
+                        MockMvcRequestBuilders
+                                .post(URLGAMEMOVE)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header(HttpHeaders.AUTHORIZATION, "not valid token")
+                                .content(toJson(new BuildRoadMoveDto(42)))
+                )
+                .andExpect(status().is(HttpStatus.UNAUTHORIZED.value()));
+    }
 
     private String toJson(final Object obj){
         try {

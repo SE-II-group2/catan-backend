@@ -60,8 +60,7 @@ public class GameLogicController {
             }
             case "BuildVillageMoveDto" -> {
                 BuildVillageMoveDto buildVillageMove = (BuildVillageMoveDto) gameMove;
-                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, player.toPlayerDto()));
-                //makeBuildVillageMove(buildVillageMove, player);
+                makeBuildVillageMove(buildVillageMove, player);
             }
             case "EndTurnMoveDto" -> {
                 if (isSetupPhase)

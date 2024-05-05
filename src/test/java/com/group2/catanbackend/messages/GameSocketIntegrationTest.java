@@ -44,7 +44,7 @@ class GameSocketIntegrationTest {
     private ObjectMapper mapper = new ObjectMapper();
 
     @Test
-    void testReceivesNotificationOnNewPlayerJoined() throws Exception{
+    void testReceivesNotificationOnNewPlayerJoined() throws Exception {
         JoinResponseDto responseDto = gameService.createAndJoin(new CreateRequestDto("Player1"));
 
         TestClientImplementation client = new TestClientImplementation(port, responseDto.getToken());
@@ -64,7 +64,7 @@ class GameSocketIntegrationTest {
     }
 
     @Test
-    void testReceivesNotificationOnPlayerLeft() throws Exception{
+    void testReceivesNotificationOnPlayerLeft() throws Exception {
         JoinResponseDto player1 = gameService.createAndJoin(new CreateRequestDto("Player1"));
         JoinResponseDto player2 = gameService.joinGame(new JoinRequestDto("Player1", player1.getGameID()));
 
@@ -83,8 +83,9 @@ class GameSocketIntegrationTest {
         assertThat(playersInLobbyDto.getPlayers().size()).isEqualTo(1);
         assertThat(playersInLobbyDto.getAdmin().getInGameID()).isEqualTo(player2.getInGameID());
     }
+
     @Test
-    void testReceivesPlayerStateConnectOnSocketEstablished() throws Exception{
+    void testReceivesPlayerStateConnectOnSocketEstablished() throws Exception {
         JoinResponseDto player1 = gameService.createAndJoin(new CreateRequestDto("Player1"));
         JoinResponseDto player2 = gameService.joinGame(new JoinRequestDto("Player1", player1.getGameID()));
 
@@ -105,7 +106,7 @@ class GameSocketIntegrationTest {
     }
 
     @Test
-    void testOnceConnectionLostPlayerLeaves() throws Exception{
+    void testOnceConnectionLostPlayerLeaves() throws Exception {
         JoinResponseDto player1 = gameService.createAndJoin(new CreateRequestDto("Player1"));
         TestClientImplementation clientImplementation = new TestClientImplementation(port, player1.getToken());
         clientImplementation.disconnect();
@@ -116,7 +117,7 @@ class GameSocketIntegrationTest {
 
 
     @Test
-    void testReceivesNotificationOnGameStart() throws Exception{
+    void testReceivesNotificationOnGameStart() throws Exception {
         JoinResponseDto player1 = gameService.createAndJoin(new CreateRequestDto("Player1"));
         JoinResponseDto player2 = gameService.joinGame(new JoinRequestDto("Player2", player1.getGameID()));
 
@@ -124,7 +125,7 @@ class GameSocketIntegrationTest {
         BlockingQueue<MessageDto> queue = new LinkedBlockingQueue<>();
         StompFrameHandlerImpl<MessageDto> handler = new StompFrameHandlerImpl<>(queue, MessageDto.class);
         client.subscribe(Constants.TOPIC_GAME_LOBBY.formatted(player2.getGameID()), handler);
-
+        Thread.sleep(1000);
         gameService.startGame(player1.getToken()); //as Player1 is admin
         Thread.sleep(1000);
         MessageDto dto = queue.poll(2, TimeUnit.SECONDS);
@@ -145,12 +146,11 @@ class GameSocketIntegrationTest {
 
         Thread.sleep(1000);
         MessageDto dto = queue.poll(2, TimeUnit.SECONDS);
-        assertThat(dto.getClass()).isEqualTo(CurrentGameStateDto.class);
-
-        List<HexagonDto> hexagonDtos = ((CurrentGameStateDto)dto).getHexagons();
-        List<IntersectionDto> intersectionDtos = ((CurrentGameStateDto)dto).getIntersections();
-        List<ConnectionDto> connectionDtos = ((CurrentGameStateDto)dto).getConnections();
-        List<PlayerDto> playerDtos = ((CurrentGameStateDto)dto).getPlayerOrder();
+        assert dto instanceof CurrentGameStateDto;
+        List<HexagonDto> hexagonDtos = ((CurrentGameStateDto) dto).getHexagons();
+        List<IntersectionDto> intersectionDtos = ((CurrentGameStateDto) dto).getIntersections();
+        List<ConnectionDto> connectionDtos = ((CurrentGameStateDto) dto).getConnections();
+        List<PlayerDto> playerDtos = ((CurrentGameStateDto) dto).getPlayerOrder();
 
         assertEquals(19, hexagonDtos.size());
         assertEquals(54, intersectionDtos.size());
@@ -170,27 +170,38 @@ class GameSocketIntegrationTest {
         StompFrameHandlerImpl<MessageDto> handler = new StompFrameHandlerImpl<>(queue, MessageDto.class);
         client.subscribe(Constants.TOPIC_GAME_PROGRESS.formatted(player1.getGameID()), handler);
         Thread.sleep(1000);
+
+        //Test buildvillageMove
         gameService.makeMove(player1.getToken(), new BuildVillageMoveDto(22));
         Thread.sleep(1000);
 
         MessageDto dto = queue.poll(2, TimeUnit.SECONDS);
-        assertThat(dto).isInstanceOf(GameProgressDto.class);
-
         if (dto instanceof GameProgressDto gameProgressDto) {
             PlayerDto playerDto = gameProgressDto.getPlayerDto();
             GameMoveDto gameMoveDto = gameProgressDto.getMoveDto();
-
-            // Check if the received game move is an instance of BuildVillageMoveDto
             if (gameMoveDto instanceof BuildVillageMoveDto buildVillageMoveDto) {
                 assertEquals(22, buildVillageMoveDto.getIntersectionID());
             } else {
-                System.out.println(gameMoveDto.getClass().getSimpleName());
-                System.out.println(gameMoveDto);
                 fail("Received game move is not an instance of BuildVillageMoveDto");
             }
-
             assertEquals(player1.getPlayerName(), playerDto.getDisplayName());
-        }
+        } else fail("Received dto is not instance of GameProgressDto");
+
+        //Test BuildRoadMove
+        gameService.makeMove(player1.getToken(), new BuildRoadMoveDto(22));
+        Thread.sleep(1000);
+
+        dto = queue.poll(2, TimeUnit.SECONDS);
+        if (dto instanceof GameProgressDto gameProgressDto) {
+            PlayerDto playerDto = gameProgressDto.getPlayerDto();
+            GameMoveDto gameMoveDto = gameProgressDto.getMoveDto();
+            if (gameMoveDto instanceof BuildRoadMoveDto buildRoadMoveDto) {
+                assertEquals(22, buildRoadMoveDto.getConnectionID());
+            } else {
+                fail("Received game move is not an instance of BuildRoadMoveDto");
+            }
+            assertEquals(player1.getPlayerName(), playerDto.getDisplayName());
+        } else fail("Received dto is not instance of GameProgressDto");
     }
 
 
