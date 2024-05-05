@@ -1,10 +1,11 @@
 package com.group2.catanbackend.dto.game;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-
+@NoArgsConstructor
 public class CurrentGameStateDto extends MessageDto{
     public CurrentGameStateDto(List<HexagonDto> hexagons, List<IntersectionDto> intersections, List<ConnectionDto> connections) {
         this.hexagons = hexagons;
@@ -14,11 +15,11 @@ public class CurrentGameStateDto extends MessageDto{
     }
 
     @Getter
-    private final List<HexagonDto> hexagons;
+    private List<HexagonDto> hexagons;
     @Getter
-    private final List<IntersectionDto> intersections;
+    private List<IntersectionDto> intersections;
     @Getter
-    private final List<ConnectionDto> connections;
+    private List<ConnectionDto> connections;
 }
 
 

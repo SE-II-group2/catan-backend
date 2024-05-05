@@ -1,5 +1,6 @@
 package com.group2.catanbackend.gamelogic;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.group2.catanbackend.dto.game.*;
 import com.group2.catanbackend.exception.*;
 import com.group2.catanbackend.gamelogic.enums.ResourceCost;

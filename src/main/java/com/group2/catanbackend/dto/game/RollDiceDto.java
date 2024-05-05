@@ -2,15 +2,12 @@ package com.group2.catanbackend.dto.game;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-
+@NoArgsConstructor
+@AllArgsConstructor
 public class RollDiceDto extends GameMoveDto{
-    public RollDiceDto(int diceRoll) {
-        this.diceRoll = diceRoll;
-        this.setEventType(MessageType.GAME_MOVE);
-    }
-
     @Getter
-    private final int diceRoll;
+    private int diceRoll;
 }
 

@@ -1,9 +1,6 @@
 package com.group2.catanbackend.service;
 
-import com.group2.catanbackend.dto.CreateRequestDto;
-import com.group2.catanbackend.dto.JoinResponseDto;
-import com.group2.catanbackend.dto.LobbyDto;
-import com.group2.catanbackend.dto.JoinRequestDto;
+import com.group2.catanbackend.dto.*;
 import com.group2.catanbackend.dto.game.*;
 import com.group2.catanbackend.exception.*;
 import com.group2.catanbackend.model.GameDescriptor;

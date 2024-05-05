@@ -1,13 +1,16 @@
 package com.group2.catanbackend.dto.game;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-public class BuildRoadMoveDto extends GameMoveDto{
-    public BuildRoadMoveDto(int connectionId) {
-        this.connectionID = connectionId;
-    }
+@AllArgsConstructor
 
-    private final int connectionID;
+public class BuildRoadMoveDto extends GameMoveDto{
+    @NotNull
+    @NotEmpty
+    private int connectionID;
 }
 
