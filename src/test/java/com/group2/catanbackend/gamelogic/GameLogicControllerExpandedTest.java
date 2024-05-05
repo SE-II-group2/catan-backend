@@ -13,7 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.springframework.messaging.Message;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -120,7 +119,7 @@ public class GameLogicControllerExpandedTest {
             argument = (GameProgressDto) allValues.get(allValues.size() - 5); //get the last buildRoadMoveDto io the setup phase
             //moveDto = new BuildRoadMoveDto(29, 30);
             BuildRoadMoveDto argumentBuildRoadMoveDto = (BuildRoadMoveDto) argument.getMoveDto();
-            assertEquals(36, argumentBuildRoadMoveDto.getConnection());
+            assertEquals(36, argumentBuildRoadMoveDto.getConnectionID());
             assertEquals(player1.getDisplayName(), argument.getPlayerDto().getDisplayName());
         } catch (Exception e) {
             e.printStackTrace();

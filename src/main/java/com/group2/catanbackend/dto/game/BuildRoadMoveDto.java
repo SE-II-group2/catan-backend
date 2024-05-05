@@ -4,11 +4,10 @@ import lombok.Getter;
 
 @Getter
 public class BuildRoadMoveDto extends GameMoveDto{
-    public BuildRoadMoveDto(int connection) {
-        this.connection = connection;
-        this.setEventType(MessageType.GAME_MOVE);
+    public BuildRoadMoveDto(int connectionId) {
+        this.connectionID = connectionId;
     }
 
-    private final int connection;
+    private final int connectionID;
 }
 

@@ -129,7 +129,7 @@ public class GameService {
 
     }
 
-    public GameMoveDto makeMove(String token, GameMoveDto gameMove){
+    public GameMoveValidResponseDto makeMove(String token, GameMoveDto gameMove){
         Player player = tokenService.getPlayerByToken(token);
         if(player == null)
             throw new NoSuchTokenException(ErrorCode.ERROR_NO_SUCH_TOKEN);
@@ -138,7 +138,7 @@ public class GameService {
         if(game == null)
             throw new NoSuchGameException(ErrorCode.ERROR_GAME_NOT_FOUND.formatted(player.getGameID()));
         game.makeMove(gameMove, player);
-        return new GameMoveValidDto("Move Ok!");
+        return new GameMoveValidResponseDto("Move Ok!");
     }
 
     public List<LobbyDto> getLobbies(){

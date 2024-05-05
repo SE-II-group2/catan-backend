@@ -1,5 +1,5 @@
 package com.group2.catanbackend.dto.game;
 
-public abstract class GameMoveDto extends MessageDto{
+public abstract class GameMoveDto{
 
 }

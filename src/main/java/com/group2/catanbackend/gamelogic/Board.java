@@ -200,6 +200,17 @@ public class Board {
         return connectionIntersections;
     }
 
+    public int getConnectionIdFromIntersections(int intersectionId1, int intersectionId2) {
+        for (int connectionId = 0; connectionId < connectedIntersections[0].length; connectionId++) {
+            if ((connectedIntersections[0][connectionId] == intersectionId1 && connectedIntersections[1][connectionId] == intersectionId2) ||
+                    (connectedIntersections[0][connectionId] == intersectionId2 && connectedIntersections[1][connectionId] == intersectionId1)) {
+                return connectionId;
+            }
+        }
+        return -1; // Return -1 if no matching connection is found
+    }
+
+
     public void generateConnectedIntersections(){ // shows which connection is connected to which 2 intersections
         connectedIntersections = new int[2][72];
         connectedIntersections[0] = new int[] {0,1,2,3,4,5,0,2 ,4 ,6 ,7,8,9 ,10,11,12,13,14,7 ,9 ,11,13,15,16,17,18,19,20,21,22,23,24,25,28,27,30,29,32,31,34,33,36,35,16,18,20,22,24,26,39,38,41,40,43,42,45,44,28,30,32,34,36,48,47,50,49,52,51,39,41,43,45};
