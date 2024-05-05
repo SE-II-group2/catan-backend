@@ -1,6 +1,5 @@
 package com.group2.catanbackend.gamelogic;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.group2.catanbackend.dto.game.*;
 import com.group2.catanbackend.exception.*;
 import com.group2.catanbackend.gamelogic.enums.ResourceCost;
@@ -13,7 +12,9 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GameLogicController {
     @Getter
@@ -41,15 +42,15 @@ public class GameLogicController {
     }
 
 
-
     public void makeMove(GameMoveDto gameMove, Player player) throws GameException {
-        if(gameover){
+        if (gameover) {
             throw new InvalidGameMoveException(ErrorCode.ERROR_GAME_ALREADY_OVER.formatted(players.get(0).getDisplayName()));
         }
         switch (gameMove.getClass().getSimpleName()) {
             case "RollDiceDto" -> {
                 if (isSetupPhase) throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_ROLL_IN_SETUP);
-                if (turnOrder.get(0) != player) throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+                if (turnOrder.get(0) != player)
+                    throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
                 RollDiceDto rollDiceMove = (RollDiceDto) gameMove;
                 makeRollDiceMove(rollDiceMove, player);
             }
@@ -59,11 +60,14 @@ public class GameLogicController {
             }
             case "BuildVillageMoveDto" -> {
                 BuildVillageMoveDto buildVillageMove = (BuildVillageMoveDto) gameMove;
-                makeBuildVillageMove(buildVillageMove, player);
+                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, player.toPlayerDto()));
+                //makeBuildVillageMove(buildVillageMove, player);
             }
             case "EndTurnMoveDto" -> {
-                if (isSetupPhase)throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
-                if (turnOrder.get(0) != player) throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+                if (isSetupPhase)
+                    throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+                if (turnOrder.get(0) != player)
+                    throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
                 turnOrder.remove(0);
                 turnOrder.add(player);
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(gameMove, player.toPlayerDto()));
@@ -86,18 +90,22 @@ public class GameLogicController {
                 }
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(buildRoadMove, player.toPlayerDto()));
 
-            } else throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildRoadMove.getClass().getSimpleName()));
+            } else
+                throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildRoadMove.getClass().getSimpleName()));
             return;
         }
 
-        if (turnOrder.get(0) != player) throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+        if (turnOrder.get(0) != player)
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
 
         if (player.resourcesSufficient(ResourceCost.ROAD.getCost())) {
             if (board.addNewRoad(player, buildRoadMove.getConnectionID())) {
                 player.adjustResources(ResourceCost.ROAD.getCost());
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(buildRoadMove, player.toPlayerDto()));
-            } else throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildRoadMove.getClass().getSimpleName()));
-        } else throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(buildRoadMove.getClass().getSimpleName()));
+            } else
+                throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildRoadMove.getClass().getSimpleName()));
+        } else
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(buildRoadMove.getClass().getSimpleName()));
     }
 
     private void makeBuildVillageMove(BuildVillageMoveDto buildVillageMove, Player player) {
@@ -105,42 +113,44 @@ public class GameLogicController {
             if (!(setupPhaseTurnOrder.get(0) == player))
                 throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
 
-            if (board.addNewVillage(player, buildVillageMove.getIntersection())) {
+            if (board.addNewVillage(player, buildVillageMove.getIntersectionID())) {
                 player.increaseVictoryPoints(1);
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, player.toPlayerDto()));
-            } else throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildVillageMove.getClass().getSimpleName()));
+            } else
+                throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildVillageMove.getClass().getSimpleName()));
             return;
         }
 
-        if (turnOrder.get(0) != player) throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+        if (turnOrder.get(0) != player)
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
 
         if (player.resourcesSufficient(ResourceCost.VILLAGE.getCost())) {
-            if (board.addNewVillage(player, buildVillageMove.getIntersection())) {
+            if (board.addNewVillage(player, buildVillageMove.getIntersectionID())) {
                 player.adjustResources(ResourceCost.VILLAGE.getCost());
                 player.increaseVictoryPoints(1);
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, player.toPlayerDto()));
 
-                if(player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY){
-                    gameover=true;
+                if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
+                    gameover = true;
                     messagingService.notifyGameProgress(gameId, new GameoverDto(player.toPlayerDto()));
                 }
-            }
-            else {
+            } else {
                 throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildVillageMove.getClass().getSimpleName()));
             }
-        }
-        else throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(buildVillageMove.getClass().getSimpleName()));
+        } else
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(buildVillageMove.getClass().getSimpleName()));
     }
 
     private void makeRollDiceMove(RollDiceDto rollDiceDto, Player player) {
-        if(rollDiceDto.getDiceRoll()<2 || rollDiceDto.getDiceRoll()>12) throw new InvalidGameMoveException(ErrorCode.ERROR_INVALID_DICE_ROLL);
+        if (rollDiceDto.getDiceRoll() < 2 || rollDiceDto.getDiceRoll() > 12)
+            throw new InvalidGameMoveException(ErrorCode.ERROR_INVALID_DICE_ROLL);
         board.distributeResourcesByDiceRoll(rollDiceDto.getDiceRoll());
         messagingService.notifyGameProgress(gameId, new GameProgressDto(rollDiceDto, player.toPlayerDto()));
     }
 
     private void sendCurrentGameStateToPlayers() {
         List<HexagonDto> hexagonDtos = new ArrayList<>();
-        for(Hexagon hexagon : board.getHexagonList()){
+        for (Hexagon hexagon : board.getHexagonList()) {
             hexagonDtos.add(new HexagonDto(hexagon.getLocation(), hexagon.getDistribution(), hexagon.getRollValue(), hexagon.getId()));
         }
         List<IntersectionDto> intersectionDtos = new ArrayList<>();
@@ -153,15 +163,27 @@ public class GameLogicController {
             }
         }
         List<ConnectionDto> connectionDtos = new ArrayList<>();
+        Map<String, Boolean> visitedConnections = new HashMap<>();
         id = 0;
-        for (Connection[] connectionRow : board.getAdjacencyMatrix()) {
-            for (Connection connection : connectionRow) {
-                if (connection != null) {
+
+        for (int i = 0; i < board.getAdjacencyMatrix().length; i++) {
+            for (int j = i + 1; j < board.getAdjacencyMatrix()[i].length; j++) {
+                Connection connection = board.getAdjacencyMatrix()[i][j];
+                if (connection != null && !visitedConnections.containsKey(i + "-" + j)) {
                     connectionDtos.add(new ConnectionDto((connection.getPlayer() == null) ? null : connection.getPlayer().toPlayerDto(), id++));
+                    visitedConnections.put(i + "-" + j, true);
+                    visitedConnections.put(j + "-" + i, true);  // Mark both [i][j] and [j][i] as visited
                 }
             }
         }
-        messagingService.notifyGameProgress(gameId, new CurrentGameStateDto(hexagonDtos, intersectionDtos, connectionDtos));
+
+        List<PlayerDto> playerDtos = new ArrayList<>();
+
+        for (Player player : (isSetupPhase) ? setupPhaseTurnOrder : turnOrder) {
+            playerDtos.add(player.toPlayerDto());
+        }
+
+        messagingService.notifyGameProgress(gameId, new CurrentGameStateDto(hexagonDtos, intersectionDtos, connectionDtos, playerDtos));
     }
 
     private void generateSetupPhaseTurnOrder(int numOfPlayers) {

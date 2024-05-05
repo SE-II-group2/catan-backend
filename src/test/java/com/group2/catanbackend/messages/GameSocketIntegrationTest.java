@@ -16,12 +16,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
 import static org.assertj.core.api.InstanceOfAssertFactories.map;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -129,7 +132,7 @@ class GameSocketIntegrationTest {
     }
 
     @Test
-    void testReceivesNotificationOnGameMove() throws Exception {
+    void testReceivesValidGameStateOnGameStart() throws Exception {
         JoinResponseDto player1 = gameService.createAndJoin(new CreateRequestDto("Player1"));
         JoinResponseDto player2 = gameService.joinGame(new JoinRequestDto("Player2", player1.getGameID()));
 
@@ -143,6 +146,51 @@ class GameSocketIntegrationTest {
         Thread.sleep(1000);
         MessageDto dto = queue.poll(2, TimeUnit.SECONDS);
         assertThat(dto.getClass()).isEqualTo(CurrentGameStateDto.class);
+
+        List<HexagonDto> hexagonDtos = ((CurrentGameStateDto)dto).getHexagons();
+        List<IntersectionDto> intersectionDtos = ((CurrentGameStateDto)dto).getIntersections();
+        List<ConnectionDto> connectionDtos = ((CurrentGameStateDto)dto).getConnections();
+        List<PlayerDto> playerDtos = ((CurrentGameStateDto)dto).getPlayerOrder();
+
+        assertEquals(19, hexagonDtos.size());
+        assertEquals(54, intersectionDtos.size());
+        assertEquals(72, connectionDtos.size());
+        assertEquals(4, playerDtos.size());
+    }
+
+    @Test
+    public void testReceiveValidUpdateOnGameMove() throws Exception {
+        JoinResponseDto player1 = gameService.createAndJoin(new CreateRequestDto("Player1"));
+        JoinResponseDto player2 = gameService.joinGame(new JoinRequestDto("Player2", player1.getGameID()));
+
+        gameService.startGame(player1.getToken()); //as Player1 is admin
+
+        TestClientImplementation client = new TestClientImplementation(port, player2.getToken());
+        BlockingQueue<MessageDto> queue = new LinkedBlockingQueue<>();
+        StompFrameHandlerImpl<MessageDto> handler = new StompFrameHandlerImpl<>(queue, MessageDto.class);
+        client.subscribe(Constants.TOPIC_GAME_PROGRESS.formatted(player1.getGameID()), handler);
+        Thread.sleep(1000);
+        gameService.makeMove(player1.getToken(), new BuildVillageMoveDto(22));
+        Thread.sleep(1000);
+
+        MessageDto dto = queue.poll(2, TimeUnit.SECONDS);
+        assertThat(dto).isInstanceOf(GameProgressDto.class);
+
+        if (dto instanceof GameProgressDto gameProgressDto) {
+            PlayerDto playerDto = gameProgressDto.getPlayerDto();
+            GameMoveDto gameMoveDto = gameProgressDto.getMoveDto();
+
+            // Check if the received game move is an instance of BuildVillageMoveDto
+            if (gameMoveDto instanceof BuildVillageMoveDto buildVillageMoveDto) {
+                assertEquals(22, buildVillageMoveDto.getIntersectionID());
+            } else {
+                System.out.println(gameMoveDto.getClass().getSimpleName());
+                System.out.println(gameMoveDto);
+                fail("Received game move is not an instance of BuildVillageMoveDto");
+            }
+
+            assertEquals(player1.getPlayerName(), playerDto.getDisplayName());
+        }
     }
 
 

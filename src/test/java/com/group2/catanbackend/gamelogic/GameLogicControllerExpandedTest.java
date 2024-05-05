@@ -113,7 +113,7 @@ public class GameLogicControllerExpandedTest {
             argument = (GameProgressDto) allValues.get(allValues.size() - 6); //get the last buildVillageMoveDto io the setup phase
             //moveDto = new BuildVillageMoveDto(3, 2);
             BuildVillageMoveDto argumentBuildVillageMoveDto = (BuildVillageMoveDto) argument.getMoveDto();
-            assertEquals(29, argumentBuildVillageMoveDto.getIntersection());
+            assertEquals(29, argumentBuildVillageMoveDto.getIntersectionID());
             assertEquals(player1.getDisplayName(), argument.getPlayerDto().getDisplayName());
 
             argument = (GameProgressDto) allValues.get(allValues.size() - 5); //get the last buildRoadMoveDto io the setup phase
