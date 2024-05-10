@@ -11,10 +11,7 @@ import com.group2.catanbackend.service.MessagingService;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class GameLogicController {
     @Getter
@@ -87,7 +84,8 @@ public class GameLogicController {
                     isSetupPhase = false;
                     board.setSetupPhase(false);
                 }
-                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildRoadMove, player.toPlayerDto()));
+                sendCurrentGameStateToPlayers();
+                //messagingService.notifyGameProgress(gameId, new GameProgressDto(buildRoadMove, player.toPlayerDto()));
 
             } else
                 throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildRoadMove.getClass().getSimpleName()));
@@ -100,7 +98,8 @@ public class GameLogicController {
         if (player.resourcesSufficient(ResourceCost.ROAD.getCost())) {
             if (board.addNewRoad(player, buildRoadMove.getConnectionID())) {
                 player.adjustResources(ResourceCost.ROAD.getCost());
-                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildRoadMove, player.toPlayerDto()));
+                sendCurrentGameStateToPlayers();
+                //messagingService.notifyGameProgress(gameId, new GameProgressDto(buildRoadMove, player.toPlayerDto()));
             } else
                 throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildRoadMove.getClass().getSimpleName()));
         } else
@@ -114,7 +113,8 @@ public class GameLogicController {
 
             if (board.addNewVillage(player, buildVillageMove.getIntersectionID())) {
                 player.increaseVictoryPoints(1);
-                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, player.toPlayerDto()));
+                sendCurrentGameStateToPlayers();
+                //messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, player.toPlayerDto()));
             } else
                 throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildVillageMove.getClass().getSimpleName()));
             return;
@@ -127,7 +127,8 @@ public class GameLogicController {
             if (board.addNewVillage(player, buildVillageMove.getIntersectionID())) {
                 player.adjustResources(ResourceCost.VILLAGE.getCost());
                 player.increaseVictoryPoints(1);
-                messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, player.toPlayerDto()));
+                sendCurrentGameStateToPlayers();
+                //messagingService.notifyGameProgress(gameId, new GameProgressDto(buildVillageMove, player.toPlayerDto()));
 
                 if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
                     gameover = true;
@@ -144,13 +145,14 @@ public class GameLogicController {
         if (rollDiceDto.getDiceRoll() < 2 || rollDiceDto.getDiceRoll() > 12)
             throw new InvalidGameMoveException(ErrorCode.ERROR_INVALID_DICE_ROLL);
         board.distributeResourcesByDiceRoll(rollDiceDto.getDiceRoll());
+        //sendCurrentGameStateToPlayers();
         messagingService.notifyGameProgress(gameId, new GameProgressDto(rollDiceDto, player.toPlayerDto()));
     }
 
     private void sendCurrentGameStateToPlayers() {
         List<HexagonDto> hexagonDtos = new ArrayList<>();
         for (Hexagon hexagon : board.getHexagonList()) {
-            hexagonDtos.add(new HexagonDto(hexagon.getLocation(), hexagon.getDistribution(), hexagon.getRollValue(), hexagon.getId()));
+            hexagonDtos.add(new HexagonDto(hexagon.getHexagonType(), hexagon.getDistribution(), hexagon.getRollValue(), hexagon.getId()));
         }
         List<IntersectionDto> intersectionDtos = new ArrayList<>();
         int id = 0;
@@ -163,18 +165,20 @@ public class GameLogicController {
         }
         List<ConnectionDto> connectionDtos = new ArrayList<>();
         Map<String, Boolean> visitedConnections = new HashMap<>();
-        id = 0;
+
 
         for (int i = 0; i < board.getAdjacencyMatrix().length; i++) {
             for (int j = i + 1; j < board.getAdjacencyMatrix()[i].length; j++) {
                 Connection connection = board.getAdjacencyMatrix()[i][j];
                 if (connection != null && !visitedConnections.containsKey(i + "-" + j)) {
-                    connectionDtos.add(new ConnectionDto((connection.getPlayer() == null) ? null : connection.getPlayer().toPlayerDto(), id++));
+                    connectionDtos.add(new ConnectionDto((connection.getPlayer() == null) ? null : connection.getPlayer().toPlayerDto(), board.getConnectionIdFromIntersections(i,j)));
                     visitedConnections.put(i + "-" + j, true);
                     visitedConnections.put(j + "-" + i, true);  // Mark both [i][j] and [j][i] as visited
                 }
             }
         }
+        Comparator<ConnectionDto> connectionDtoComparator = Comparator.comparingInt(ConnectionDto::getId);
+        connectionDtos.sort(connectionDtoComparator);
 
         List<PlayerDto> playerDtos = new ArrayList<>();
 

@@ -6,6 +6,7 @@ import com.group2.catanbackend.dto.CreateRequestDto;
 import com.group2.catanbackend.dto.JoinRequestDto;
 import com.group2.catanbackend.dto.JoinResponseDto;
 import com.group2.catanbackend.dto.game.*;
+import com.group2.catanbackend.gamelogic.enums.BuildingType;
 import com.group2.catanbackend.model.PlayerState;
 import com.group2.catanbackend.service.GameService;
 import com.group2.catanbackend.service.TokenService;
@@ -17,6 +18,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 import static org.assertj.core.api.InstanceOfAssertFactories.map;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -176,33 +178,23 @@ class GameSocketIntegrationTest {
         Thread.sleep(1000);
 
         MessageDto dto = queue.poll(2, TimeUnit.SECONDS);
-        if (dto instanceof GameProgressDto gameProgressDto) {
-            PlayerDto playerDto = gameProgressDto.getPlayerDto();
-            GameMoveDto gameMoveDto = gameProgressDto.getMoveDto();
-            if (gameMoveDto instanceof BuildVillageMoveDto buildVillageMoveDto) {
-                assertEquals(22, buildVillageMoveDto.getIntersectionID());
-            } else {
-                fail("Received game move is not an instance of BuildVillageMoveDto");
-            }
-            assertEquals(player1.getPlayerName(), playerDto.getDisplayName());
-        } else fail("Received dto is not instance of GameProgressDto");
+        if (dto instanceof CurrentGameStateDto currentGameStateDto) {
+            List<IntersectionDto> intersectionDtoList = currentGameStateDto.getIntersections();
+            assertEquals(intersectionDtoList.get(22).getBuildingType(), BuildingType.VILLAGE.name());
+            assertEquals(intersectionDtoList.get(10).getBuildingType(), BuildingType.EMPTY.name());
+        } else fail("Received dto is not instance of CurrentGameStateDto");
 
         //Test BuildRoadMove
         gameService.makeMove(player1.getToken(), new BuildRoadMoveDto(22));
         Thread.sleep(1000);
 
         dto = queue.poll(2, TimeUnit.SECONDS);
-        if (dto instanceof GameProgressDto gameProgressDto) {
-            PlayerDto playerDto = gameProgressDto.getPlayerDto();
-            GameMoveDto gameMoveDto = gameProgressDto.getMoveDto();
-            if (gameMoveDto instanceof BuildRoadMoveDto buildRoadMoveDto) {
-                assertEquals(22, buildRoadMoveDto.getConnectionID());
-            } else {
-                fail("Received game move is not an instance of BuildRoadMoveDto");
-            }
-            assertEquals(player1.getPlayerName(), playerDto.getDisplayName());
-        } else fail("Received dto is not instance of GameProgressDto");
+        if (dto instanceof CurrentGameStateDto currentGameStateDto) {
+            List<ConnectionDto> connectionDtoList = currentGameStateDto.getConnections();
+            assertNotNull(connectionDtoList.get(22).getOwner());
+            assertNull(connectionDtoList.get(10).getOwner());
+        } else fail("Received dto is not instance of CurrentGameStateDto");
+
+
     }
-
-
 }

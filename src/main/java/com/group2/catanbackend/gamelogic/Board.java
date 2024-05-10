@@ -47,7 +47,7 @@ public class Board {
         int toIntersection = connectionIntersections[1];
 
         if(isSetupPhase && adjacencyMatrix[fromIntersection][toIntersection] != null && !(adjacencyMatrix[fromIntersection][toIntersection] instanceof Road)){
-            Road road = new Road(player);
+            Road road = new Road(player, connectionID);
             adjacencyMatrix[fromIntersection][toIntersection] = road;
             adjacencyMatrix[toIntersection][fromIntersection] = road;
             return true;
@@ -55,7 +55,7 @@ public class Board {
 
         if(adjacencyMatrix[fromIntersection][toIntersection] != null && !(adjacencyMatrix[fromIntersection][toIntersection] instanceof Road) // check if null or road already
                 && (isNextToOwnRoad(fromIntersection,player) || isNextToOwnRoad(toIntersection,player))){ //check if a road is next to one of the intersections
-            Road road = new Road(player);
+            Road road = new Road(player, connectionID);
             adjacencyMatrix[fromIntersection][toIntersection] = road;
             adjacencyMatrix[toIntersection][fromIntersection] = road;
             return true;
@@ -70,20 +70,27 @@ public class Board {
         int col = intersectionCoordinates[1];
 
         if(isSetupPhase && intersections[row][col] != null && noBuildingAdjacent(row, col) && !(intersections[row][col] instanceof Building)){
-            intersections[row][col] = new Building(player,BuildingType.VILLAGE);
+            intersections[row][col] = new Building(player,BuildingType.VILLAGE, intersectionID);
             Building village = (Building)intersections[row][col];
             addBuildingToSurroundingHexagons(intersectionID,village);
             return true;
         }
 
         if((intersections[row][col] != null) && !(intersections[row][col] instanceof Building) && noBuildingAdjacent(row,col) && isNextToOwnRoad(intersectionID,player)){
-            intersections[row][col] = new Building(player,BuildingType.VILLAGE);
+            intersections[row][col] = new Building(player,BuildingType.VILLAGE, intersectionID);
             Building village = (Building)intersections[row][col];
 
             addBuildingToSurroundingHexagons(intersectionID,village);
             return true;
         }
         return false;
+    }
+
+    public void moveRobber(int hexagonIDTarget){
+        for(Hexagon hexagon : hexagonList){
+            if(hexagon.getId()==hexagonIDTarget)hexagon.setHasRobber(true);
+            if(hexagon.isHasRobber())hexagon.setHasRobber(false);
+        }
     }
 
     public boolean addNewCity(Player player, int intersectionID){
@@ -96,7 +103,7 @@ public class Board {
             int col = intersectionCoordinates[1];
 
             if(intersections[row][col].getType() == BuildingType.VILLAGE && intersections[row][col].getPlayer() == player){
-                intersections[row][col] = new Building(player,BuildingType.CITY);
+                intersections[row][col] = new Building(player,BuildingType.CITY, intersectionID);
                 Building city = (Building)intersections[row][col];
                 addBuildingToSurroundingHexagons(intersectionID,city);
                 return true;
@@ -218,31 +225,33 @@ public class Board {
     }
 
     private void generateHexagons() {
-        List<Location> locations = new ArrayList<>();
+        List<HexagonType> hexagonTypes = new ArrayList<>();
         List<Integer> values = new ArrayList<>();
 
-        // Copy locations and values lists to ensure original lists remain unchanged (19 locations total)
-        Collections.addAll(locations, Location.HILLS, Location.HILLS, Location.HILLS, Location.FOREST,
-                Location.FOREST, Location.FOREST, Location.FOREST, Location.MOUNTAINS, Location.MOUNTAINS,
-                Location.MOUNTAINS, Location.FIELDS, Location.FIELDS, Location.FIELDS, Location.FIELDS,
-                Location.PASTURE, Location.PASTURE, Location.PASTURE, Location.PASTURE, Location.DESERT);
+        // Copy hexagonTypes and values lists to ensure original lists remain unchanged (19 hexagonTypes total)
+        Collections.addAll(hexagonTypes, HexagonType.HILLS, HexagonType.HILLS, HexagonType.HILLS, HexagonType.FOREST,
+                HexagonType.FOREST, HexagonType.FOREST, HexagonType.FOREST, HexagonType.MOUNTAINS, HexagonType.MOUNTAINS,
+                HexagonType.MOUNTAINS, HexagonType.FIELDS, HexagonType.FIELDS, HexagonType.FIELDS, HexagonType.FIELDS,
+                HexagonType.PASTURE, HexagonType.PASTURE, HexagonType.PASTURE, HexagonType.PASTURE, HexagonType.DESERT);
         Collections.addAll(values, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12);
 
         hexagonList = new ArrayList<>();
 
-        Collections.shuffle(locations);
+        Collections.shuffle(hexagonTypes);
         Collections.shuffle(values);
 
-        for (int i = 0; i<locations.size(); i++) {
-            Location location = locations.get(i);
+        for (int i = 0; i< hexagonTypes.size(); i++) {
+            HexagonType hexagonType = hexagonTypes.get(i);
             int value;
-            if (location == Location.DESERT) {
-                value = 0; // Desert location should have value 0
+            boolean hasRobber=false;
+            if (hexagonType == HexagonType.DESERT) {
+                value = 0; // Desert hexagonType should have value 0
+                hasRobber=true;
             } else {
                 value = values.remove(0);
             }
 
-            ResourceDistribution resourceDistribution = switch (location) {
+            ResourceDistribution resourceDistribution = switch (hexagonType) {
                 case FIELDS -> ResourceDistribution.FIELDS;
                 case PASTURE -> ResourceDistribution.PASTURE;
                 case FOREST -> ResourceDistribution.FOREST;
@@ -250,7 +259,7 @@ public class Board {
                 case MOUNTAINS -> ResourceDistribution.MOUNTAINS;
                 default -> ResourceDistribution.DESERT;
             };
-            hexagonList.add(new Hexagon(location, resourceDistribution, value, i));
+            hexagonList.add(new Hexagon(hexagonType, resourceDistribution, value, i, hasRobber));
         }
     }
 

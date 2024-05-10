@@ -2,7 +2,8 @@ package com.group2.catanbackend.gamelogic;
 
 import com.group2.catanbackend.dto.game.*;
 import com.group2.catanbackend.exception.GameException;
-import com.group2.catanbackend.gamelogic.enums.Location;
+import com.group2.catanbackend.gamelogic.enums.BuildingType;
+import com.group2.catanbackend.gamelogic.enums.HexagonType;
 import com.group2.catanbackend.gamelogic.enums.ResourceDistribution;
 import com.group2.catanbackend.gamelogic.objects.Building;
 import com.group2.catanbackend.gamelogic.objects.Hexagon;
@@ -110,17 +111,15 @@ public class GameLogicControllerExpandedTest {
             assertEquals(4, argumentRollDiceDto.getDiceRoll());
             assertEquals(player2.getDisplayName(), argument.getPlayerDto().getDisplayName());
 
-            argument = (GameProgressDto) allValues.get(allValues.size() - 6); //get the last buildVillageMoveDto io the setup phase
+            CurrentGameStateDto argument2 = (CurrentGameStateDto) allValues.get(allValues.size() - 6); //get the last buildVillageMoveDto io the setup phase
             //moveDto = new BuildVillageMoveDto(3, 2);
-            BuildVillageMoveDto argumentBuildVillageMoveDto = (BuildVillageMoveDto) argument.getMoveDto();
-            assertEquals(29, argumentBuildVillageMoveDto.getIntersectionID());
-            assertEquals(player1.getDisplayName(), argument.getPlayerDto().getDisplayName());
+            assertEquals(BuildingType.VILLAGE.name(), argument2.getIntersections().get(29).getBuildingType());
+            assertEquals(player1.getDisplayName(), argument2.getIntersections().get(29).getOwner().getDisplayName());
 
-            argument = (GameProgressDto) allValues.get(allValues.size() - 5); //get the last buildRoadMoveDto io the setup phase
+            argument2 = (CurrentGameStateDto) allValues.get(allValues.size() - 5); //get the last buildRoadMoveDto io the setup phase
             //moveDto = new BuildRoadMoveDto(29, 30);
-            BuildRoadMoveDto argumentBuildRoadMoveDto = (BuildRoadMoveDto) argument.getMoveDto();
-            assertEquals(36, argumentBuildRoadMoveDto.getConnectionID());
-            assertEquals(player1.getDisplayName(), argument.getPlayerDto().getDisplayName());
+            assertNotNull(argument2.getConnections().get(36).getOwner());
+            assertEquals(player1.getDisplayName(), argument2.getConnections().get(36).getOwner().getDisplayName());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -230,27 +229,27 @@ public class GameLogicControllerExpandedTest {
         //URL of picture of Board:
         //https://cdn.discordapp.com/attachments/1219917626424164376/1231297808997421297/image.png?ex=66367272&is=6623fd72&hm=5989f819604eda76f0d834755e973aaf04f18479a42c26912a5b8a0dc1576799&
         List<Hexagon> hexagonList = new ArrayList<>();
-        List<Location> locations = new ArrayList<>();
+        List<HexagonType> hexagonTypes = new ArrayList<>();
         List<Integer> values = new ArrayList<>();
 
-        // Copy locations and values lists to ensure original lists remain unchanged
-        Collections.addAll(locations, Location.PASTURE, Location.FOREST, Location.HILLS,
-                Location.MOUNTAINS, Location.HILLS, Location.FOREST, Location.HILLS,
-                Location.FOREST, Location.HILLS, Location.FIELDS, Location.PASTURE, Location.FIELDS,
-                Location.FIELDS, Location.PASTURE, Location.DESERT, Location.FIELDS,
-                Location.MOUNTAINS, Location.PASTURE, Location.FOREST);
+        // Copy hexagonTypes and values lists to ensure original lists remain unchanged
+        Collections.addAll(hexagonTypes, HexagonType.PASTURE, HexagonType.FOREST, HexagonType.HILLS,
+                HexagonType.MOUNTAINS, HexagonType.HILLS, HexagonType.FOREST, HexagonType.HILLS,
+                HexagonType.FOREST, HexagonType.HILLS, HexagonType.FIELDS, HexagonType.PASTURE, HexagonType.FIELDS,
+                HexagonType.FIELDS, HexagonType.PASTURE, HexagonType.DESERT, HexagonType.FIELDS,
+                HexagonType.MOUNTAINS, HexagonType.PASTURE, HexagonType.FOREST);
         Collections.addAll(values, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12);
 
-        for (int i = 0; i < locations.size(); i++) {
-            Location location = locations.get(i);
+        for (int i = 0; i < hexagonTypes.size(); i++) {
+            HexagonType hexagonType = hexagonTypes.get(i);
             int value;
-            if (location == Location.DESERT) {
-                value = 0; // Desert location should have value 0
+            if (hexagonType == HexagonType.DESERT) {
+                value = 0; // Desert hexagonType should have value 0
             } else {
                 value = values.remove(0);
             }
 
-            ResourceDistribution resourceDistribution = switch (location) {
+            ResourceDistribution resourceDistribution = switch (hexagonType) {
                 case FIELDS -> ResourceDistribution.FIELDS;
                 case PASTURE -> ResourceDistribution.PASTURE;
                 case FOREST -> ResourceDistribution.FOREST;
@@ -258,7 +257,7 @@ public class GameLogicControllerExpandedTest {
                 case MOUNTAINS -> ResourceDistribution.MOUNTAINS;
                 default -> ResourceDistribution.DESERT;
             };
-            hexagonList.add(new Hexagon(location, resourceDistribution, value, i));
+            hexagonList.add(new Hexagon(hexagonType, resourceDistribution, value, i, false));
         }
 
         try {

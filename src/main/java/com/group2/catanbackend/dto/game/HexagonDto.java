@@ -1,6 +1,6 @@
 package com.group2.catanbackend.dto.game;
 
-import com.group2.catanbackend.gamelogic.enums.Location;
+import com.group2.catanbackend.gamelogic.enums.HexagonType;
 import com.group2.catanbackend.gamelogic.enums.ResourceDistribution;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,7 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class HexagonDto{
-    private Location location;
+    private HexagonType hexagonType;
     private ResourceDistribution resourceDistribution;
     private int value;
     private int id;
