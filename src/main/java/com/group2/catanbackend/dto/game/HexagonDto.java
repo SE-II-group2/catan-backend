@@ -16,4 +16,5 @@ public class HexagonDto{
     private ResourceDistribution resourceDistribution;
     private int value;
     private int id;
+    private boolean hasRobber;
 }

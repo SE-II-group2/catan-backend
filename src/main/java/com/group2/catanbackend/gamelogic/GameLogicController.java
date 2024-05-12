@@ -37,13 +37,7 @@ public class GameLogicController {
         generateSetupPhaseTurnOrder(players.size());
         //Send the starting gamestate to all playérs
         sendCurrentGameStateToPlayers();
-
-        //send the starting turnorder to all players
-        ArrayList<IngamePlayerDto> turnOderDto = new ArrayList<>();
-        for(Player player1 : setupPhaseTurnOrder){
-            turnOderDto.add(player1.toInGamePlayerDto());
-        }
-        messagingService.notifyGameProgress(gameId, new GameProgressDto(turnOderDto));
+        System.out.println("Send Gamestate to Players");
     }
 
 
@@ -74,11 +68,7 @@ public class GameLogicController {
                     throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
                 turnOrder.remove(0);
                 turnOrder.add(player);
-                ArrayList<IngamePlayerDto> turnOderDto = new ArrayList<>();
-                for(Player player1 : turnOrder){
-                    turnOderDto.add(player1.toInGamePlayerDto());
-                }
-                messagingService.notifyGameProgress(gameId, new GameProgressDto(turnOderDto));
+                sendCurrentGameStateToPlayers();
             }
             //TODO To implement other moves create MoveDto and include it here
             default -> throw new UnsupportedGameMoveException("Unknown DTO Format");
@@ -158,18 +148,13 @@ public class GameLogicController {
         if (rollDiceDto.getDiceRoll() < 2 || rollDiceDto.getDiceRoll() > 12)
             throw new InvalidGameMoveException(ErrorCode.ERROR_INVALID_DICE_ROLL);
         board.distributeResourcesByDiceRoll(rollDiceDto.getDiceRoll());
-        //sendCurrentGameStateToPlayers();
-        ArrayList<IngamePlayerDto> turnOderDto = new ArrayList<>();
-        for(Player player1 : setupPhaseTurnOrder){
-            turnOderDto.add(player1.toInGamePlayerDto());
-        }
-        messagingService.notifyGameProgress(gameId, new GameProgressDto(turnOderDto));
+        sendCurrentGameStateToPlayers();
     }
 
     private void sendCurrentGameStateToPlayers() {
         List<HexagonDto> hexagonDtos = new ArrayList<>();
         for (Hexagon hexagon : board.getHexagonList()) {
-            hexagonDtos.add(new HexagonDto(hexagon.getHexagonType(), hexagon.getDistribution(), hexagon.getRollValue(), hexagon.getId()));
+            hexagonDtos.add(new HexagonDto(hexagon.getHexagonType(), hexagon.getDistribution(), hexagon.getRollValue(), hexagon.getId(), hexagon.isHasRobber()));
         }
         List<IntersectionDto> intersectionDtos = new ArrayList<>();
         int id = 0;

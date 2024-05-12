@@ -14,4 +14,5 @@ public class IngamePlayerDto {
     private int[] resources;
     private int victoryPoints;
     private int color;
+    private int inGameID;
 }
