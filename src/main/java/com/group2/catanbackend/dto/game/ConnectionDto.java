@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ConnectionDto {
-    private PlayerDto owner;
+    private IngamePlayerDto owner;
     private int id;
 }

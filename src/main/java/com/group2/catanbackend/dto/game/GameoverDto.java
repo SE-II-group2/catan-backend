@@ -8,9 +8,9 @@ import lombok.Setter;
 public class GameoverDto extends MessageDto{
     @Getter
     @Setter
-    private PlayerDto winner;
+    private IngamePlayerDto winner;
 
-    public GameoverDto(PlayerDto winner) {
+    public GameoverDto(IngamePlayerDto winner) {
         this.setEventType(MessageType.GAME_MOVE_NOTIFIER);
         this.winner=winner;
     }

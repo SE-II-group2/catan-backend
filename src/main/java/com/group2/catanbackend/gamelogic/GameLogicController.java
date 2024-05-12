@@ -35,7 +35,15 @@ public class GameLogicController {
         this.gameId = gameId;
         board = new Board();
         generateSetupPhaseTurnOrder(players.size());
+        //Send the starting gamestate to all playérs
         sendCurrentGameStateToPlayers();
+
+        //send the starting turnorder to all players
+        ArrayList<IngamePlayerDto> turnOderDto = new ArrayList<>();
+        for(Player player1 : setupPhaseTurnOrder){
+            turnOderDto.add(player1.toInGamePlayerDto());
+        }
+        messagingService.notifyGameProgress(gameId, new GameProgressDto(turnOderDto));
     }
 
 
@@ -66,7 +74,11 @@ public class GameLogicController {
                     throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
                 turnOrder.remove(0);
                 turnOrder.add(player);
-                messagingService.notifyGameProgress(gameId, new GameProgressDto(gameMove, player.toPlayerDto()));
+                ArrayList<IngamePlayerDto> turnOderDto = new ArrayList<>();
+                for(Player player1 : turnOrder){
+                    turnOderDto.add(player1.toInGamePlayerDto());
+                }
+                messagingService.notifyGameProgress(gameId, new GameProgressDto(turnOderDto));
             }
             //TODO To implement other moves create MoveDto and include it here
             default -> throw new UnsupportedGameMoveException("Unknown DTO Format");
@@ -83,6 +95,7 @@ public class GameLogicController {
                 if (setupPhaseTurnOrder.isEmpty()) {
                     isSetupPhase = false;
                     board.setSetupPhase(false);
+
                 }
                 sendCurrentGameStateToPlayers();
                 //messagingService.notifyGameProgress(gameId, new GameProgressDto(buildRoadMove, player.toPlayerDto()));
@@ -132,7 +145,7 @@ public class GameLogicController {
 
                 if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
                     gameover = true;
-                    messagingService.notifyGameProgress(gameId, new GameoverDto(player.toPlayerDto()));
+                    messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
                 }
             } else {
                 throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildVillageMove.getClass().getSimpleName()));
@@ -146,7 +159,11 @@ public class GameLogicController {
             throw new InvalidGameMoveException(ErrorCode.ERROR_INVALID_DICE_ROLL);
         board.distributeResourcesByDiceRoll(rollDiceDto.getDiceRoll());
         //sendCurrentGameStateToPlayers();
-        messagingService.notifyGameProgress(gameId, new GameProgressDto(rollDiceDto, player.toPlayerDto()));
+        ArrayList<IngamePlayerDto> turnOderDto = new ArrayList<>();
+        for(Player player1 : setupPhaseTurnOrder){
+            turnOderDto.add(player1.toInGamePlayerDto());
+        }
+        messagingService.notifyGameProgress(gameId, new GameProgressDto(turnOderDto));
     }
 
     private void sendCurrentGameStateToPlayers() {
@@ -159,7 +176,7 @@ public class GameLogicController {
         for (Intersection[] intersectionRow : board.getIntersections()) {
             for (Intersection intersection : intersectionRow) {
                 if (intersection != null) {
-                    intersectionDtos.add(new IntersectionDto((intersection.getPlayer() == null) ? null : intersection.getPlayer().toPlayerDto(), intersection.getType().name(), id++));
+                    intersectionDtos.add(new IntersectionDto((intersection.getPlayer() == null) ? null : intersection.getPlayer().toInGamePlayerDto(), intersection.getType().name(), id++));
                 }
             }
         }
@@ -171,7 +188,7 @@ public class GameLogicController {
             for (int j = i + 1; j < board.getAdjacencyMatrix()[i].length; j++) {
                 Connection connection = board.getAdjacencyMatrix()[i][j];
                 if (connection != null && !visitedConnections.containsKey(i + "-" + j)) {
-                    connectionDtos.add(new ConnectionDto((connection.getPlayer() == null) ? null : connection.getPlayer().toPlayerDto(), board.getConnectionIdFromIntersections(i,j)));
+                    connectionDtos.add(new ConnectionDto((connection.getPlayer() == null) ? null : connection.getPlayer().toInGamePlayerDto(), board.getConnectionIdFromIntersections(i,j)));
                     visitedConnections.put(i + "-" + j, true);
                     visitedConnections.put(j + "-" + i, true);  // Mark both [i][j] and [j][i] as visited
                 }
@@ -180,13 +197,13 @@ public class GameLogicController {
         Comparator<ConnectionDto> connectionDtoComparator = Comparator.comparingInt(ConnectionDto::getId);
         connectionDtos.sort(connectionDtoComparator);
 
-        List<PlayerDto> playerDtos = new ArrayList<>();
+        List<IngamePlayerDto> playerDtos = new ArrayList<>();
 
         for (Player player : (isSetupPhase) ? setupPhaseTurnOrder : turnOrder) {
-            playerDtos.add(player.toPlayerDto());
+            playerDtos.add(player.toInGamePlayerDto());
         }
 
-        messagingService.notifyGameProgress(gameId, new CurrentGameStateDto(hexagonDtos, intersectionDtos, connectionDtos, playerDtos));
+        messagingService.notifyGameProgress(gameId, new CurrentGameStateDto(hexagonDtos, intersectionDtos, connectionDtos, playerDtos, isSetupPhase));
     }
 
     private void generateSetupPhaseTurnOrder(int numOfPlayers) {

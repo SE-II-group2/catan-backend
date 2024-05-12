@@ -152,7 +152,7 @@ class GameSocketIntegrationTest {
         List<HexagonDto> hexagonDtos = ((CurrentGameStateDto) dto).getHexagons();
         List<IntersectionDto> intersectionDtos = ((CurrentGameStateDto) dto).getIntersections();
         List<ConnectionDto> connectionDtos = ((CurrentGameStateDto) dto).getConnections();
-        List<PlayerDto> playerDtos = ((CurrentGameStateDto) dto).getPlayerOrder();
+        List<IngamePlayerDto> playerDtos = ((CurrentGameStateDto) dto).getPlayerOrder();
 
         assertEquals(19, hexagonDtos.size());
         assertEquals(54, intersectionDtos.size());

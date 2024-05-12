@@ -10,7 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class IntersectionDto {
-    private PlayerDto owner;
+    private IngamePlayerDto owner;
     private String BuildingType;
     private int id;
 

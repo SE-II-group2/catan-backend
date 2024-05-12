@@ -1,5 +1,6 @@
 package com.group2.catanbackend.model;
 
+import com.group2.catanbackend.dto.game.IngamePlayerDto;
 import com.group2.catanbackend.dto.game.PlayerDto;
 import lombok.*;
 
@@ -16,6 +17,9 @@ public class Player {
     private final int[] resources = new int[]{0,0,0,0,0};
     @Getter
     private int victoryPoints = 0;
+    @Getter
+    @Setter
+    private int color;
 
     public Player(String token, String displayName, String gameID){
         this.token = token;
@@ -27,6 +31,9 @@ public class Player {
         return new PlayerDto(getDisplayName(), getInGameID(), playerState);
     }
 
+    public IngamePlayerDto toInGamePlayerDto() {
+        return new IngamePlayerDto(displayName, resources, victoryPoints, color);
+    }
     public void adjustResources(int[] resources){
         if(resources!=null&&resources.length == 5){
             for (int i = 0; i < resources.length; i++) {

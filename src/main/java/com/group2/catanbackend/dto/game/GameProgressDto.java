@@ -4,19 +4,19 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 public class GameProgressDto extends MessageDto{
     public GameProgressDto() {
         this.setEventType(MessageType.GAME_MOVE_NOTIFIER);
     }
-    public GameProgressDto(GameMoveDto moveDto, PlayerDto playerDto) {
+    public GameProgressDto(List<IngamePlayerDto> players) {
         this.setEventType(MessageType.GAME_MOVE_NOTIFIER);
-        this.moveDto = moveDto;
-        this.playerDto = playerDto;
+        this.players=players;
 
     }
-    private GameMoveDto moveDto;
-    private PlayerDto playerDto;
+    private List<IngamePlayerDto> players;
 
 }
