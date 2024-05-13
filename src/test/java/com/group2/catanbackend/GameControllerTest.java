@@ -140,7 +140,7 @@ public class GameControllerTest {
     }
 
     @Test
-    public void testMakeInvalidGameMove() throws Exception {
+    void testMakeInvalidGameMove() throws Exception {
         String token = gameService.createAndJoin(new CreateRequestDto("Player1")).getToken();
         gameService.startGame(token);
 
@@ -155,7 +155,7 @@ public class GameControllerTest {
     }
 
     @Test
-    public void testMakeValidGameMove()throws Exception {
+    void testMakeValidGameMove()throws Exception {
         String token = gameService.createAndJoin(new CreateRequestDto("Player1")).getToken();
         gameService.startGame(token);
 
@@ -170,7 +170,7 @@ public class GameControllerTest {
     }
 
     @Test
-    public void testCannotMakeGameMoveWithoutGame()throws Exception {
+    void testCannotMakeGameMoveWithoutGame()throws Exception {
         mockMvc.perform(
                         MockMvcRequestBuilders
                                 .post(URLGAMEMOVE)
