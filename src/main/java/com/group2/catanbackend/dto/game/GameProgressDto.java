@@ -12,11 +12,11 @@ public class GameProgressDto extends MessageDto{
     public GameProgressDto() {
         this.setEventType(MessageType.GAME_MOVE_NOTIFIER);
     }
-    public GameProgressDto(List<IngamePlayerDto> players) {
+    public GameProgressDto(GameMoveDto gameMoveDto) {
         this.setEventType(MessageType.GAME_MOVE_NOTIFIER);
-        this.players=players;
+        this.gameMoveDto=gameMoveDto;
 
     }
-    private List<IngamePlayerDto> players;
+    private GameMoveDto gameMoveDto;
 
 }

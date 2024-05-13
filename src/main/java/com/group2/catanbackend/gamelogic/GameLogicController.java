@@ -37,7 +37,6 @@ public class GameLogicController {
         generateSetupPhaseTurnOrder(players.size());
         //Send the starting gamestate to all playérs
         sendCurrentGameStateToPlayers();
-        System.out.println("Send Gamestate to Players");
     }
 
 
@@ -69,6 +68,7 @@ public class GameLogicController {
                 turnOrder.remove(0);
                 turnOrder.add(player);
                 sendCurrentGameStateToPlayers();
+                messagingService.notifyGameProgress(gameId, new GameProgressDto(gameMove));
             }
             //TODO To implement other moves create MoveDto and include it here
             default -> throw new UnsupportedGameMoveException("Unknown DTO Format");
@@ -148,6 +148,7 @@ public class GameLogicController {
         if (rollDiceDto.getDiceRoll() < 2 || rollDiceDto.getDiceRoll() > 12)
             throw new InvalidGameMoveException(ErrorCode.ERROR_INVALID_DICE_ROLL);
         board.distributeResourcesByDiceRoll(rollDiceDto.getDiceRoll());
+        messagingService.notifyGameProgress(gameId ,new GameProgressDto(rollDiceDto));
         sendCurrentGameStateToPlayers();
     }
 

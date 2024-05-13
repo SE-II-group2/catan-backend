@@ -9,13 +9,9 @@ import java.util.ArrayList;
 @Getter
 @Setter
 public class EndTurnMoveDto extends GameMoveDto{
-    private ArrayList<PlayerDto> turnOder;
+
     public EndTurnMoveDto() {
         this.setEventType(GameMoveType.ENTTURNMOVE);
     }
 
-    public EndTurnMoveDto(ArrayList<PlayerDto> turnOder) {
-        this.setEventType(GameMoveType.ENTTURNMOVE);
-        this.turnOder=turnOder;
-    }
 }
