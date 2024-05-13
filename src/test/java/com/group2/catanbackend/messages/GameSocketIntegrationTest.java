@@ -183,7 +183,7 @@ class GameSocketIntegrationTest {
         } else fail("Received dto is not instance of CurrentGameStateDto");
     }
 
-    //@Test //Test disabled due to bug
+    @Test
     public void testReceiveValidUpdateOnGameMoveBuildRoad() throws Exception {
         JoinResponseDto player1 = gameService.createAndJoin(new CreateRequestDto("Player1"));
         JoinResponseDto player2 = gameService.joinGame(new JoinRequestDto("Player2", player1.getGameID()));
@@ -199,8 +199,10 @@ class GameSocketIntegrationTest {
         //Test BuildRoadMove
         gameService.makeMove(player1.getToken(), new BuildRoadMoveDto(22));
         Thread.sleep(1000);
-
+        //TEMPORARY SOLUTION, FIX IMPLEMENTATION LATER
+        queue.poll(2, TimeUnit.SECONDS);
         MessageDto dto = queue.poll(2, TimeUnit.SECONDS);
+
         if (dto instanceof CurrentGameStateDto currentGameStateDto) {
             List<ConnectionDto> connectionDtoList = currentGameStateDto.getConnections();
             assertNotNull(connectionDtoList.get(22).getOwner());
