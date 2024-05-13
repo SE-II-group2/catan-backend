@@ -34,6 +34,9 @@ public class GameLogicController {
         this.messagingService = messagingService;
         this.gameId = gameId;
         board = new Board();
+        for(Player player : players){
+            player.setColor((int) (Math.random()*(-16777216)));
+        }
         generateSetupPhaseTurnOrder(players.size());
         //Send the starting gamestate to all playérs
         sendCurrentGameStateToPlayers();
@@ -68,7 +71,7 @@ public class GameLogicController {
                 turnOrder.remove(0);
                 turnOrder.add(player);
                 sendCurrentGameStateToPlayers();
-                messagingService.notifyGameProgress(gameId, new GameProgressDto(gameMove));
+                messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto((isSetupPhase)? setupPhaseTurnOrder.get(0).toInGamePlayerDto() : turnOrder.get(0).toInGamePlayerDto())));
             }
             //TODO To implement other moves create MoveDto and include it here
             default -> throw new UnsupportedGameMoveException("Unknown DTO Format");
@@ -85,9 +88,11 @@ public class GameLogicController {
                 if (setupPhaseTurnOrder.isEmpty()) {
                     isSetupPhase = false;
                     board.setSetupPhase(false);
-
-                }
+                    messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(turnOrder.get(0).toInGamePlayerDto())));
+                }else messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto( setupPhaseTurnOrder.get(0).toInGamePlayerDto())));
                 sendCurrentGameStateToPlayers();
+
+
                 //messagingService.notifyGameProgress(gameId, new GameProgressDto(buildRoadMove, player.toPlayerDto()));
 
             } else

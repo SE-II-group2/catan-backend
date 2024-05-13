@@ -102,11 +102,11 @@ public class GameLogicControllerExpandedTest {
         gameLogicController.makeMove(moveDto, player2);
         moveDto = new EndTurnMoveDto();
         gameLogicController.makeMove(moveDto, player2);
-        verify(messagingMock, times(17)).notifyGameProgress(eq(gameLogicController.getGameId()), argumentCaptor.capture()); //4 moves here, already 8 from setup phase, 1 from hexqgonlist
+        verify(messagingMock, times(21)).notifyGameProgress(eq(gameLogicController.getGameId()), argumentCaptor.capture()); //4 moves here, already 8 from setup phase, 1 from hexqgonlist
 
         try {
             List<MessageDto> allValues = argumentCaptor.getAllValues();
-            CurrentGameStateDto argument2 = (CurrentGameStateDto) allValues.get(allValues.size() - 10); //get the last buildVillageMoveDto io the setup phase
+            CurrentGameStateDto argument2 = (CurrentGameStateDto) allValues.get(allValues.size() - 6); //get the last buildVillageMoveDto io the setup phase
             //moveDto = new BuildVillageMoveDto(3, 2);
             assertEquals(BuildingType.VILLAGE.name(), argument2.getIntersections().get(29).getBuildingType());
             assertEquals(player1.getDisplayName(), argument2.getIntersections().get(29).getOwner().getDisplayName());
@@ -140,7 +140,7 @@ public class GameLogicControllerExpandedTest {
 
 
             assertTrue(gameLogicController.isGameover());
-            verify(messagingMock, times(12)).notifyGameProgress(eq(gameLogicController.getGameId()), argumentCaptor.capture()); // 8 for setup phase, 2 for road, 1 from hexagonlist and village and 1 for victory
+            verify(messagingMock, times(16)).notifyGameProgress(eq(gameLogicController.getGameId()), argumentCaptor.capture()); // 8 for setup phase, 2 for road, 1 from hexagonlist and village and 1 for victory
 
             List<MessageDto> allValues = argumentCaptor.getAllValues();
             GameoverDto lastArgument =  (GameoverDto) allValues.get(allValues.size() - 1); //get the last Dto sent
