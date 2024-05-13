@@ -1,14 +1,19 @@
 package com.group2.catanbackend.dto.game;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter
+@NoArgsConstructor
 public class BuildRoadMoveDto extends GameMoveDto{
-    public BuildRoadMoveDto(int connection) {
-        this.connection = connection;
-        this.setEventType(MessageType.GAME_MOVE);
-    }
 
-    private final int connection;
+    public BuildRoadMoveDto(int connectionID) {
+        this.connectionID = connectionID;
+        this.setEventType(GameMoveType.BUILDROADMOVE);
+    }
+    private int connectionID;
 }
 

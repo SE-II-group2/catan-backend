@@ -1,16 +1,18 @@
 package com.group2.catanbackend.dto.game;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
-public class BuildVillageMoveDto extends GameMoveDto{
-    public BuildVillageMoveDto(int intersection) {
-        this.intersection = intersection;
-        this.setEventType(MessageType.GAME_MOVE);
+@Setter
+@NoArgsConstructor
+public class BuildVillageMoveDto extends GameMoveDto {
+    public BuildVillageMoveDto(int intersectionID) {
+        this.intersectionID = intersectionID;
+        this.setEventType(GameMoveType.BUILDVILLAGEMOVE);
     }
-
-    private final int intersection;
-
+    public int intersectionID;
 }
 

@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.group2.catanbackend.dto.CreateRequestDto;
 import com.group2.catanbackend.dto.JoinRequestDto;
 import com.group2.catanbackend.dto.JoinResponseDto;
+import com.group2.catanbackend.dto.game.BuildRoadMoveDto;
+import com.group2.catanbackend.dto.game.BuildVillageMoveDto;
+import com.group2.catanbackend.dto.game.EndTurnMoveDto;
 import com.group2.catanbackend.service.GameService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -27,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class GameControllerTest {
+    private static final String URLGAMEMOVE = "/catan/game/gamemove";
     @Autowired
     private MockMvc mockMvc;
 
@@ -135,6 +139,47 @@ public class GameControllerTest {
         Assertions.assertNull(gameService.getRegisteredGames().get(player1.getGameID()));
     }
 
+    @Test
+    void testMakeInvalidGameMove() throws Exception {
+        String token = gameService.createAndJoin(new CreateRequestDto("Player1")).getToken();
+        gameService.startGame(token);
+
+        mockMvc.perform(
+                        MockMvcRequestBuilders
+                                .post(URLGAMEMOVE)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                .content(toJson(new EndTurnMoveDto()))
+                )
+                .andExpect(status().is(HttpStatus.UNPROCESSABLE_ENTITY.value()));
+    }
+
+    @Test
+    void testMakeValidGameMove()throws Exception {
+        String token = gameService.createAndJoin(new CreateRequestDto("Player1")).getToken();
+        gameService.startGame(token);
+
+        mockMvc.perform(
+                        MockMvcRequestBuilders
+                                .post(URLGAMEMOVE)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                .content(toJson(new BuildVillageMoveDto(42)))
+                )
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testCannotMakeGameMoveWithoutGame()throws Exception {
+        mockMvc.perform(
+                        MockMvcRequestBuilders
+                                .post(URLGAMEMOVE)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header(HttpHeaders.AUTHORIZATION, "not valid token")
+                                .content(toJson(new BuildRoadMoveDto(42)))
+                )
+                .andExpect(status().is(HttpStatus.UNAUTHORIZED.value()));
+    }
 
     private String toJson(final Object obj){
         try {

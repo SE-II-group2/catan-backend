@@ -1,17 +1,22 @@
 package com.group2.catanbackend.dto.game;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+import java.util.List;
+
+@Getter
+@Setter
 public class GameProgressDto extends MessageDto{
-    public GameProgressDto(GameMoveDto moveDto, PlayerDto playerDto) {
-        this.moveDto = moveDto;
-        this.playerDto = playerDto;
+    public GameProgressDto() {
         this.setEventType(MessageType.GAME_MOVE_NOTIFIER);
     }
+    public GameProgressDto(GameMoveDto gameMoveDto) {
+        this.setEventType(MessageType.GAME_MOVE_NOTIFIER);
+        this.gameMoveDto=gameMoveDto;
 
-    @Getter
-    private final GameMoveDto moveDto;
-    @Getter
-    private final PlayerDto playerDto;
+    }
+    private GameMoveDto gameMoveDto;
 
 }

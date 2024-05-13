@@ -10,10 +10,12 @@ public class Building extends Intersection {
 
     Player player;
     private final BuildingType type;
+    private final int id;
 
-    public Building(Player player, BuildingType type) {
+    public Building(Player player, BuildingType type, int id) {
         this.player = player;
         this.type = type;
+        this.id = id;
     }
 
     public void giveResources(ResourceDistribution distribution) {

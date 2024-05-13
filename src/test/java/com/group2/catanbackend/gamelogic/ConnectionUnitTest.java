@@ -16,7 +16,7 @@ public class ConnectionUnitTest {
 
     @Test
     public void testRoadOwner() {
-        Connection connection = new Road(player1);
+        Connection connection = new Road(player1, 1);
         assertEquals(player1, connection.getPlayer());
     }
 }

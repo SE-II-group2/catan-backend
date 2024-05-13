@@ -40,20 +40,20 @@ public class BoardUnitTests {
 
     @Test
     public void testGenerateHexagonsDistribution() {
-        List<Location> locationsWanted = new ArrayList<>();
+        List<HexagonType> locationsWanted = new ArrayList<>();
         List<Integer> valuesWanted = new ArrayList<>();
 
-        Collections.addAll(locationsWanted, Location.HILLS, Location.HILLS, Location.HILLS, Location.FOREST,
-                Location.FOREST, Location.FOREST, Location.FOREST, Location.MOUNTAINS, Location.MOUNTAINS,
-                Location.MOUNTAINS, Location.FIELDS, Location.FIELDS, Location.FIELDS, Location.FIELDS,
-                Location.PASTURE, Location.PASTURE, Location.PASTURE, Location.PASTURE, Location.DESERT);
+        Collections.addAll(locationsWanted, HexagonType.HILLS, HexagonType.HILLS, HexagonType.HILLS, HexagonType.FOREST,
+                HexagonType.FOREST, HexagonType.FOREST, HexagonType.FOREST, HexagonType.MOUNTAINS, HexagonType.MOUNTAINS,
+                HexagonType.MOUNTAINS, HexagonType.FIELDS, HexagonType.FIELDS, HexagonType.FIELDS, HexagonType.FIELDS,
+                HexagonType.PASTURE, HexagonType.PASTURE, HexagonType.PASTURE, HexagonType.PASTURE, HexagonType.DESERT);
         Collections.addAll(valuesWanted, 0, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12);
 
-        List<Location> locationsActual = new ArrayList<>();
+        List<HexagonType> locationsActual = new ArrayList<>();
         List<Integer> valuesActual = new ArrayList<>();
 
         for (Hexagon hexagon : board.getHexagonList()) {
-            locationsActual.add(hexagon.getLocation());
+            locationsActual.add(hexagon.getHexagonType());
             valuesActual.add(hexagon.getRollValue());
         }
 
@@ -69,7 +69,7 @@ public class BoardUnitTests {
     public void testGenerateHexagonsDesertTileCorrectness() {
         boolean hasDesertTile = false;
         for (Hexagon hexagon : board.getHexagonList()) {
-            if (hexagon.getLocation().equals(Location.DESERT)) {
+            if (hexagon.getHexagonType().equals(HexagonType.DESERT)) {
                 assertEquals(0, hexagon.getRollValue());
                 assertArrayEquals(new int[]{0, 0, 0, 0, 0}, hexagon.getDistribution().getDistribution());
                 hasDesertTile = true;
