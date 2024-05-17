@@ -1,5 +1,6 @@
 package com.group2.catanbackend.dto.game;
 
+// fixme use enums
 public interface GameMoveType {
     String BUILDROADMOVE = "BUILD_ROAD_MOVE";
     String BUILDVILLAGEMOVE = "BUILD_VILLAGE_MOVE";
