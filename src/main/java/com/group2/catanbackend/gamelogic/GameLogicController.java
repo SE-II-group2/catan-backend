@@ -13,6 +13,7 @@ import lombok.Getter;
 
 import java.util.*;
 
+// fixme be careful to avoid a god class here
 public class GameLogicController {
     @Getter
     private final Board board;
@@ -78,6 +79,7 @@ public class GameLogicController {
         }
     }
 
+    // fixme extract methods
     private void makeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
         if (isSetupPhase) {
             if (!(setupPhaseTurnOrder.get(0) == player))
@@ -110,6 +112,7 @@ public class GameLogicController {
 
     }
 
+    // fixme extract methods
     private void makeBuildVillageMove(BuildVillageMoveDto buildVillageMove, Player player) {
         if (isSetupPhase) {
             if (!(setupPhaseTurnOrder.get(0) == player))

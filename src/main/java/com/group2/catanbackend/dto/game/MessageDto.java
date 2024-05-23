@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.*;
 
+// fixme oop (see GameMoveDto)
 /**
  * Defines the Basic Structure of a Stomp Message to the client
  */

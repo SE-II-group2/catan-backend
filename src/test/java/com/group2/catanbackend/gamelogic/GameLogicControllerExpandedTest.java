@@ -91,6 +91,7 @@ public class GameLogicControllerExpandedTest {
         assertThrows(GameException.class, () -> gameLogicController.makeMove(moveDto, player1));
     }
 
+    // fixme split into two tests for messaging and logic
     @Test
     public void testCommunicationFromServerOnValidMoves() {
         moveDto = new RollDiceDto(2);
@@ -104,6 +105,7 @@ public class GameLogicControllerExpandedTest {
         gameLogicController.makeMove(moveDto, player2);
         verify(messagingMock, times(21)).notifyGameProgress(eq(gameLogicController.getGameId()), argumentCaptor.capture()); //4 moves here, already 8 from setup phase, 1 from hexqgonlist
 
+        // fixme avoid catching exceptions as the assertions might not execute
         try {
             List<MessageDto> allValues = argumentCaptor.getAllValues();
             CurrentGameStateDto argument2 = (CurrentGameStateDto) allValues.get(allValues.size() - 6); //get the last buildVillageMoveDto io the setup phase
@@ -120,7 +122,7 @@ public class GameLogicControllerExpandedTest {
         }
     }
 
-
+    // fixme split into two tests for messaging and logic
     @Test
     public void testVictoryCondition() {
         try {
@@ -152,6 +154,7 @@ public class GameLogicControllerExpandedTest {
 
     }
 
+    // fixme split in individual tests (also for setup conditions)
     @Test
     public void testValidBuildingOutOfSetupPhase() {
         moveDto = new RollDiceDto(2);
@@ -220,6 +223,7 @@ public class GameLogicControllerExpandedTest {
         gameLogicController.makeMove(moveDto, player1);
     }
 
+    // fixme too complex setup but youll learn patterns for this in a masters course (you can still ask me if youre interested)
     private void createPreSetupBoard() {
         //URL of picture of Board:
         //https://cdn.discordapp.com/attachments/1219917626424164376/1231297808997421297/image.png?ex=66367272&is=6623fd72&hm=5989f819604eda76f0d834755e973aaf04f18479a42c26912a5b8a0dc1576799&
