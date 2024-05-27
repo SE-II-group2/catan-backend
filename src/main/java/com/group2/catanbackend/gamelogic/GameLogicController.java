@@ -13,7 +13,6 @@ import lombok.Getter;
 
 import java.util.*;
 
-// fixme be careful to avoid a god class here
 public class GameLogicController {
     @Getter
     private final Board board;
@@ -30,13 +29,15 @@ public class GameLogicController {
     @Getter
     private boolean gameover = false;
 
+    private int[] playerColors = {-65536, -16776961, -16711936, -1}; //Red, Blue, Green, White
+
     public GameLogicController(@NotNull List<Player> players, @NotNull MessagingService messagingService, @NotNull String gameId) {
         this.players = players;
         this.messagingService = messagingService;
         this.gameId = gameId;
         board = new Board();
-        for (Player player : players) {
-            player.setColor((int) (Math.random() * (-16777216)));
+        for (int i = 0; i<players.size(); i++) {
+            players.get(i).setColor(playerColors[i]);
         }
         generateSetupPhaseTurnOrder(players.size());
         //Send the starting gamestate to all playérs
@@ -79,25 +80,23 @@ public class GameLogicController {
         }
     }
 
-    // fixme extract methods
     private void makeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
         if (isSetupPhase) {
-            if (!(setupPhaseTurnOrder.get(0) == player))
-                throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
-
-            if (!board.addNewRoad(player, buildRoadMove.getConnectionID()))
-                throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildRoadMove.getClass().getSimpleName()));
-            setupPhaseTurnOrder.remove(0); //after you set down your road your turn ends during the setup phase
-            if (setupPhaseTurnOrder.isEmpty()) {
-                isSetupPhase = false;
-                board.setSetupPhase(false);
-                messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(turnOrder.get(0).toInGamePlayerDto())));
-            } else
-                messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(setupPhaseTurnOrder.get(0).toInGamePlayerDto())));
-            sendCurrentGameStateToPlayers();
-            return;
+            computeBuildRoadMoveSetupPhase(buildRoadMove, player);
         }
+        else computeBuildRoadMove(buildRoadMove, player);
+    }
 
+    private void makeBuildVillageMove(BuildVillageMoveDto buildVillageMove, Player player) {
+        if (isSetupPhase) {
+            computeBuildVillageMoveSetupPhase(buildVillageMove, player);
+        }
+        else computeBuildVillageMove(buildVillageMove, player);
+
+    }
+
+
+    private void computeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
         if (turnOrder.get(0) != player)
             throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
 
@@ -108,23 +107,25 @@ public class GameLogicController {
             sendCurrentGameStateToPlayers();
         } else
             throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildRoadMove.getClass().getSimpleName()));
-
-
     }
 
-    // fixme extract methods
-    private void makeBuildVillageMove(BuildVillageMoveDto buildVillageMove, Player player) {
-        if (isSetupPhase) {
-            if (!(setupPhaseTurnOrder.get(0) == player))
-                throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+    private void computeBuildRoadMoveSetupPhase(BuildRoadMoveDto buildRoadMove, Player player) {
+        if (!(setupPhaseTurnOrder.get(0) == player))
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
 
-            if (board.addNewVillage(player, buildVillageMove.getIntersectionID())) {
-                player.increaseVictoryPoints(1);
-                sendCurrentGameStateToPlayers();
-            } else
-                throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildVillageMove.getClass().getSimpleName()));
-            return;
-        }
+        if (!board.addNewRoad(player, buildRoadMove.getConnectionID()))
+            throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildRoadMove.getClass().getSimpleName()));
+        setupPhaseTurnOrder.remove(0); //after you set down your road your turn ends during the setup phase
+        if (setupPhaseTurnOrder.isEmpty()) {
+            isSetupPhase = false;
+            board.setSetupPhase(false);
+            messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(turnOrder.get(0).toInGamePlayerDto())));
+        } else
+            messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(setupPhaseTurnOrder.get(0).toInGamePlayerDto())));
+        sendCurrentGameStateToPlayers();
+    }
+
+    private void computeBuildVillageMove(BuildVillageMoveDto buildVillageMove, Player player) {
 
         if (turnOrder.get(0) != player)
             throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
@@ -144,6 +145,18 @@ public class GameLogicController {
             }
         } else
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(buildVillageMove.getClass().getSimpleName()));
+    }
+
+    private void computeBuildVillageMoveSetupPhase(BuildVillageMoveDto buildVillageMove, Player player) {
+        if (!(setupPhaseTurnOrder.get(0) == player))
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+
+        if (board.addNewVillage(player, buildVillageMove.getIntersectionID())) {
+            player.increaseVictoryPoints(1);
+            sendCurrentGameStateToPlayers();
+        } else
+            throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildVillageMove.getClass().getSimpleName()));
+
     }
 
     private void makeRollDiceMove(RollDiceDto rollDiceDto) {

@@ -205,7 +205,7 @@ class GameSocketIntegrationTest {
         //TEMPORARY SOLUTION, FIX IMPLEMENTATION LATER
         queue.poll(2, TimeUnit.SECONDS);
         MessageDto dto = queue.poll(2, TimeUnit.SECONDS);
-
+        dto = queue.poll(2, TimeUnit.SECONDS);
         if (dto instanceof CurrentGameStateDto currentGameStateDto) {
             List<ConnectionDto> connectionDtoList = currentGameStateDto.getConnections();
             assertNotNull(connectionDtoList.get(22).getOwner());
