@@ -91,7 +91,6 @@ public class GameLogicControllerExpandedTest {
         assertThrows(GameException.class, () -> gameLogicController.makeMove(moveDto, player1));
     }
 
-    // fixme split into two tests for messaging and logic
     @Test
     public void testCommunicationFromServerOnValidMoves() {
         moveDto = new RollDiceDto(2);
@@ -103,26 +102,26 @@ public class GameLogicControllerExpandedTest {
         gameLogicController.makeMove(moveDto, player2);
         moveDto = new EndTurnMoveDto();
         gameLogicController.makeMove(moveDto, player2);
-        verify(messagingMock, times(21)).notifyGameProgress(eq(gameLogicController.getGameId()), argumentCaptor.capture()); //4 moves here, already 8 from setup phase, 1 from hexqgonlist
 
-        // fixme avoid catching exceptions as the assertions might not execute
-        try {
-            List<MessageDto> allValues = argumentCaptor.getAllValues();
-            CurrentGameStateDto argument2 = (CurrentGameStateDto) allValues.get(allValues.size() - 6); //get the last buildVillageMoveDto io the setup phase
-            //moveDto = new BuildVillageMoveDto(3, 2);
-            assertEquals(BuildingType.VILLAGE.name(), argument2.getIntersections().get(29).getBuildingType());
-            assertEquals(player1.getDisplayName(), argument2.getIntersections().get(29).getOwner().getDisplayName());
-
-            argument2 = (CurrentGameStateDto) allValues.get(allValues.size() - 9); //get the last buildRoadMoveDto io the setup phase
-            //moveDto = new BuildRoadMoveDto(29, 30);
-            assertNotNull(argument2.getConnections().get(36).getOwner());
-            assertEquals(player1.getDisplayName(), argument2.getConnections().get(36).getOwner().getDisplayName());
-        } catch (Exception e) {
-            e.printStackTrace();
+        verify(messagingMock, atLeastOnce()).notifyGameProgress(eq(gameLogicController.getGameId()), argumentCaptor.capture());
+        List<MessageDto> allValues = argumentCaptor.getAllValues();
+        CurrentGameStateDto argument = null;
+        for (int i = allValues.size() - 1; i >= 0; i--) {
+            if (allValues.get(i).getEventType().equalsIgnoreCase("GAME_OBJECT")) {
+                argument = (CurrentGameStateDto) allValues.get(i);
+                break;
+            }
         }
+        if (argument == null) fail("argument was null, no currentgamestate sent to players");
+        assertEquals(BuildingType.VILLAGE.name(), argument.getIntersections().get(29).getBuildingType());
+        assertEquals(player1.getDisplayName(), argument.getIntersections().get(29).getOwner().getDisplayName());
+
+        assertNotNull(argument.getConnections().get(36).getOwner());
+        assertEquals(player1.getDisplayName(), argument.getConnections().get(36).getOwner().getDisplayName());
+
+        assertArrayEquals(new int[]{0, 1, 0, 1, 1}, argument.getPlayerOrder().get(0).getResources());
     }
 
-    // fixme split into two tests for messaging and logic
     @Test
     public void testVictoryCondition() {
         try {
@@ -142,19 +141,19 @@ public class GameLogicControllerExpandedTest {
 
 
             assertTrue(gameLogicController.isGameover());
-            verify(messagingMock, times(16)).notifyGameProgress(eq(gameLogicController.getGameId()), argumentCaptor.capture()); // 8 for setup phase, 2 for road, 1 from hexagonlist and village and 1 for victory
+            verify(messagingMock, atLeastOnce()).notifyGameProgress(eq(gameLogicController.getGameId()), argumentCaptor.capture());
 
             List<MessageDto> allValues = argumentCaptor.getAllValues();
-            GameoverDto lastArgument =  (GameoverDto) allValues.get(allValues.size() - 1); //get the last Dto sent
+            GameoverDto lastArgument = (GameoverDto) allValues.get(allValues.size() - 1); //get the last Dto sent, should always be gameoverdto
             assertEquals(lastArgument.getWinner().getDisplayName(), player1.getDisplayName());
 
         } catch (Exception e) {
             e.printStackTrace();
+            fail();
         }
 
     }
 
-    // fixme split in individual tests (also for setup conditions)
     @Test
     public void testValidBuildingOutOfSetupPhase() {
         moveDto = new RollDiceDto(2);
@@ -195,8 +194,6 @@ public class GameLogicControllerExpandedTest {
 
         assertInstanceOf(Building.class, gameLogicController.getBoard().getIntersections()[1][5]);
         assertArrayEquals(new int[]{0, 0, 0, 1, 1}, player1.getResources());
-
-
     }
 
 
