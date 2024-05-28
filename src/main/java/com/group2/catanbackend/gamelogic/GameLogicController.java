@@ -75,6 +75,7 @@ public class GameLogicController {
                 sendCurrentGameStateToPlayers();
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto((isSetupPhase) ? setupPhaseTurnOrder.get(0).toInGamePlayerDto() : turnOrder.get(0).toInGamePlayerDto())));
             }
+
             //TODO To implement other moves create MoveDto and include it here
             default -> throw new UnsupportedGameMoveException("Unknown DTO Format");
         }
