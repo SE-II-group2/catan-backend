@@ -1,5 +1,6 @@
 package com.group2.catanbackend.dto.game;
 
+// fixme see GameMoveType
 /**
  * The types of Messages that can be sent.
  * No enum because easier for Jackson
