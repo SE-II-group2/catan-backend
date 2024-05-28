@@ -193,7 +193,7 @@ public class GameLogicController {
             for (int j = i + 1; j < board.getAdjacencyMatrix()[i].length; j++) {
                 Connection connection = board.getAdjacencyMatrix()[i][j];
                 if (connection != null && !visitedConnections.containsKey(i + "-" + j)) {
-                    connectionDtos.add(new ConnectionDto((connection.getPlayer() == null) ? null : connection.getPlayer().toInGamePlayerDto(), board.getConnectionIdFromIntersections(i, j)));
+                    connectionDtos.add(new ConnectionDto((connection.getPlayer() == null) ? null : connection.getPlayer().toInGamePlayerDto(), board.translateIntersectionsToConnection(i, j)));
                     visitedConnections.put(i + "-" + j, true);
                     visitedConnections.put(j + "-" + i, true);  // Mark both [i][j] and [j][i] as visited
                 }
