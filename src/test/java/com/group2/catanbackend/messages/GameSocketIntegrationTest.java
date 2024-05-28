@@ -196,13 +196,16 @@ class GameSocketIntegrationTest {
         client.subscribe(Constants.TOPIC_GAME_PROGRESS.formatted(player1.getGameID()), handler);
         Thread.sleep(1000);
 
+        //Make BuildVillageMove first as only making BuuldRoadMove leads to errors
+        gameService.makeMove(player1.getToken(), new BuildVillageMoveDto(22));
+        Thread.sleep(1000);
         //Test BuildRoadMove
         gameService.makeMove(player1.getToken(), new BuildRoadMoveDto(22));
         Thread.sleep(1000);
         //TEMPORARY SOLUTION, FIX IMPLEMENTATION LATER
         queue.poll(2, TimeUnit.SECONDS);
         MessageDto dto = queue.poll(2, TimeUnit.SECONDS);
-
+        dto = queue.poll(2, TimeUnit.SECONDS);
         if (dto instanceof CurrentGameStateDto currentGameStateDto) {
             List<ConnectionDto> connectionDtoList = currentGameStateDto.getConnections();
             assertNotNull(connectionDtoList.get(22).getOwner());
