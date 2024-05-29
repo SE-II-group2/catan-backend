@@ -70,8 +70,8 @@ public class GameLogicControllerExpandedTest {
         moveDto = new EndTurnMoveDto();
         gameLogicController.makeMove(moveDto, player1);
 
-        assertArrayEquals(new int[]{0, 1, 1, 2, 1}, player1.getResources());
-        assertArrayEquals(new int[]{0, 0, 0, 0, 0}, player2.getResources());
+        assertArrayEquals(new int[]{1, 2, 2, 4, 2}, player1.getResources());
+        assertArrayEquals(new int[]{1, 1, 3, 2, 0}, player2.getResources());
     }
 
     @Test
@@ -119,7 +119,7 @@ public class GameLogicControllerExpandedTest {
         assertNotNull(argument.getConnections().get(36).getOwner());
         assertEquals(player1.getDisplayName(), argument.getConnections().get(36).getOwner().getDisplayName());
 
-        assertArrayEquals(new int[]{0, 1, 0, 1, 1}, argument.getPlayerOrder().get(0).getResources());
+        assertArrayEquals(new int[]{1, 2, 1, 3, 2}, argument.getPlayerOrder().get(0).getResources());
     }
 
     @Test
@@ -173,7 +173,7 @@ public class GameLogicControllerExpandedTest {
         gameLogicController.makeMove(moveDto, player1);
 
         assertTrue(gameLogicController.getBoard().getAdjacencyMatrix()[10][11] instanceof Road);
-        assertArrayEquals(new int[]{0, 1, 0, 1, 1}, player1.getResources());
+        assertArrayEquals(new int[]{1, 2, 1, 3, 2}, player1.getResources());
 
         moveDto = new EndTurnMoveDto();
         gameLogicController.makeMove(moveDto, player1);
@@ -186,14 +186,14 @@ public class GameLogicControllerExpandedTest {
         moveDto = new RollDiceDto(9);
         gameLogicController.makeMove(moveDto, player1);
 
-        assertArrayEquals(new int[]{1, 1, 1, 2, 1}, player1.getResources());
-        assertArrayEquals(new int[]{0, 0, 0, 0, 0}, player2.getResources());
+        assertArrayEquals(new int[]{2, 2, 2, 4, 2}, player1.getResources());
+        assertArrayEquals(new int[]{1, 1, 3, 2, 0}, player2.getResources());
 
         moveDto = new BuildVillageMoveDto(11);
         gameLogicController.makeMove(moveDto, player1);
 
         assertInstanceOf(Building.class, gameLogicController.getBoard().getIntersections()[1][5]);
-        assertArrayEquals(new int[]{0, 0, 0, 1, 1}, player1.getResources());
+        assertArrayEquals(new int[]{1, 1, 1, 3, 2}, player1.getResources());
     }
 
 

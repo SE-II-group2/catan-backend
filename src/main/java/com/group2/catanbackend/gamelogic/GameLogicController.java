@@ -154,6 +154,7 @@ public class GameLogicController {
 
         if (board.addNewVillage(player, buildVillageMove.getIntersectionID())) {
             player.increaseVictoryPoints(1);
+            board.distributeResourcesSetupPhase(player,buildVillageMove.getIntersectionID());
             sendCurrentGameStateToPlayers();
         } else
             throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildVillageMove.getClass().getSimpleName()));
