@@ -29,7 +29,7 @@ public class GameLogicController {
     @Getter
     private boolean gameover = false;
 
-    private int[] playerColors = {-65536, -16776961, -16711936, -1}; //Red, Blue, Green, White
+    private int[] playerColors = {-65536, -16776961, -16711936, -154624}; //Red, Blue, Green, Orange
 
     public GameLogicController(@NotNull List<Player> players, @NotNull MessagingService messagingService, @NotNull String gameId) {
         this.players = players;
@@ -154,6 +154,7 @@ public class GameLogicController {
 
         if (board.addNewVillage(player, buildVillageMove.getIntersectionID())) {
             player.increaseVictoryPoints(1);
+            board.distributeResourcesSetupPhase(player,buildVillageMove.getIntersectionID());
             sendCurrentGameStateToPlayers();
         } else
             throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildVillageMove.getClass().getSimpleName()));

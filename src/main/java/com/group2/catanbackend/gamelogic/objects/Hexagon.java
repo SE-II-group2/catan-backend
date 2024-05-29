@@ -2,6 +2,7 @@ package com.group2.catanbackend.gamelogic.objects;
 
 import com.group2.catanbackend.gamelogic.enums.HexagonType;
 import com.group2.catanbackend.gamelogic.enums.ResourceDistribution;
+import com.group2.catanbackend.model.Player;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -35,6 +36,25 @@ public class Hexagon {
         for (Building building : buildings) {
             if (building != null) {
                 building.giveResources(distribution);
+            }
+        }
+    }
+
+    public void distributeResources(Player player) {
+        if(hasRobber)return;
+        for (Building building : buildings) {
+            if (building != null && building.getPlayer() == player) {
+                building.giveResources(distribution);
+            }
+        }
+    }
+
+    public void removeBuilding(Building building) {
+        for (int i = 0; i < buildings.length; i++) {
+            if (buildings[i] == building) {
+                buildings[i] = null;
+                numOfAdjacentBuildings--;
+                break;
             }
         }
     }

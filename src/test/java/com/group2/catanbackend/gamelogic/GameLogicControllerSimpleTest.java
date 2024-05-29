@@ -57,13 +57,14 @@ public class GameLogicControllerSimpleTest {
 
     }
 
-    //TODO Uncomment line, fails right now and should only work after fixing issue of needing to set village before road
     @Test
     public void testAddTwoRoadsThrowsError(){
+        moveDto = new BuildVillageMoveDto(0);
+        gameLogicController.makeMove(moveDto,player1);
         moveDto = new BuildRoadMoveDto(0);
         gameLogicController.makeMove(moveDto, player1);
-        /*moveDto = new BuildRoadMoveDto(3);
-        assertThrows(Exception.class, () -> gameLogicController.makeMove(moveDto, player2));*/
+        moveDto = new BuildRoadMoveDto(3);
+        assertThrows(Exception.class, () -> gameLogicController.makeMove(moveDto, player2));
     }
 
     @Test
