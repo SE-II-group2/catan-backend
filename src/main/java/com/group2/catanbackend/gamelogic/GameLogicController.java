@@ -2,7 +2,9 @@ package com.group2.catanbackend.gamelogic;
 
 import com.group2.catanbackend.dto.game.*;
 import com.group2.catanbackend.exception.*;
+import com.group2.catanbackend.gamelogic.enums.ProgressCardType;
 import com.group2.catanbackend.gamelogic.enums.ResourceCost;
+import com.group2.catanbackend.gamelogic.enums.ResourceDistribution;
 import com.group2.catanbackend.gamelogic.objects.Connection;
 import com.group2.catanbackend.gamelogic.objects.Hexagon;
 import com.group2.catanbackend.gamelogic.objects.Intersection;
@@ -10,6 +12,7 @@ import com.group2.catanbackend.model.Player;
 import com.group2.catanbackend.service.MessagingService;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.*;
 
@@ -24,6 +27,7 @@ public class GameLogicController {
     private ArrayList<Player> setupPhaseTurnOrder;
     @Getter
     private ArrayList<Player> turnOrder;
+    @Setter
     private boolean isSetupPhase = true;
     private static final int VICTORYPOINTSFORVICTORY = 10;
     @Getter
@@ -75,6 +79,13 @@ public class GameLogicController {
                 sendCurrentGameStateToPlayers();
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto((isSetupPhase) ? setupPhaseTurnOrder.get(0).toInGamePlayerDto() : turnOrder.get(0).toInGamePlayerDto())));
             }
+            case "UseProgressCardDto" -> {
+                if (isSetupPhase) {
+                   throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_USE_PROGRESS_CARDS_IN_SETUP);
+                }
+                UseProgressCardDto useProgressCardDto = (UseProgressCardDto) gameMove;
+                makeUseProgressCardMove(useProgressCardDto, player);
+            }
 
             //TODO To implement other moves create MoveDto and include it here
             default -> throw new UnsupportedGameMoveException("Unknown DTO Format");
@@ -96,6 +107,63 @@ public class GameLogicController {
 
     }
 
+    private void makeUseProgressCardMove(UseProgressCardDto useProgressCardDto, Player player) {
+        ProgressCardType progressCardType = useProgressCardDto.getProgressCardType();
+        List<ResourceDistribution> chosenResources = useProgressCardDto.getChosenResources();
+        if (!player.getProgressCards().contains(progressCardType)){
+            throw new InvalidGameMoveException(ErrorCode.ERROR_CARD_TYPE_NOT_IN_POSSESSION);
+        }
+        player.useProgressCard(progressCardType);
+        switch(progressCardType) {
+            case KNIGHT -> {
+                // set knight to different hexagon and steal 1 resource from someone from this hex
+                // TODO: Implement when possible
+            }
+            case YEAR_OF_PLENTY -> {
+                // choose 2 free resources from the bank
+                player.adjustResources(chosenResources.get(0).getDistribution());
+                player.adjustResources(chosenResources.get(1).getDistribution());
+            }
+            case ROAD_BUILDING -> {
+                // build 2 roads for free
+                for (int i = 0; i < 2; i++){
+                    player.adjustResources(ResourceDistribution.FOREST.getDistribution());
+                    player.adjustResources(ResourceDistribution.HILLS.getDistribution());
+                }
+            }
+            case MONOPOLY -> {
+                // grants you all the resources from the type you have chosen from all other players
+                ResourceDistribution monopolyResource = useProgressCardDto.getMonopolyResource();
+
+                int resourceIndex = monopolyResource.getResourceIndex();
+                int amountCollected = 0;
+
+                for (Player otherPlayer : players) {
+                    if (otherPlayer != player) {
+                        int[] otherPlayerResources = otherPlayer.getResources();
+                        int amountToCollect = otherPlayerResources[resourceIndex];
+                        amountCollected += amountToCollect;
+                        int[] resourceAdjustment = new int[5];
+                        resourceAdjustment[resourceIndex] = -amountToCollect;
+                        otherPlayer.adjustResources(resourceAdjustment);
+                    }
+                }
+
+                int[] playerResourceAdjustment = new int[5];
+                playerResourceAdjustment[resourceIndex] = amountCollected;
+                player.adjustResources(playerResourceAdjustment);
+            }
+            case VICTORY_POINT -> {
+                // grants you 1 victory point
+                player.increaseVictoryPoints(1);
+                // TODO: outsource win-condition-check to method
+                if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
+                   gameover = true;
+                   messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
+                }
+            }
+        }
+    }
 
     private void computeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
         if (turnOrder.get(0) != player)
