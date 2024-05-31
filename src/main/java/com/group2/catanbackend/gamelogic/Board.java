@@ -104,8 +104,8 @@ public class Board {
 
     public void moveRobber(int hexagonIDTarget){
         for(Hexagon hexagon : hexagonList){
-            if(hexagon.getId()==hexagonIDTarget)hexagon.setHasRobber(true);
             if(hexagon.isHasRobber())hexagon.setHasRobber(false);
+            if(hexagon.getId()==hexagonIDTarget)hexagon.setHasRobber(true);
         }
     }
 
