@@ -17,4 +17,14 @@ public enum ResourceDistribution {
     public int[] getDistribution() {
         return distribution;
     }
+
+    public int getResourceIndex(){
+        for (int i = 0; i < distribution.length; i++) {
+            if (distribution[i] == 1) {
+                return i;
+            }
+        }
+        return -1;
+        //TODO: throw
+    }
 }
