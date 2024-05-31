@@ -3,6 +3,8 @@ package com.group2.catanbackend.gamelogic;
 import com.group2.catanbackend.dto.game.*;
 import com.group2.catanbackend.exception.InvalidGameMoveException;
 import com.group2.catanbackend.exception.NotActivePlayerException;
+import com.group2.catanbackend.gamelogic.enums.ProgressCardType;
+import com.group2.catanbackend.gamelogic.enums.ResourceDistribution;
 import com.group2.catanbackend.gamelogic.objects.Building;
 import com.group2.catanbackend.gamelogic.objects.Road;
 import com.group2.catanbackend.model.Player;
@@ -12,9 +14,14 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 
 public class GameLogicControllerSimpleTest {
@@ -24,6 +31,7 @@ public class GameLogicControllerSimpleTest {
     private Player player2;
     GameMoveDto moveDto;
     private final ArrayList<Player> playersList = new ArrayList<>();
+    private final int VICTORYPOINTSFORVICTORY = 10;
 
     @Mock
     MessagingService messagingService;
@@ -127,4 +135,47 @@ public class GameLogicControllerSimpleTest {
         assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(moveDto, player1));
     }
 
+    //TODO: magic constants below o_O
+    @Test
+    public void testYearOfPlentyCard(){
+        player1.addProgressCard(ProgressCardType.YEAR_OF_PLENTY);
+        List<ResourceDistribution> chosenResources = Arrays.asList(ResourceDistribution.FIELDS, ResourceDistribution.FOREST);
+        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.YEAR_OF_PLENTY, chosenResources, null);
+        gameLogicController.setSetupPhase(false);
+        gameLogicController.makeMove(useProgressCardDto, player1);
+        assertArrayEquals(new int[]{1,0,1,0,0}, player1.getResources());
+    }
+
+    @Test
+    public void testMonopolyCard(){
+        player1.addProgressCard(ProgressCardType.MONOPOLY);
+        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.MONOPOLY, null, ResourceDistribution.FIELDS);
+        player2.adjustResources(ResourceDistribution.FIELDS.getDistribution());
+        player2.adjustResources(ResourceDistribution.FIELDS.getDistribution());
+        gameLogicController.setSetupPhase(false);
+        gameLogicController.makeMove(useProgressCardDto, player1);
+        assertArrayEquals(new int[]{2,0,0,0,0}, player1.getResources());
+        assertArrayEquals(new int[]{0,0,0,0,0}, player2.getResources());
+    }
+
+    @Test
+    public void testRoadBuildingCard(){
+       player1.addProgressCard(ProgressCardType.ROAD_BUILDING);
+       UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.ROAD_BUILDING, null, null);
+       gameLogicController.setSetupPhase(false);
+       gameLogicController.makeMove(useProgressCardDto, player1);
+       assertArrayEquals(new int[]{0,0,2,2,0}, player1.getResources());
+    }
+
+    @Test
+    public void testVictoryPointCard(){
+        player1.increaseVictoryPoints(9);
+        player1.addProgressCard(ProgressCardType.VICTORY_POINT);
+        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.VICTORY_POINT, null, null);
+        gameLogicController.setSetupPhase(false);
+        gameLogicController.makeMove(useProgressCardDto, player1);
+        assertEquals(VICTORYPOINTSFORVICTORY, player1.getVictoryPoints());
+        assertTrue(gameLogicController.isGameover());
+        verify(messagingService).notifyGameProgress(anyString(), any(GameoverDto.class));
+    }
 }
