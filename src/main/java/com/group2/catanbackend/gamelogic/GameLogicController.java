@@ -3,6 +3,7 @@ package com.group2.catanbackend.gamelogic;
 import com.group2.catanbackend.dto.game.*;
 import com.group2.catanbackend.exception.*;
 import com.group2.catanbackend.gamelogic.enums.ResourceCost;
+import com.group2.catanbackend.gamelogic.objects.Building;
 import com.group2.catanbackend.gamelogic.objects.Connection;
 import com.group2.catanbackend.gamelogic.objects.Hexagon;
 import com.group2.catanbackend.gamelogic.objects.Intersection;
@@ -75,10 +76,47 @@ public class GameLogicController {
                 sendCurrentGameStateToPlayers();
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto((isSetupPhase) ? setupPhaseTurnOrder.get(0).toInGamePlayerDto() : turnOrder.get(0).toInGamePlayerDto())));
             }
+            case "MoveRobberDtO" -> {
+                if(isSetupPhase)
+                    throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_MOVE_ROBBER);
+                makeRobberMove((MoveRobberDto)gameMove, player);
+            }
 
             //TODO To implement other moves create MoveDto and include it here
-            default -> throw new UnsupportedGameMoveException("Unknown DTO Format");
+            default -> throw new UnsupportedGameMoveException(ErrorCode.ERROR_NOT_IMPLEMENTED);
         }
+    }
+
+    private void makeRobberMove(MoveRobberDto gameMove, Player player) {
+        board.moveRobber(gameMove.getHexagonID());
+        Hexagon newPosition = board.getHexagonList().get(gameMove.getHexagonID());
+
+        for (Building building : newPosition.getBuildings()) {
+            if (building.getPlayer() != player && stealResource(building.getPlayer(), player)) {
+                break;
+            }
+        }
+    }
+
+    private boolean stealResource(Player playerToStealFrom, Player playerToGiveTo){
+        List<Integer> nonZeroIndices = new ArrayList<>();
+        int[] opponentResources = playerToStealFrom.getResources();
+        for (int i = 0; i < opponentResources.length; i++) {
+            if (opponentResources[i] > 0) {
+                nonZeroIndices.add(i);
+            }
+        }
+        if (!nonZeroIndices.isEmpty()) {
+            int randomIndex = nonZeroIndices.get((int) (Math.random() * nonZeroIndices.size()));
+            int[] resourceAdjustment = new int[5];
+            resourceAdjustment[randomIndex] = -1;
+            playerToStealFrom.adjustResources(resourceAdjustment);
+
+            resourceAdjustment[randomIndex] = 1;
+            playerToGiveTo.adjustResources(resourceAdjustment);
+            return true;
+        }
+        return false;
     }
 
     private void makeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {

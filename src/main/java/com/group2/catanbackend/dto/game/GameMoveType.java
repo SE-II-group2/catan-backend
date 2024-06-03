@@ -6,4 +6,5 @@ public interface GameMoveType {
     String BUILDVILLAGEMOVE = "BUILD_VILLAGE_MOVE";
     String ENTTURNMOVE = "END_TURN_MOVE";
     String ROLLDICEMOVE = "ROLL_DICE_MOVE";
+    String MOVEROBBERMOVE = "MOVE_ROBBER_MOVE";
 }
