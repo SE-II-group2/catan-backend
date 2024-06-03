@@ -251,7 +251,7 @@ public class GameLogicControllerExpandedTest {
         try {
             Field privateField = Player.class.getDeclaredField("resources");
             privateField.setAccessible(true); // This allows us to modify private fields
-            privateField.set(player1, new int[]{2,2,2,2,2});
+            privateField.set(player1, new int[]{2,2,2,2,1});
         } catch (Exception e) {
             fail();
             e.printStackTrace();
@@ -259,12 +259,13 @@ public class GameLogicControllerExpandedTest {
         moveDto = new RollDiceDto(7);
         gameLogicController.makeMove(moveDto,player1);
         int totalResources=0;
+        //The Number of reduced resources should be rounded down, so for a total of 9, 4 should be removed and 5 should be left
         for(Integer i : player1.getResources())totalResources+=i;
         assertEquals(5, totalResources);
     }
 
     @Test
-    void testRollFf7DoesNotRemoveHalfResourcesIfLessThan8Resources(){
+    void testRollOf7DoesNotRemoveHalfResourcesIfLessThan8Resources(){
         moveDto = new RollDiceDto(7);
         gameLogicController.makeMove(moveDto,player1);
         int totalResources=0;
