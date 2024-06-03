@@ -109,59 +109,64 @@ public class GameLogicController {
 
     private void makeUseProgressCardMove(UseProgressCardDto useProgressCardDto, Player player) {
         ProgressCardType progressCardType = useProgressCardDto.getProgressCardType();
-        List<ResourceDistribution> chosenResources = useProgressCardDto.getChosenResources();
         if (!player.getProgressCards().contains(progressCardType)){
             throw new InvalidGameMoveException(ErrorCode.ERROR_CARD_TYPE_NOT_IN_POSSESSION);
         }
         player.useProgressCard(progressCardType);
         switch(progressCardType) {
+            // set knight to different hexagon and steal 1 resource from someone from this hex
             case KNIGHT -> {
-                // set knight to different hexagon and steal 1 resource from someone from this hex
                 // TODO: Implement when possible
             }
-            case YEAR_OF_PLENTY -> {
-                // choose 2 free resources from the bank
-                player.adjustResources(chosenResources.get(0).getDistribution());
-                player.adjustResources(chosenResources.get(1).getDistribution());
-            }
-            case ROAD_BUILDING -> {
-                // build 2 roads for free
-                for (int i = 0; i < 2; i++){
-                    player.adjustResources(ResourceDistribution.FOREST.getDistribution());
-                    player.adjustResources(ResourceDistribution.HILLS.getDistribution());
-                }
-            }
-            case MONOPOLY -> {
-                // grants you all the resources from the type you have chosen from all other players
-                ResourceDistribution monopolyResource = useProgressCardDto.getMonopolyResource();
+            // choose 2 free resources from the bank
+            case YEAR_OF_PLENTY -> computeYearOfPlentyCardMove(useProgressCardDto, player);
+            // build 2 roads for free
+            case ROAD_BUILDING -> computeRoadBuildingCardMove(player);
+            // grants you all the resources from the type you have chosen from all other players
+            case MONOPOLY -> computeMonopolyCardMove(useProgressCardDto, player);
+            // grants you 1 victory point
+            case VICTORY_POINT -> computeVictoryPointCardMove(player);
+        }
+    }
 
-                int resourceIndex = monopolyResource.getResourceIndex();
-                int amountCollected = 0;
+    private void computeYearOfPlentyCardMove(UseProgressCardDto useProgressCardDto, Player player){
+        List<ResourceDistribution> chosenResources = useProgressCardDto.getChosenResources();
+        player.adjustResources(chosenResources.get(0).getDistribution());
+        player.adjustResources(chosenResources.get(1).getDistribution());
+    }
 
-                for (Player otherPlayer : players) {
-                    if (otherPlayer != player) {
-                        int[] otherPlayerResources = otherPlayer.getResources();
-                        int amountToCollect = otherPlayerResources[resourceIndex];
-                        amountCollected += amountToCollect;
-                        int[] resourceAdjustment = new int[5];
-                        resourceAdjustment[resourceIndex] = -amountToCollect;
-                        otherPlayer.adjustResources(resourceAdjustment);
-                    }
-                }
+    private void computeRoadBuildingCardMove(Player player) {
+        for (int i = 0; i < 2; i++){
+            player.adjustResources(ResourceDistribution.FOREST.getDistribution());
+            player.adjustResources(ResourceDistribution.HILLS.getDistribution());
+        }
+    }
 
-                int[] playerResourceAdjustment = new int[5];
-                playerResourceAdjustment[resourceIndex] = amountCollected;
-                player.adjustResources(playerResourceAdjustment);
+    private void computeMonopolyCardMove(UseProgressCardDto useProgressCardDto, Player player){
+        ResourceDistribution monopolyResource = useProgressCardDto.getMonopolyResource();
+        int resourceIndex = monopolyResource.getResourceIndex();
+        int amountCollected = 0;
+        for (Player otherPlayer : players) {
+            if (otherPlayer != player) {
+                int[] otherPlayerResources = otherPlayer.getResources();
+                int amountToCollect = otherPlayerResources[resourceIndex];
+                amountCollected += amountToCollect;
+                int[] resourceAdjustment = new int[5];
+                resourceAdjustment[resourceIndex] = -amountToCollect;
+                otherPlayer.adjustResources(resourceAdjustment);
             }
-            case VICTORY_POINT -> {
-                // grants you 1 victory point
-                player.increaseVictoryPoints(1);
-                // TODO: outsource win-condition-check to method
-                if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
-                   gameover = true;
-                   messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
-                }
-            }
+        }
+        int[] playerResourceAdjustment = new int[5];
+        playerResourceAdjustment[resourceIndex] = amountCollected;
+        player.adjustResources(playerResourceAdjustment);
+    }
+
+    private void computeVictoryPointCardMove(Player player){
+        player.increaseVictoryPoints(1);
+        // TODO: outsource win-condition-check to method
+        if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
+            gameover = true;
+            messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
         }
     }
 
