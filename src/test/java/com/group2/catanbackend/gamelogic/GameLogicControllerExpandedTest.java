@@ -196,6 +196,82 @@ public class GameLogicControllerExpandedTest {
         assertArrayEquals(new int[]{1, 1, 1, 3, 2}, player1.getResources());
     }
 
+    @Test
+    public void testRobberMoveNoResourcesToSteal() {
+        try {
+            Field privateField = Player.class.getDeclaredField("resources");
+            privateField.setAccessible(true); // This allows us to modify private fields
+            privateField.set(player1, new int[]{0, 0, 0, 0, 0});
+            privateField.set(player2, new int[]{0, 0, 0, 0, 0});
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        MoveRobberDto moveRobberDto = new MoveRobberDto(2);
+        gameLogicController.makeMove(moveRobberDto, player1);
+
+        assertArrayEquals(new int[]{0, 0, 0, 0, 0}, player2.getResources());
+        assertArrayEquals(new int[]{0, 0, 0, 0, 0}, player1.getResources());
+    }
+
+    @Test
+    public void testRobberMoveWithResourcesToSteal() {
+        try {
+            Field privateField = Player.class.getDeclaredField("resources");
+            privateField.setAccessible(true); // This allows us to modify private fields
+            privateField.set(player1, new int[]{0, 0, 0, 0, 0});
+            privateField.set(player2, new int[]{1, 0, 0, 0, 0});
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        MoveRobberDto moveRobberDto = new MoveRobberDto(2);
+        gameLogicController.makeMove(moveRobberDto, player1);
+
+        assertArrayEquals(new int[]{0, 0, 0, 0, 0}, player2.getResources());
+        assertArrayEquals(new int[]{1, 0, 0, 0, 0}, player1.getResources());
+    }
+
+    @Test
+    public void testRobberMovePlayerIsSame() {
+        try {
+            Field privateField = Player.class.getDeclaredField("resources");
+            privateField.setAccessible(true); // This allows us to modify private fields
+            privateField.set(player1, new int[]{0, 0, 0, 0, 0});
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        MoveRobberDto moveRobberDto = new MoveRobberDto(0);
+        gameLogicController.makeMove(moveRobberDto, player1);
+
+        assertArrayEquals(new int[]{0, 0, 0, 0, 0}, player1.getResources());
+    }
+
+    @Test
+    void testRollOf7RemovesHalfResources() {
+        try {
+            Field privateField = Player.class.getDeclaredField("resources");
+            privateField.setAccessible(true); // This allows us to modify private fields
+            privateField.set(player1, new int[]{2,2,2,2,2});
+        } catch (Exception e) {
+            fail();
+            e.printStackTrace();
+        }
+        moveDto = new RollDiceDto(7);
+        gameLogicController.makeMove(moveDto,player1);
+        int totalResources=0;
+        for(Integer i : player1.getResources())totalResources+=i;
+        assertEquals(5, totalResources);
+    }
+
+    @Test
+    void testRollFf7DoesNotRemoveHalfResourcesIfLessThan8Resources(){
+        moveDto = new RollDiceDto(7);
+        gameLogicController.makeMove(moveDto,player1);
+        int totalResources=0;
+        //Player 2 should have exactly 7 resources from the setup phase, so nothing should be reduced
+        for(Integer i : player2.getResources())totalResources+=i;
+        assertEquals(7, totalResources);
+    }
 
     //#####################################################################################################
     private void finishSetUpPhase() {
@@ -220,10 +296,10 @@ public class GameLogicControllerExpandedTest {
         gameLogicController.makeMove(moveDto, player1);
     }
 
-    // fixme too complex setup but youll learn patterns for this in a masters course (you can still ask me if youre interested)
     private void createPreSetupBoard() {
         //URL of picture of Board:
         //https://cdn.discordapp.com/attachments/1219917626424164376/1231297808997421297/image.png?ex=66367272&is=6623fd72&hm=5989f819604eda76f0d834755e973aaf04f18479a42c26912a5b8a0dc1576799&
+        //Only Hexagons are correct in the picture, villages and roads arent :]
         List<Hexagon> hexagonList = new ArrayList<>();
         List<HexagonType> hexagonTypes = new ArrayList<>();
         List<Integer> values = new ArrayList<>();

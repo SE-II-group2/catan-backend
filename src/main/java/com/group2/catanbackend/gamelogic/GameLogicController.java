@@ -11,6 +11,7 @@ import com.group2.catanbackend.model.Player;
 import com.group2.catanbackend.service.MessagingService;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.*;
 
@@ -77,9 +78,9 @@ public class GameLogicController {
                 sendCurrentGameStateToPlayers();
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto((isSetupPhase) ? setupPhaseTurnOrder.get(0).toInGamePlayerDto() : turnOrder.get(0).toInGamePlayerDto())));
             }
-            case "MoveRobberDtO" -> {
+            case "MoveRobberDto" -> {
                 if(isSetupPhase)
-                    throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_MOVE_ROBBER);
+                    throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_MOVE_ROBBER_SETUP_PHASE);
                 if (turnOrder.get(0) != player)
                     throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
                 makeRobberMove((MoveRobberDto)gameMove, player);
@@ -90,9 +91,10 @@ public class GameLogicController {
     }
 
     private void makeRobberMove(MoveRobberDto gameMove, Player player) {
+        if(gameMove.getHexagonID()<0 || gameMove.getHexagonID()>18) throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_MOVE_ROBBER);
         board.moveRobber(gameMove.getHexagonID());
         for (Building building : board.getHexagonList().get(gameMove.getHexagonID()).getBuildings()) {
-            if (building.getPlayer() != player && stealResource(building.getPlayer(), player)) {
+            if (building!=null && building.getPlayer() != player && stealResource(building.getPlayer(), player)) {
                 break;
             }
         }
@@ -133,7 +135,6 @@ public class GameLogicController {
         else computeBuildVillageMove(buildVillageMove, player);
 
     }
-
 
     private void computeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
         if (turnOrder.get(0) != player)
@@ -226,6 +227,7 @@ public class GameLogicController {
             int[] resourceAdjustment = new int[5];
             while (totalResources > 0) {
                 int randomIndex = nonZeroIndices.get((int) (Math.random() * nonZeroIndices.size()));
+                if((resourceAdjustment[randomIndex]*-1)==resources[randomIndex])continue;
                 resourceAdjustment[randomIndex] -=1;
                 totalResources--;
             }
