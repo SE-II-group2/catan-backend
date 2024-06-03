@@ -178,4 +178,19 @@ public class GameLogicControllerSimpleTest {
         assertTrue(gameLogicController.isGameover());
         verify(messagingService).notifyGameProgress(anyString(), any(GameoverDto.class));
     }
+
+    @Test
+    public void testUseProgressCardsNotInPossession(){
+        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.YEAR_OF_PLENTY, null, null);
+        gameLogicController.setSetupPhase(false);
+        assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(useProgressCardDto, player1));
+    }
+
+    @Test
+    public void testUseProgressCardDuringSetupPhase() {
+        player1.addProgressCard(ProgressCardType.YEAR_OF_PLENTY);
+        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.YEAR_OF_PLENTY, null, null);
+        gameLogicController.setSetupPhase(true);
+        assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(useProgressCardDto, player1));
+    }
 }
