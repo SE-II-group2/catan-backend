@@ -98,6 +98,7 @@ public class GameLogicController {
                 break;
             }
         }
+        sendCurrentGameStateToPlayers();
     }
 
     private boolean stealResource(Player playerToStealFrom, Player playerToGiveTo){
