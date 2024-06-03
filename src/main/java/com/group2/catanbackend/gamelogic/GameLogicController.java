@@ -30,13 +30,14 @@ public class GameLogicController {
     @Getter
     private boolean gameover = false;
 
-    private int[] playerColors = {-65536, -16776961, -16711936, -154624}; //Red, Blue, Green, Orange
+
 
     public GameLogicController(@NotNull List<Player> players, @NotNull MessagingService messagingService, @NotNull String gameId) {
         this.players = players;
         this.messagingService = messagingService;
         this.gameId = gameId;
         board = new Board();
+        int[] playerColors = {-65536, -16776961, -16711936, -154624}; //Red, Blue, Green, Orange
         for (int i = 0; i<players.size(); i++) {
             players.get(i).setColor(playerColors[i]);
         }
@@ -79,9 +80,10 @@ public class GameLogicController {
             case "MoveRobberDtO" -> {
                 if(isSetupPhase)
                     throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_MOVE_ROBBER);
+                if (turnOrder.get(0) != player)
+                    throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
                 makeRobberMove((MoveRobberDto)gameMove, player);
             }
-
             //TODO To implement other moves create MoveDto and include it here
             default -> throw new UnsupportedGameMoveException(ErrorCode.ERROR_NOT_IMPLEMENTED);
         }
@@ -89,9 +91,7 @@ public class GameLogicController {
 
     private void makeRobberMove(MoveRobberDto gameMove, Player player) {
         board.moveRobber(gameMove.getHexagonID());
-        Hexagon newPosition = board.getHexagonList().get(gameMove.getHexagonID());
-
-        for (Building building : newPosition.getBuildings()) {
+        for (Building building : board.getHexagonList().get(gameMove.getHexagonID()).getBuildings()) {
             if (building.getPlayer() != player && stealResource(building.getPlayer(), player)) {
                 break;
             }
@@ -202,9 +202,35 @@ public class GameLogicController {
     private void makeRollDiceMove(RollDiceDto rollDiceDto) {
         if (rollDiceDto.getDiceRoll() < 2 || rollDiceDto.getDiceRoll() > 12)
             throw new InvalidGameMoveException(ErrorCode.ERROR_INVALID_DICE_ROLL);
-        board.distributeResourcesByDiceRoll(rollDiceDto.getDiceRoll());
+        if(rollDiceDto.getDiceRoll() == 7){
+            deleteHalfResourcesIfMoreThan7();
+        }
+        else board.distributeResourcesByDiceRoll(rollDiceDto.getDiceRoll());
         messagingService.notifyGameProgress(gameId, new GameProgressDto(rollDiceDto));
         sendCurrentGameStateToPlayers();
+    }
+
+    private void deleteHalfResourcesIfMoreThan7() {
+        for(Player player : turnOrder){
+            List<Integer> nonZeroIndices = new ArrayList<>();
+            int totalResources = 0;
+            int[] resources = player.getResources();
+            for (int i = 0; i < resources.length; i++) {
+                if (resources[i] > 0) {
+                    nonZeroIndices.add(i);
+                    totalResources += resources[i];
+                }
+            }
+            if(totalResources<=7)continue;
+            totalResources/=2;
+            int[] resourceAdjustment = new int[5];
+            while (totalResources > 0) {
+                int randomIndex = nonZeroIndices.get((int) (Math.random() * nonZeroIndices.size()));
+                resourceAdjustment[randomIndex] -=1;
+                totalResources--;
+            }
+            player.adjustResources(resourceAdjustment);
+        }
     }
 
     private void sendCurrentGameStateToPlayers() {
