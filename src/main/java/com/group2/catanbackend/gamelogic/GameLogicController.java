@@ -77,8 +77,45 @@ public class GameLogicController {
             }
 
             //TODO To implement other moves create MoveDto and include it here
+
+            case "TradeMoveDto" -> {
+                TradeMoveDto tradeMove = (TradeMoveDto) gameMove;
+                makeTradeMove(tradeMove, player);
+            }
+
             default -> throw new UnsupportedGameMoveException("Unknown DTO Format");
         }
+    }
+
+    private void makeTradeMove(TradeMoveDto tradeMove, Player player){
+        if (isSetupPhase) throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_ROLL_IN_SETUP);
+        if (turnOrder.get(0) != player)
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+        if (!player.resourcesSufficient(tradeMove.getResources()))
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(tradeMove.getClass().getSimpleName()));
+        if(tradeMove.getWaitTime()<1)
+            throw new InvalidConfigurationException(ErrorCode.ERROR_INVALID_CONFIGURATION);
+        if(isempty(tradeMove.getToPlayer())){
+            computeTradeMoveBank(tradeMove, player);
+        }
+        else computeTradeMove(tradeMove, player);
+    }
+    public boolean isempty(boolean[] toPlayer){
+        // maybe change length dynamically dependent on Game
+        if(toPlayer.length != 4){
+            throw new NotActivePlayerException(ErrorCode.ERROR_INVALID_CONFIGURATION);
+        }
+        for(boolean b : toPlayer){
+            if(b){//b==true
+                return false;
+            }
+        }
+        return true;
+    }
+    private void computeTradeMoveBank(TradeMoveDto tradeMove, Player player){}
+    private void computeTradeMove(TradeMoveDto tradeMove, Player player){
+        //messagingService.notifyUser(player.getToken(), new NotifyUserDto("Trade got sent!"));
+        messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto((isSetupPhase) ? setupPhaseTurnOrder.get(0).toInGamePlayerDto() : turnOrder.get(0).toInGamePlayerDto())));
     }
 
     private void makeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {

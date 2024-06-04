@@ -18,6 +18,7 @@ import lombok.Setter;
         @JsonSubTypes.Type(value = BuildVillageMoveDto.class, name = GameMoveType.BUILDVILLAGEMOVE),
         @JsonSubTypes.Type(value = EndTurnMoveDto.class, name = GameMoveType.ENTTURNMOVE),
         @JsonSubTypes.Type(value = RollDiceDto.class, name = GameMoveType.ROLLDICEMOVE),
+        @JsonSubTypes.Type(value = TradeMoveDto.class, name = GameMoveType.TRADEMOVE),
 })
 
 //no longer abstract because this causes issues with serialization and deserialization
