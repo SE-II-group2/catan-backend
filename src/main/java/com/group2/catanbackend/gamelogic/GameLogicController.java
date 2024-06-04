@@ -29,7 +29,7 @@ public class GameLogicController {
     @Getter
     private boolean gameover = false;
 
-    private int[] playerColors = {-65536, -16776961, -16711936, -154624}; //Red, Blue, Green, Orange
+    private final int[] playerColors = {-65536, -16776961, -16711936, -154624}; //Red, Blue, Green, Orange
 
     public GameLogicController(@NotNull List<Player> players, @NotNull MessagingService messagingService, @NotNull String gameId) {
         this.players = players;
@@ -58,12 +58,17 @@ public class GameLogicController {
                 makeRollDiceMove(rollDiceMove);
             }
             case "BuildRoadMoveDto" -> {
+                player.adjustResources(new int[]{10,10,10,10,10});
                 BuildRoadMoveDto buildRoadMove = (BuildRoadMoveDto) gameMove;
                 makeBuildRoadMove(buildRoadMove, player);
             }
             case "BuildVillageMoveDto" -> {
                 BuildVillageMoveDto buildVillageMove = (BuildVillageMoveDto) gameMove;
                 makeBuildVillageMove(buildVillageMove, player);
+            }
+            case "BuildCityMoveDto" -> {
+                BuildCityMoveDto buildCityMoveDto = (BuildCityMoveDto) gameMove;
+                makeBuildCityMove(buildCityMoveDto, player);
             }
             case "EndTurnMoveDto" -> {
                 if (isSetupPhase)
@@ -93,9 +98,11 @@ public class GameLogicController {
             computeBuildVillageMoveSetupPhase(buildVillageMove, player);
         }
         else computeBuildVillageMove(buildVillageMove, player);
-
     }
 
+    private void makeBuildCityMove(BuildCityMoveDto buildCityMoveDto, Player player) {
+        computeBuildCityMove(buildCityMoveDto,player);
+    }
 
     private void computeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
         if (turnOrder.get(0) != player)
@@ -146,6 +153,27 @@ public class GameLogicController {
             }
         } else
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(buildVillageMove.getClass().getSimpleName()));
+    }
+
+    private void computeBuildCityMove(BuildCityMoveDto buildCityMoveDto, Player player) {
+        if (turnOrder.get(0) != player)
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+
+        if (player.resourcesSufficient(ResourceCost.CITY.getCost())) {
+            if (board.addNewCity(player, buildCityMoveDto.getIntersectionID())) {
+                player.adjustResources(ResourceCost.CITY.getCost());
+                player.increaseVictoryPoints(1);
+                sendCurrentGameStateToPlayers();
+
+                if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
+                    gameover = true;
+                    messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
+                }
+            } else {
+                throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildCityMoveDto.getClass().getSimpleName()));
+            }
+        } else
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(buildCityMoveDto.getClass().getSimpleName()));
     }
 
     private void computeBuildVillageMoveSetupPhase(BuildVillageMoveDto buildVillageMove, Player player) {
