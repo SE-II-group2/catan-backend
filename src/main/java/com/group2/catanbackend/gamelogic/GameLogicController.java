@@ -58,7 +58,6 @@ public class GameLogicController {
                 makeRollDiceMove(rollDiceMove);
             }
             case "BuildRoadMoveDto" -> {
-                player.adjustResources(new int[]{10,10,10,10,10});
                 BuildRoadMoveDto buildRoadMove = (BuildRoadMoveDto) gameMove;
                 makeBuildRoadMove(buildRoadMove, player);
             }
