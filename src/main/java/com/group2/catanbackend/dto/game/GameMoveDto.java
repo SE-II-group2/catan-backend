@@ -16,6 +16,7 @@ import lombok.Setter;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = BuildRoadMoveDto.class, name = GameMoveType.BUILDROADMOVE),
         @JsonSubTypes.Type(value = BuildVillageMoveDto.class, name = GameMoveType.BUILDVILLAGEMOVE),
+        @JsonSubTypes.Type(value = BuildCityMoveDto.class, name = GameMoveType.BUILDCITYMOVE),
         @JsonSubTypes.Type(value = EndTurnMoveDto.class, name = GameMoveType.ENTTURNMOVE),
         @JsonSubTypes.Type(value = RollDiceDto.class, name = GameMoveType.ROLLDICEMOVE),
 })
