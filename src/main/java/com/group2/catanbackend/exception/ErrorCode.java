@@ -15,5 +15,5 @@ public class ErrorCode {
     public static final String ERROR_NOT_ENOUGH_RESOURCES = "Not enough Resources to make %s";
     public static final String ERROR_INVALID_DICE_ROLL="Cant roll more than 12 or less than 2";
     public static final String ERROR_DTO_WAS_NULL = "Dto that was transported is null";
-
+    public static final String ERROR_IS_SETUP_PHASE = "Not possible during Setup phase!";
 }
