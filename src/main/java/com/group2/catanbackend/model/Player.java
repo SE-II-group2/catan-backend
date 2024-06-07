@@ -3,6 +3,7 @@ package com.group2.catanbackend.model;
 import com.group2.catanbackend.dto.game.IngamePlayerDto;
 import com.group2.catanbackend.dto.game.PlayerDto;
 import com.group2.catanbackend.gamelogic.enums.ProgressCardType;
+import com.group2.catanbackend.gamelogic.enums.ResourceCost;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -63,6 +64,7 @@ public class Player {
 
     public void addProgressCard(ProgressCardType progressCardType){
         progressCards.add(progressCardType);
+        adjustResources(ResourceCost.DEVELOPMENT_CARD.getCost());
     }
 
     public void useProgressCard(ProgressCardType progressCardType){
