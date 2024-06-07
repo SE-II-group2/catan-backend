@@ -86,6 +86,13 @@ public class GameLogicController {
                 UseProgressCardDto useProgressCardDto = (UseProgressCardDto) gameMove;
                 makeUseProgressCardMove(useProgressCardDto, player);
             }
+            case "BuyProgressCardDto" -> {
+                if(isSetupPhase){
+                    throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_USE_PROGRESS_CARDS_IN_SETUP);
+                }
+                BuyProgressCardDto buyProgressCardDto = (BuyProgressCardDto) gameMove;
+                makeBuyProgressCardMove(buyProgressCardDto, player);
+            }
 
             //TODO To implement other moves create MoveDto and include it here
             default -> throw new UnsupportedGameMoveException("Unknown DTO Format");
@@ -127,6 +134,16 @@ public class GameLogicController {
             // grants you 1 victory point
             case VICTORY_POINT -> computeVictoryPointCardMove(player);
         }
+    }
+
+    private void makeBuyProgressCardMove(BuyProgressCardDto buyProgressCardDto, Player player) {
+        if (!player.resourcesSufficient(ResourceCost.DEVELOPMENT_CARD.getCost())){
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES);
+        }
+        Random random = new Random();
+        ProgressCardType[] values = ProgressCardType.values();
+        int randomIndex = random.nextInt(values.length);
+        player.addProgressCard(values[randomIndex]);
     }
 
     private void computeYearOfPlentyCardMove(UseProgressCardDto useProgressCardDto, Player player){
