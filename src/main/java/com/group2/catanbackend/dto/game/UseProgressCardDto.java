@@ -12,14 +12,6 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class UseProgressCardDto extends GameMoveDto {
-
-    // TODO: Implement Robber when ready on Board
-
-    private ProgressCardType progressCardType;
-    private List<ResourceDistribution> chosenResources;
-    private ResourceDistribution monopolyResource;
-    //private Robber position
-
     public UseProgressCardDto(ProgressCardType progressCardType, List<ResourceDistribution> chosenResources, ResourceDistribution monopolyResource){
         this.progressCardType = progressCardType;
         this.chosenResources = chosenResources;
@@ -27,4 +19,10 @@ public class UseProgressCardDto extends GameMoveDto {
         //this.robberPosition = robberPosition;
         this.setEventType(GameMoveType.USEPROGRESSCARD);
     }
+
+    // TODO: Implement Robber when ready on Board
+    public ProgressCardType progressCardType;
+    public List<ResourceDistribution> chosenResources;
+    public ResourceDistribution monopolyResource;
+    //private Robber position
 }
