@@ -7,4 +7,5 @@ public interface GameMoveType {
     String ENTTURNMOVE = "END_TURN_MOVE";
     String ROLLDICEMOVE = "ROLL_DICE_MOVE";
     String USEPROGRESSCARD = "USE_PROGRESS_CARD";
+    String BUYPROGRESSCARD = "BUY_PROGRESS_CARD";
 }
