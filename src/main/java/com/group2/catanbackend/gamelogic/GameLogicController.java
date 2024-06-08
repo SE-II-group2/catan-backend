@@ -144,6 +144,7 @@ public class GameLogicController {
         ProgressCardType[] values = ProgressCardType.values();
         int randomIndex = random.nextInt(values.length);
         player.addProgressCard(values[randomIndex]);
+        sendCurrentGameStateToPlayers();
     }
 
     private void computeYearOfPlentyCardMove(UseProgressCardDto useProgressCardDto, Player player){
