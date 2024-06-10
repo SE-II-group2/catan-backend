@@ -256,7 +256,7 @@ public class GameLogicControllerExpandedTest {
             fail();
             e.printStackTrace();
         }
-        moveDto = new RollDiceDto(7);
+        moveDto = new RollDiceDto(7, new MoveRobberDto(18, true));
         gameLogicController.makeMove(moveDto,player1);
         int totalResources=0;
         //The Number of reduced resources should be rounded down, so for a total of 9, 4 should be removed and 5 should be left
@@ -266,12 +266,51 @@ public class GameLogicControllerExpandedTest {
 
     @Test
     void testRollOf7DoesNotRemoveHalfResourcesIfLessThan8Resources(){
-        moveDto = new RollDiceDto(7);
+        moveDto = new RollDiceDto(7, new MoveRobberDto(18, true));
         gameLogicController.makeMove(moveDto,player1);
         int totalResources=0;
         //Player 2 should have exactly 7 resources from the setup phase, so nothing should be reduced
         for(Integer i : player2.getResources())totalResources+=i;
         assertEquals(7, totalResources);
+    }
+
+    @Test
+    void testIllegalRobberMoveGetsProperlyPunishedWhenAccused(){
+        moveDto = new MoveRobberDto(18, false);
+        gameLogicController.makeMove(moveDto, player1);
+        moveDto = new AccuseCheatingDto();
+        gameLogicController.makeMove(moveDto, player1);
+
+        int totalResources=0;
+        //Player 2 should have exactly 7 resources from the setup phase, so nothing should be reduced
+        for(Integer i : player1.getResources())totalResources+=i;
+        assertEquals(3, totalResources);
+    }
+
+    @Test
+    void testLegalRobberMoveDoesNotGetPunishedWhenAccused(){
+        moveDto = new MoveRobberDto(18, true);
+        gameLogicController.makeMove(moveDto, player2);
+        moveDto = new AccuseCheatingDto();
+        gameLogicController.makeMove(moveDto, player1);
+
+        int totalResources=0;
+        //Player 2 should have exactly 7 resources from the setup phase, so nothing should be reduced
+        for(Integer i : player2.getResources())totalResources+=i;
+        assertEquals(7, totalResources);
+    }
+
+    @Test
+    void testFalseAccusationGetsProperlyPunished(){
+        moveDto = new MoveRobberDto(18, true);
+        gameLogicController.makeMove(moveDto, player2);
+        moveDto = new AccuseCheatingDto();
+        gameLogicController.makeMove(moveDto, player1);
+
+        int totalResources=0;
+        //Player 2 should have exactly 7 resources from the setup phase, so nothing should be reduced
+        for(Integer i : player1.getResources())totalResources+=i;
+        assertEquals(3, totalResources);
     }
 
     //#####################################################################################################
