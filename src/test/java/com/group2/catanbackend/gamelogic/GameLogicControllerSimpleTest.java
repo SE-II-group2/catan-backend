@@ -130,7 +130,7 @@ public class GameLogicControllerSimpleTest {
 
     @Test
     void testMoveRobberThrowsExceptionInSetupPhase(){
-        moveDto = new MoveRobberDto(1);
+        moveDto = new MoveRobberDto(1, true);
         assertThrows(InvalidGameMoveException.class, () ->gameLogicController.makeMove(moveDto, player1));
     }
 
@@ -145,11 +145,11 @@ public class GameLogicControllerSimpleTest {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        moveDto = new MoveRobberDto(2);
+        moveDto = new MoveRobberDto(2, true);
         gameLogicController.makeMove(moveDto, player1);
         assertTrue(gameLogicController.getBoard().getHexagonList().get(2).isHasRobber());
 
-        moveDto = new MoveRobberDto(5);
+        moveDto = new MoveRobberDto(5, true);
         gameLogicController.makeMove(moveDto, player1);
         assertTrue(gameLogicController.getBoard().getHexagonList().get(5).isHasRobber());
         assertFalse(gameLogicController.getBoard().getHexagonList().get(2).isHasRobber());
@@ -166,9 +166,9 @@ public class GameLogicControllerSimpleTest {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        moveDto = new MoveRobberDto(20);
+        moveDto = new MoveRobberDto(20, true);
         assertThrows(InvalidGameMoveException.class, () ->gameLogicController.makeMove(moveDto, player1));
-        moveDto = new MoveRobberDto(-1);
+        moveDto = new MoveRobberDto(-1, true);
         assertThrows(InvalidGameMoveException.class, () ->gameLogicController.makeMove(moveDto, player1));
     }
 

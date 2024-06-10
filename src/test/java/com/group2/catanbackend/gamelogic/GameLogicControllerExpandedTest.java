@@ -206,7 +206,7 @@ public class GameLogicControllerExpandedTest {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        MoveRobberDto moveRobberDto = new MoveRobberDto(2);
+        MoveRobberDto moveRobberDto = new MoveRobberDto(2, true);
         gameLogicController.makeMove(moveRobberDto, player1);
 
         assertArrayEquals(new int[]{0, 0, 0, 0, 0}, player2.getResources());
@@ -224,7 +224,7 @@ public class GameLogicControllerExpandedTest {
             e.printStackTrace();
         }
 
-        MoveRobberDto moveRobberDto = new MoveRobberDto(2);
+        MoveRobberDto moveRobberDto = new MoveRobberDto(2, true);
         gameLogicController.makeMove(moveRobberDto, player1);
 
         assertArrayEquals(new int[]{0, 0, 0, 0, 0}, player2.getResources());
@@ -240,7 +240,7 @@ public class GameLogicControllerExpandedTest {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        MoveRobberDto moveRobberDto = new MoveRobberDto(0);
+        MoveRobberDto moveRobberDto = new MoveRobberDto(0, true);
         gameLogicController.makeMove(moveRobberDto, player1);
 
         assertArrayEquals(new int[]{0, 0, 0, 0, 0}, player1.getResources());

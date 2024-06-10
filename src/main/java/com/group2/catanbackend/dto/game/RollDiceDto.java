@@ -1,16 +1,16 @@
 package com.group2.catanbackend.dto.game;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.HashMap;
-
 
 @Getter
 @Setter
 public class RollDiceDto extends GameMoveDto{
+    public RollDiceDto(int diceRoll, MoveRobberDto moveRobberDto) {
+        this.diceRoll = diceRoll;
+        this.moveRobberDto = moveRobberDto;
+        this.setEventType(GameMoveType.ROLLDICEMOVE);
+    }
     public RollDiceDto(int diceRoll) {
         this.diceRoll = diceRoll;
         this.setEventType(GameMoveType.ROLLDICEMOVE);
@@ -20,6 +20,7 @@ public class RollDiceDto extends GameMoveDto{
     }
     private int diceRoll;
 
+    private MoveRobberDto moveRobberDto;
 
 }
 
