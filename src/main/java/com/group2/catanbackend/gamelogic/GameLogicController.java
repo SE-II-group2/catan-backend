@@ -88,13 +88,15 @@ public class GameLogicController {
     }
 
     private void makeTradeMove(TradeMoveDto tradeMove, Player player){
-        if (isSetupPhase) throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_ROLL_IN_SETUP);
+        //if (isSetupPhase) throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_ROLL_IN_SETUP);
         if (turnOrder.get(0) != player)
             throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
-        if (!player.resourcesSufficient(tradeMove.getResources()))
+        if (!player.resourcesSufficient(tradeMove.getGiveResources()))
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(tradeMove.getClass().getSimpleName()));
+        /*
         if(tradeMove.getWaitTime()<1)
             throw new InvalidConfigurationException(ErrorCode.ERROR_INVALID_CONFIGURATION);
+         */
         if(isempty(tradeMove.getToPlayer())){
             computeTradeMoveBank(tradeMove, player);
         }
@@ -115,7 +117,7 @@ public class GameLogicController {
     private void computeTradeMoveBank(TradeMoveDto tradeMove, Player player){}
     private void computeTradeMove(TradeMoveDto tradeMove, Player player){
         //messagingService.notifyUser(player.getToken(), new NotifyUserDto("Trade got sent!"));
-        messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto((isSetupPhase) ? setupPhaseTurnOrder.get(0).toInGamePlayerDto() : turnOrder.get(0).toInGamePlayerDto())));
+        messagingService.notifyGameProgress(gameId, new TradeOfferDto(tradeMove.getGetResources(), tradeMove.getGiveResources()));
     }
 
     private void makeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
