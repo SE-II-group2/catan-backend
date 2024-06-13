@@ -192,10 +192,20 @@ public class GameLogicControllerExpandedTest {
         moveDto = new BuildVillageMoveDto(11);
         gameLogicController.makeMove(moveDto, player1);
 
+        player1.adjustResources(new int[]{5,5,5,5,5});
+        moveDto = new BuildCityMoveDto(11);
+        gameLogicController.makeMove(moveDto, player1);
+
         assertInstanceOf(Building.class, gameLogicController.getBoard().getIntersections()[1][5]);
-        assertArrayEquals(new int[]{1, 1, 1, 3, 2}, player1.getResources());
+        assertArrayEquals(new int[]{4, 6, 6, 8, 4}, player1.getResources());
     }
 
+    @Test
+    public void testInvalidCityDuringSetupPhase() {
+        player1.adjustResources(new int[]{5,5,5,5,5});
+        moveDto = new BuildCityMoveDto(0);
+        assertThrows(GameException.class, () -> gameLogicController.makeMove(moveDto, player1));
+    }
     @Test
     public void testRobberMoveNoResourcesToSteal() {
         try {

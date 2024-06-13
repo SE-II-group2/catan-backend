@@ -67,6 +67,10 @@ public class GameLogicController {
                 BuildVillageMoveDto buildVillageMove = (BuildVillageMoveDto) gameMove;
                 makeBuildVillageMove(buildVillageMove, player);
             }
+            case "BuildCityMoveDto" -> {
+                BuildCityMoveDto buildCityMoveDto = (BuildCityMoveDto) gameMove;
+                makeBuildCityMove(buildCityMoveDto, player);
+            }
             case "EndTurnMoveDto" -> {
                 if (isSetupPhase)
                     throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
@@ -166,7 +170,7 @@ public class GameLogicController {
     }
 
     private void computeBuildRoadMoveSetupPhase(BuildRoadMoveDto buildRoadMove, Player player) {
-        if (!(setupPhaseTurnOrder.get(0) == player))
+        if (setupPhaseTurnOrder.get(0) != player)
             throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
 
         if (!board.addNewRoad(player, buildRoadMove.getConnectionID()))
@@ -182,25 +186,41 @@ public class GameLogicController {
     }
 
     private void computeBuildVillageMove(BuildVillageMoveDto buildVillageMove, Player player) {
-
         if (turnOrder.get(0) != player)
             throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
-
-        if (player.resourcesSufficient(ResourceCost.VILLAGE.getCost())) {
-            if (board.addNewVillage(player, buildVillageMove.getIntersectionID())) {
-                player.adjustResources(ResourceCost.VILLAGE.getCost());
-                player.increaseVictoryPoints(1);
-                sendCurrentGameStateToPlayers();
-
-                if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
-                    gameover = true;
-                    messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
-                }
-            } else {
-                throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildVillageMove.getClass().getSimpleName()));
-            }
-        } else
+        if (!player.resourcesSufficient(ResourceCost.VILLAGE.getCost()))
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(buildVillageMove.getClass().getSimpleName()));
+        if (!board.addNewVillage(player, buildVillageMove.getIntersectionID()))
+            throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildVillageMove.getClass().getSimpleName()));
+
+        player.adjustResources(ResourceCost.VILLAGE.getCost());
+        player.increaseVictoryPoints(1);
+        sendCurrentGameStateToPlayers();
+
+        if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
+            gameover = true;
+            messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
+        }
+    }
+
+    private void makeBuildCityMove(BuildCityMoveDto buildCityMoveDto, Player player) {
+        if (isSetupPhase)
+            throw new InvalidGameMoveException(ErrorCode.ERROR_IS_SETUP_PHASE);
+        if (turnOrder.get(0) != player)
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+        if (!player.resourcesSufficient(ResourceCost.CITY.getCost()))
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(buildCityMoveDto.getClass().getSimpleName()));
+        if (!board.addNewCity(player, buildCityMoveDto.getIntersectionID()))
+            throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildCityMoveDto.getClass().getSimpleName()));
+
+        player.adjustResources(ResourceCost.CITY.getCost());
+        player.increaseVictoryPoints(1);
+        sendCurrentGameStateToPlayers();
+
+        if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
+            gameover = true;
+            messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
+        }
     }
 
     private void computeBuildVillageMoveSetupPhase(BuildVillageMoveDto buildVillageMove, Player player) {
