@@ -146,7 +146,15 @@ class GameSocketIntegrationTest {
         gameService.startGame(player1.getToken()); //as Player1 is admin
 
         Thread.sleep(1000);
-        MessageDto dto = queue.poll(2, TimeUnit.SECONDS);
+        int counter = 0;
+        MessageDto dto = null;
+        while (counter < 5){
+            counter++;
+            dto = queue.poll(2, TimeUnit.SECONDS);
+            if(dto instanceof CurrentGameStateDto)break;
+            Thread.sleep(500);
+        }
+        if(dto==null) Assertions.fail();
         assert dto instanceof CurrentGameStateDto;
         List<HexagonDto> hexagonDtos = ((CurrentGameStateDto) dto).getHexagons();
         List<IntersectionDto> intersectionDtos = ((CurrentGameStateDto) dto).getIntersections();
@@ -176,7 +184,15 @@ class GameSocketIntegrationTest {
         gameService.makeMove(player1.getToken(), new BuildVillageMoveDto(22));
         Thread.sleep(1000);
 
-        MessageDto dto = queue.poll(2, TimeUnit.SECONDS);
+        int counter = 0;
+        MessageDto dto = null;
+        while (counter < 5){
+            counter++;
+            dto = queue.poll(2, TimeUnit.SECONDS);
+            if(dto instanceof CurrentGameStateDto && ((CurrentGameStateDto) dto).getIntersections().get(22).getOwner()!=null)break;
+            Thread.sleep(500);
+        }
+        if(dto==null) Assertions.fail();
         if (dto instanceof CurrentGameStateDto currentGameStateDto) {
             List<IntersectionDto> intersectionDtoList = currentGameStateDto.getIntersections();
             assertEquals(intersectionDtoList.get(22).getBuildingType(), BuildingType.VILLAGE.name());
@@ -200,6 +216,7 @@ class GameSocketIntegrationTest {
         //Make BuildVillageMove first as only making BuuldRoadMove leads to errors
         gameService.makeMove(player1.getToken(), new BuildVillageMoveDto(22));
         Thread.sleep(1000);
+
         //Test BuildRoadMove
         gameService.makeMove(player1.getToken(), new BuildRoadMoveDto(28));
         Thread.sleep(1000);
@@ -208,7 +225,7 @@ class GameSocketIntegrationTest {
         while (counter < 5){
             counter++;
             dto = queue.poll(2, TimeUnit.SECONDS);
-            if(dto instanceof CurrentGameStateDto)break;
+            if(dto instanceof CurrentGameStateDto && ((CurrentGameStateDto) dto).getConnections().get(28).getOwner()!=null)break;
             Thread.sleep(500);
         }
         if(dto==null) Assertions.fail();
