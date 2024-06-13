@@ -10,6 +10,7 @@ import com.group2.catanbackend.gamelogic.enums.BuildingType;
 import com.group2.catanbackend.model.PlayerState;
 import com.group2.catanbackend.service.GameService;
 import com.group2.catanbackend.service.TokenService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -202,10 +203,15 @@ class GameSocketIntegrationTest {
         //Test BuildRoadMove
         gameService.makeMove(player1.getToken(), new BuildRoadMoveDto(28));
         Thread.sleep(1000);
-        //TEMPORARY SOLUTION, FIX IMPLEMENTATION LATER
-        queue.poll(2, TimeUnit.SECONDS);
-        MessageDto dto = queue.poll(2, TimeUnit.SECONDS);
-        dto = queue.poll(2, TimeUnit.SECONDS);
+        int counter = 0;
+        MessageDto dto = null;
+        while (counter < 5){
+            counter++;
+            dto = queue.poll(2, TimeUnit.SECONDS);
+            if(dto instanceof CurrentGameStateDto)break;
+            Thread.sleep(500);
+        }
+        if(dto==null) Assertions.fail();
         if (dto instanceof CurrentGameStateDto currentGameStateDto) {
             List<ConnectionDto> connectionDtoList = currentGameStateDto.getConnections();
             assertNotNull(connectionDtoList.get(28).getOwner());
