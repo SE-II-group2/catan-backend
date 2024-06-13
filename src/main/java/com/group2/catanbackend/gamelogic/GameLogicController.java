@@ -92,6 +92,7 @@ public class GameLogicController {
                 }
                 BuyProgressCardDto buyProgressCardDto = (BuyProgressCardDto) gameMove;
                 makeBuyProgressCardMove(buyProgressCardDto, player);
+                sendCurrentGameStateToPlayers();
             }
 
             //TODO To implement other moves create MoveDto and include it here
