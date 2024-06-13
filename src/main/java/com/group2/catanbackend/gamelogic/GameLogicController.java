@@ -31,6 +31,7 @@ public class GameLogicController {
     private boolean gameover = false;
     private Player lastCheatingPlayer = null;
     private int lastLegalRobberPlace = -1;
+    private final Random random = new Random();
 
     public GameLogicController(@NotNull List<Player> players, @NotNull MessagingService messagingService, @NotNull String gameId) {
         this.players = players;
@@ -129,7 +130,7 @@ public class GameLogicController {
             }
         }
         if (!nonZeroIndices.isEmpty()) {
-            int randomIndex = nonZeroIndices.get((int) (Math.random() * nonZeroIndices.size()));
+            int randomIndex = nonZeroIndices.get(random.nextInt(nonZeroIndices.size()));
             int[] resourceAdjustment = new int[5];
             resourceAdjustment[randomIndex] = -1;
             playerToStealFrom.adjustResources(resourceAdjustment);
@@ -268,7 +269,7 @@ public class GameLogicController {
         totalResources /= 2;
         int[] resourceAdjustment = new int[5];
         while (totalResources > 0) {
-            int randomIndex = nonZeroIndices.get((int) (Math.random() * nonZeroIndices.size()));
+            int randomIndex = nonZeroIndices.get(random.nextInt(nonZeroIndices.size()));
             if ((resourceAdjustment[randomIndex] * -1) == resources[randomIndex]) continue;
             resourceAdjustment[randomIndex] -= 1;
             totalResources--;

@@ -36,7 +36,7 @@ public class GameLogicControllerExpandedTest {
 
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         player1 = new Player("Token1", "Player One(1)", "this");
         player1.setInGameID(1);
         player2 = new Player("Token2", "Player Two(2)", "this");
@@ -54,7 +54,7 @@ public class GameLogicControllerExpandedTest {
     }
 
     @Test
-    public void testResourceDistribution() {
+    void testResourceDistribution() {
         moveDto = new RollDiceDto(2);
         gameLogicController.makeMove(moveDto, player1);
         moveDto = new EndTurnMoveDto();
@@ -75,7 +75,7 @@ public class GameLogicControllerExpandedTest {
     }
 
     @Test
-    public void testInvalidBuildVillageMove() {
+    void testInvalidBuildVillageMove() {
         moveDto = new BuildVillageMoveDto(21);
         assertThrows(GameException.class, () -> gameLogicController.makeMove(moveDto, player1));
 
@@ -92,7 +92,7 @@ public class GameLogicControllerExpandedTest {
     }
 
     @Test
-    public void testCommunicationFromServerOnValidMoves() {
+    void testCommunicationFromServerOnValidMoves() {
         moveDto = new RollDiceDto(2);
         gameLogicController.makeMove(moveDto, player1);
         moveDto = new EndTurnMoveDto();
@@ -112,7 +112,7 @@ public class GameLogicControllerExpandedTest {
                 break;
             }
         }
-        if (argument == null) fail("argument was null, no currentgamestate sent to players");
+        if (argument == null) fail("argument was null, no currentGameState sent to players");
         assertEquals(BuildingType.VILLAGE.name(), argument.getIntersections().get(29).getBuildingType());
         assertEquals(player1.getDisplayName(), argument.getIntersections().get(29).getOwner().getDisplayName());
 
@@ -123,7 +123,7 @@ public class GameLogicControllerExpandedTest {
     }
 
     @Test
-    public void testVictoryCondition() {
+    void testVictoryCondition() {
         try {
             Field privateFieldVictoryPoints = Player.class.getDeclaredField("victoryPoints");
             privateFieldVictoryPoints.setAccessible(true); // This allows us to modify private fields
@@ -144,7 +144,7 @@ public class GameLogicControllerExpandedTest {
             verify(messagingMock, atLeastOnce()).notifyGameProgress(eq(gameLogicController.getGameId()), argumentCaptor.capture());
 
             List<MessageDto> allValues = argumentCaptor.getAllValues();
-            GameoverDto lastArgument = (GameoverDto) allValues.get(allValues.size() - 1); //get the last Dto sent, should always be gameoverdto
+            GameoverDto lastArgument = (GameoverDto) allValues.get(allValues.size() - 1); //get the last Dto sent, should always be gameOverDto
             assertEquals(lastArgument.getWinner().getDisplayName(), player1.getDisplayName());
 
         } catch (Exception e) {
@@ -155,7 +155,7 @@ public class GameLogicControllerExpandedTest {
     }
 
     @Test
-    public void testValidBuildingOutOfSetupPhase() {
+    void testValidBuildingOutOfSetupPhase() {
         moveDto = new RollDiceDto(2);
         gameLogicController.makeMove(moveDto, player1);
         moveDto = new EndTurnMoveDto();
@@ -201,13 +201,13 @@ public class GameLogicControllerExpandedTest {
     }
 
     @Test
-    public void testInvalidCityDuringSetupPhase() {
+    void testInvalidCityDuringSetupPhase() {
         player1.adjustResources(new int[]{5,5,5,5,5});
         moveDto = new BuildCityMoveDto(0);
         assertThrows(GameException.class, () -> gameLogicController.makeMove(moveDto, player1));
     }
     @Test
-    public void testRobberMoveNoResourcesToSteal() {
+    void testRobberMoveNoResourcesToSteal() {
         try {
             Field privateField = Player.class.getDeclaredField("resources");
             privateField.setAccessible(true); // This allows us to modify private fields
@@ -224,7 +224,7 @@ public class GameLogicControllerExpandedTest {
     }
 
     @Test
-    public void testRobberMoveWithResourcesToSteal() {
+    void testRobberMoveWithResourcesToSteal() {
         try {
             Field privateField = Player.class.getDeclaredField("resources");
             privateField.setAccessible(true); // This allows us to modify private fields
@@ -242,7 +242,7 @@ public class GameLogicControllerExpandedTest {
     }
 
     @Test
-    public void testRobberMovePlayerIsSame() {
+    void testRobberMovePlayerIsSame() {
         try {
             Field privateField = Player.class.getDeclaredField("resources");
             privateField.setAccessible(true); // This allows us to modify private fields
@@ -349,7 +349,7 @@ public class GameLogicControllerExpandedTest {
     private void createPreSetupBoard() {
         //URL of picture of Board:
         //https://cdn.discordapp.com/attachments/1219917626424164376/1231297808997421297/image.png?ex=66367272&is=6623fd72&hm=5989f819604eda76f0d834755e973aaf04f18479a42c26912a5b8a0dc1576799&
-        //Only Hexagons are correct in the picture, villages and roads arent :]
+        //Only Hexagons are correct in the picture, villages and roads aren't
         List<Hexagon> hexagonList = new ArrayList<>();
         List<HexagonType> hexagonTypes = new ArrayList<>();
         List<Integer> values = new ArrayList<>();
