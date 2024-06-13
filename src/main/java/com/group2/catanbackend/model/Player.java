@@ -39,7 +39,7 @@ public class Player {
     }
 
     public IngamePlayerDto toInGamePlayerDto() {
-        return new IngamePlayerDto(displayName, resources, victoryPoints, color, inGameID);
+        return new IngamePlayerDto(displayName, resources, victoryPoints, color, inGameID, progressCards);
     }
     public void adjustResources(int[] resources){
         if(resources!=null&&resources.length == 5){
