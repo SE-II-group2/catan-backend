@@ -266,7 +266,7 @@ public class GameLogicControllerExpandedTest {
             fail();
             e.printStackTrace();
         }
-        moveDto = new RollDiceDto(7, new MoveRobberDto(18, true));
+        moveDto = new RollDiceDto(7);
         gameLogicController.makeMove(moveDto,player1);
         int totalResources=0;
         //The Number of reduced resources should be rounded down, so for a total of 9, 4 should be removed and 5 should be left
@@ -276,7 +276,7 @@ public class GameLogicControllerExpandedTest {
 
     @Test
     void testRollOf7DoesNotRemoveHalfResourcesIfLessThan8Resources(){
-        moveDto = new RollDiceDto(7, new MoveRobberDto(18, true));
+        moveDto = new RollDiceDto(7);
         gameLogicController.makeMove(moveDto,player1);
         int totalResources=0;
         //Player 2 should have exactly 7 resources from the setup phase, so nothing should be reduced
