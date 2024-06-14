@@ -8,6 +8,7 @@ import com.group2.catanbackend.gamelogic.objects.Connection;
 import com.group2.catanbackend.gamelogic.objects.Hexagon;
 import com.group2.catanbackend.gamelogic.objects.Intersection;
 import com.group2.catanbackend.model.Player;
+import com.group2.catanbackend.model.PlayerState;
 import com.group2.catanbackend.service.MessagingService;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -22,9 +23,12 @@ public class GameLogicController {
     @Getter
     private final String gameId;
     @Getter
-    private ArrayList<Player> setupPhaseTurnOrder;
+    private LinkedList<Player> setupPhaseTurnOrder;
     @Getter
-    private ArrayList<Player> turnOrder;
+    private LinkedList<Player> turnOrder;
+    @Getter
+    private Player activePlayer;
+
     private boolean isSetupPhase = true;
     private static final int VICTORYPOINTSFORVICTORY = 10;
     @Getter
@@ -42,7 +46,7 @@ public class GameLogicController {
         for (int i = 0; i < players.size(); i++) {
             players.get(i).setColor(playerColors[i]);
         }
-        generateSetupPhaseTurnOrder(players.size());
+        initializeTurnOrder(players.size());
         //Send the starting gamestate to all playérs
         sendCurrentGameStateToPlayers();
     }
@@ -55,8 +59,8 @@ public class GameLogicController {
         switch (gameMove.getClass().getSimpleName()) {
             case "RollDiceDto" -> {
                 if (isSetupPhase) throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_ROLL_IN_SETUP);
-                if (turnOrder.get(0) != player)
-                    throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+                if (activePlayer != player)
+                    throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(activePlayer.getDisplayName()));
                 RollDiceDto rollDiceMove = (RollDiceDto) gameMove;
                 makeRollDiceMove(rollDiceMove);
             }
@@ -73,15 +77,14 @@ public class GameLogicController {
                 makeBuildCityMove(buildCityMoveDto, player);
             }
             case "EndTurnMoveDto" -> {
+                if (activePlayer != player)
+                    throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(activePlayer.getDisplayName()));
                 if (isSetupPhase)
-                    throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
-                if (turnOrder.get(0) != player)
-                    throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
-                turnOrder.remove(0);
-                turnOrder.add(player);
+                    throw new InvalidGameMoveException(ErrorCode.ERROR_IS_SETUP_PHASE);
+                genericNextTurn();
                 lastCheatingPlayer = null;
                 sendCurrentGameStateToPlayers();
-                messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto((isSetupPhase) ? setupPhaseTurnOrder.get(0).toInGamePlayerDto() : turnOrder.get(0).toInGamePlayerDto())));
+                messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(activePlayer.toInGamePlayerDto())));
             }
             case "MoveRobberDto" -> {
                 if (isSetupPhase)
@@ -143,20 +146,22 @@ public class GameLogicController {
     }
 
     private void makeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
-        if (isSetupPhase) {
+        if (isSetupPhase)
             computeBuildRoadMoveSetupPhase(buildRoadMove, player);
-        } else computeBuildRoadMove(buildRoadMove, player);
+        else
+            computeBuildRoadMove(buildRoadMove, player);
     }
 
     private void makeBuildVillageMove(BuildVillageMoveDto buildVillageMove, Player player) {
-        if (isSetupPhase) {
+        if (isSetupPhase)
             computeBuildVillageMoveSetupPhase(buildVillageMove, player);
-        } else computeBuildVillageMove(buildVillageMove, player);
+        else
+            computeBuildVillageMove(buildVillageMove, player);
 
     }
 
     private void computeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
-        if (turnOrder.get(0) != player)
+        if (activePlayer != player)
             throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
 
         if (!player.resourcesSufficient(ResourceCost.ROAD.getCost()))
@@ -169,23 +174,22 @@ public class GameLogicController {
     }
 
     private void computeBuildRoadMoveSetupPhase(BuildRoadMoveDto buildRoadMove, Player player) {
-        if (setupPhaseTurnOrder.get(0) != player)
-            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+        //if (setupPhaseTurnOrder.isEmpty())
+        //    throw new InternalGameException(ErrorCode.ERROR_INTERNAL_ERROR.formatted("Called setup Phase handler with no players left"));
+
+        if (activePlayer != player)
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(activePlayer.getDisplayName()));
 
         if (!board.addNewRoad(player, buildRoadMove.getConnectionID()))
             throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildRoadMove.getClass().getSimpleName()));
-        setupPhaseTurnOrder.remove(0); //after you set down your road your turn ends during the setup phase
-        if (setupPhaseTurnOrder.isEmpty()) {
-            isSetupPhase = false;
-            board.setSetupPhase(false);
-            messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(turnOrder.get(0).toInGamePlayerDto())));
-        } else
-            messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(setupPhaseTurnOrder.get(0).toInGamePlayerDto())));
+
+        genericNextTurn();
+        messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(activePlayer.toInGamePlayerDto())));
         sendCurrentGameStateToPlayers();
     }
 
     private void computeBuildVillageMove(BuildVillageMoveDto buildVillageMove, Player player) {
-        if (turnOrder.get(0) != player)
+        if (activePlayer != player)
             throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
         if (!player.resourcesSufficient(ResourceCost.VILLAGE.getCost()))
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(buildVillageMove.getClass().getSimpleName()));
@@ -205,7 +209,7 @@ public class GameLogicController {
     private void makeBuildCityMove(BuildCityMoveDto buildCityMoveDto, Player player) {
         if (isSetupPhase)
             throw new InvalidGameMoveException(ErrorCode.ERROR_IS_SETUP_PHASE);
-        if (turnOrder.get(0) != player)
+        if (activePlayer != player)
             throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
         if (!player.resourcesSufficient(ResourceCost.CITY.getCost()))
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(buildCityMoveDto.getClass().getSimpleName()));
@@ -223,8 +227,10 @@ public class GameLogicController {
     }
 
     private void computeBuildVillageMoveSetupPhase(BuildVillageMoveDto buildVillageMove, Player player) {
-        if (!(setupPhaseTurnOrder.get(0) == player))
-            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+        //if (setupPhaseTurnOrder.isEmpty())
+        //    throw new InternalGameException(ErrorCode.ERROR_INTERNAL_ERROR.formatted("Called setup Phase handler with no players left"));
+        if (activePlayer != player)
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(activePlayer.getDisplayName()));
 
         if (board.addNewVillage(player, buildVillageMove.getIntersectionID())) {
             player.increaseVictoryPoints(1);
@@ -288,7 +294,7 @@ public class GameLogicController {
     private List<IngamePlayerDto> getIngamePlayerDtoList() {
         List<IngamePlayerDto> playerDtos = new ArrayList<>();
 
-        for (Player player : (isSetupPhase) ? setupPhaseTurnOrder : turnOrder) {
+        for (Player player : players) {
             playerDtos.add(player.toInGamePlayerDto());
         }
         return playerDtos;
@@ -335,9 +341,9 @@ public class GameLogicController {
         return hexagonDtos;
     }
 
-    private void generateSetupPhaseTurnOrder(int numOfPlayers) {
-        setupPhaseTurnOrder = new ArrayList<>();
-        turnOrder = new ArrayList<>();
+    private void initializeTurnOrder(int numOfPlayers) {
+        setupPhaseTurnOrder = new LinkedList<>();
+        turnOrder = new LinkedList<>();
         for (int i = 0; i < numOfPlayers; i++) {
             setupPhaseTurnOrder.add(players.get(i));
             turnOrder.add(players.get(i));
@@ -345,5 +351,57 @@ public class GameLogicController {
         for (int i = numOfPlayers - 1; i >= 0; i--) {
             setupPhaseTurnOrder.add(players.get(i));
         }
+        activePlayer = setupPhaseTurnOrder.remove();
+    }
+
+    /**
+     * Sets the next Player depending on whether he is connected.
+     * if he is not connected, he is skipped
+     */
+    private void setNextPlayerTurn(){
+        Player newActive = turnOrder.remove();
+
+        int infiniteLoopGuard = 0;
+        assert newActive != null;
+        while(newActive.getPlayerState() != PlayerState.CONNECTED && infiniteLoopGuard < players.size()){
+            turnOrder.add(newActive);
+            newActive = turnOrder.remove();
+            infiniteLoopGuard++;
+        }
+        activePlayer = newActive;
+        turnOrder.add(newActive);
+    }
+
+    private void genericNextTurn(){
+        if(isSetupPhase){
+            if(setupPhaseTurnOrder.isEmpty()){
+                board.setSetupPhase(false);
+                isSetupPhase = false;
+                setNextPlayerTurn();
+            }else {
+                activePlayer = setupPhaseTurnOrder.remove();
+            }
+        }else {
+            setNextPlayerTurn();
+        }
+    }
+
+    public void handleDisconnect(Player p){
+        if(!isSetupPhase && activePlayer == p){
+            setNextPlayerTurn();
+            lastCheatingPlayer = null;
+        }
+        if(isSetupPhase){
+            turnOrder.remove(p); //will never become active again.
+
+            boolean forceNextPlayer = activePlayer == p;
+            while(true){
+                if(!setupPhaseTurnOrder.remove(p)) break;
+            }
+            if(forceNextPlayer)
+                genericNextTurn();
+        }
+        sendCurrentGameStateToPlayers();
+        messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(activePlayer.toInGamePlayerDto())));
     }
 }

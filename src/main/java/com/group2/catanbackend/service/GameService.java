@@ -103,7 +103,7 @@ public class GameService {
         //As a running Game is a service, the notification is handled by it.
         if(game != null){
             tokenService.revokeToken(token);
-            game.removePlayer(player);
+            game.playerDisconnect(player);
         }
     }
 
@@ -122,6 +122,11 @@ public class GameService {
         if(p == null) return; //no information cannot process
         if (registeredGames.get(p.getGameID()) != null) {
             leaveGame(token); //connection loss in lobby state is equivalent to leaving
+            return;
+        }
+        RunningInstanceService runningGame = runningGames.get(p.getGameID());
+        if(runningGame != null){
+            runningGame.playerDisconnect(p);
         }
 
     }
