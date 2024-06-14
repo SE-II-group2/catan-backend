@@ -155,6 +155,7 @@ public class GameLogicController {
         List<ResourceDistribution> chosenResources = useProgressCardDto.getChosenResources();
         player.adjustResources(chosenResources.get(0).getDistribution());
         player.adjustResources(chosenResources.get(1).getDistribution());
+        sendCurrentGameStateToPlayers();
     }
 
     private void computeRoadBuildingCardMove(Player player) {
@@ -162,6 +163,7 @@ public class GameLogicController {
             player.adjustResources(ResourceDistribution.FOREST.getDistribution());
             player.adjustResources(ResourceDistribution.HILLS.getDistribution());
         }
+        sendCurrentGameStateToPlayers();
     }
 
     private void computeMonopolyCardMove(UseProgressCardDto useProgressCardDto, Player player){
@@ -181,6 +183,7 @@ public class GameLogicController {
         int[] playerResourceAdjustment = new int[5];
         playerResourceAdjustment[resourceIndex] = amountCollected;
         player.adjustResources(playerResourceAdjustment);
+        sendCurrentGameStateToPlayers();
     }
 
     private void computeVictoryPointCardMove(Player player){
@@ -190,6 +193,7 @@ public class GameLogicController {
             gameover = true;
             messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
         }
+        sendCurrentGameStateToPlayers();
     }
 
     private void computeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
