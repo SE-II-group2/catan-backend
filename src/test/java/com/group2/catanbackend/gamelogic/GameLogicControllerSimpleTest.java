@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -125,6 +126,50 @@ public class GameLogicControllerSimpleTest {
     public void testRollDiceDuringSetupPhase() {
         moveDto = new RollDiceDto(7);
         assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(moveDto, player1));
+    }
+
+    @Test
+    void testMoveRobberThrowsExceptionInSetupPhase(){
+        moveDto = new MoveRobberDto(1, true);
+        assertThrows(InvalidGameMoveException.class, () ->gameLogicController.makeMove(moveDto, player1));
+    }
+
+    @Test
+    void testMoveRobberMovesRobber(){
+        try {
+            Field privateField1 = GameLogicController.class.getDeclaredField("isSetupPhase");
+            privateField1.setAccessible(true); // This allows us to modify private fields
+            privateField1.set(gameLogicController, false);
+            gameLogicController.getBoard().setSetupPhase(false);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        moveDto = new MoveRobberDto(2, true);
+        gameLogicController.makeMove(moveDto, player1);
+        assertTrue(gameLogicController.getBoard().getHexagonList().get(2).isHasRobber());
+
+        moveDto = new MoveRobberDto(5, true);
+        gameLogicController.makeMove(moveDto, player1);
+        assertTrue(gameLogicController.getBoard().getHexagonList().get(5).isHasRobber());
+        assertFalse(gameLogicController.getBoard().getHexagonList().get(2).isHasRobber());
+    }
+
+    @Test
+    void testMoveRobberToInvalidFieldThrowsError(){
+        try {
+            Field privateField1 = GameLogicController.class.getDeclaredField("isSetupPhase");
+            privateField1.setAccessible(true); // This allows us to modify private fields
+            privateField1.set(gameLogicController, false);
+            gameLogicController.getBoard().setSetupPhase(false);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        moveDto = new MoveRobberDto(20, true);
+        assertThrows(InvalidGameMoveException.class, () ->gameLogicController.makeMove(moveDto, player1));
+        moveDto = new MoveRobberDto(-1, true);
+        assertThrows(InvalidGameMoveException.class, () ->gameLogicController.makeMove(moveDto, player1));
     }
 
 }

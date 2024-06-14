@@ -3,6 +3,7 @@ package com.group2.catanbackend.gamelogic;
 import com.group2.catanbackend.dto.game.*;
 import com.group2.catanbackend.exception.*;
 import com.group2.catanbackend.gamelogic.enums.ResourceCost;
+import com.group2.catanbackend.gamelogic.objects.Building;
 import com.group2.catanbackend.gamelogic.objects.Connection;
 import com.group2.catanbackend.gamelogic.objects.Hexagon;
 import com.group2.catanbackend.gamelogic.objects.Intersection;
@@ -28,15 +29,17 @@ public class GameLogicController {
     private static final int VICTORYPOINTSFORVICTORY = 10;
     @Getter
     private boolean gameover = false;
-
-    private final int[] playerColors = {-65536, -16776961, -16711936, -154624}; //Red, Blue, Green, Orange
+    private Player lastCheatingPlayer = null;
+    private int lastLegalRobberPlace = -1;
+    private final Random random = new Random();
 
     public GameLogicController(@NotNull List<Player> players, @NotNull MessagingService messagingService, @NotNull String gameId) {
         this.players = players;
         this.messagingService = messagingService;
         this.gameId = gameId;
         board = new Board();
-        for (int i = 0; i<players.size(); i++) {
+        int[] playerColors = {-65536, -16776961, -16711936, -154624}; //Red, Blue, Green, Orange
+        for (int i = 0; i < players.size(); i++) {
             players.get(i).setColor(playerColors[i]);
         }
         generateSetupPhaseTurnOrder(players.size());
@@ -76,27 +79,80 @@ public class GameLogicController {
                     throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
                 turnOrder.remove(0);
                 turnOrder.add(player);
+                lastCheatingPlayer = null;
                 sendCurrentGameStateToPlayers();
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto((isSetupPhase) ? setupPhaseTurnOrder.get(0).toInGamePlayerDto() : turnOrder.get(0).toInGamePlayerDto())));
             }
-
+            case "MoveRobberDto" -> {
+                if (isSetupPhase)
+                    throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_MOVE_ROBBER_SETUP_PHASE);
+                makeRobberMove((MoveRobberDto) gameMove, player);
+            }
+            case "AccuseCheatingDto" -> makeAccuseCheatingMove((AccuseCheatingDto) gameMove, player);
             //TODO To implement other moves create MoveDto and include it here
-            default -> throw new UnsupportedGameMoveException("Unknown DTO Format");
+            default -> throw new UnsupportedGameMoveException(ErrorCode.ERROR_NOT_IMPLEMENTED);
         }
+    }
+
+    private void makeAccuseCheatingMove(AccuseCheatingDto gameMove, Player player) {
+        if(lastCheatingPlayer == null) deleteHalfPlayerResources(player);
+        else {
+            deleteHalfPlayerResources(lastCheatingPlayer);
+            board.moveRobber(lastLegalRobberPlace);
+        }
+        messagingService.notifyGameProgress(gameId, new GameProgressDto(gameMove));
+        sendCurrentGameStateToPlayers();
+    }
+
+    private void makeRobberMove(MoveRobberDto gameMove, Player player) {
+        if (gameMove.getHexagonID() < 0 || gameMove.getHexagonID() > 18)
+            throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_MOVE_ROBBER);
+        board.moveRobber(gameMove.getHexagonID());
+        if(gameMove.isLegal()) {
+            for (Building building : board.getHexagonList().get(gameMove.getHexagonID()).getBuildings()) {
+                if (building != null && building.getPlayer() != player && stealResource(building.getPlayer(), player)) {
+                    break;
+                }
+            }
+            lastLegalRobberPlace = gameMove.getHexagonID();
+        } else {
+            lastCheatingPlayer = player;
+        }
+        sendCurrentGameStateToPlayers();
+    }
+
+    private boolean stealResource(Player playerToStealFrom, Player playerToGiveTo) {
+        List<Integer> nonZeroIndices = new ArrayList<>();
+        int[] opponentResources = playerToStealFrom.getResources();
+        for (int i = 0; i < opponentResources.length; i++) {
+            if (opponentResources[i] > 0) {
+                nonZeroIndices.add(i);
+            }
+        }
+        if (!nonZeroIndices.isEmpty()) {
+            int randomIndex = nonZeroIndices.get(random.nextInt(nonZeroIndices.size()));
+            int[] resourceAdjustment = new int[5];
+            resourceAdjustment[randomIndex] = -1;
+            playerToStealFrom.adjustResources(resourceAdjustment);
+
+            resourceAdjustment[randomIndex] = 1;
+            playerToGiveTo.adjustResources(resourceAdjustment);
+            return true;
+        }
+        return false;
     }
 
     private void makeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
         if (isSetupPhase) {
             computeBuildRoadMoveSetupPhase(buildRoadMove, player);
-        }
-        else computeBuildRoadMove(buildRoadMove, player);
+        } else computeBuildRoadMove(buildRoadMove, player);
     }
 
     private void makeBuildVillageMove(BuildVillageMoveDto buildVillageMove, Player player) {
         if (isSetupPhase) {
             computeBuildVillageMoveSetupPhase(buildVillageMove, player);
-        }
-        else computeBuildVillageMove(buildVillageMove, player);
+        } else computeBuildVillageMove(buildVillageMove, player);
+
     }
 
     private void computeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
@@ -172,7 +228,7 @@ public class GameLogicController {
 
         if (board.addNewVillage(player, buildVillageMove.getIntersectionID())) {
             player.increaseVictoryPoints(1);
-            board.distributeResourcesSetupPhase(player,buildVillageMove.getIntersectionID());
+            board.distributeResourcesSetupPhase(player, buildVillageMove.getIntersectionID());
             sendCurrentGameStateToPlayers();
         } else
             throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildVillageMove.getClass().getSimpleName()));
@@ -182,9 +238,43 @@ public class GameLogicController {
     private void makeRollDiceMove(RollDiceDto rollDiceDto) {
         if (rollDiceDto.getDiceRoll() < 2 || rollDiceDto.getDiceRoll() > 12)
             throw new InvalidGameMoveException(ErrorCode.ERROR_INVALID_DICE_ROLL);
-        board.distributeResourcesByDiceRoll(rollDiceDto.getDiceRoll());
+        if (rollDiceDto.getDiceRoll() == 7) {
+            deleteHalfResourcesIfMoreThan7();
+        } else board.distributeResourcesByDiceRoll(rollDiceDto.getDiceRoll());
         messagingService.notifyGameProgress(gameId, new GameProgressDto(rollDiceDto));
         sendCurrentGameStateToPlayers();
+    }
+
+    private void deleteHalfResourcesIfMoreThan7() {
+        for (Player player : turnOrder) {
+            int totalResources = 0;
+            for (int resource : player.getResources()) {
+                totalResources += resource;
+            }
+            if (totalResources <= 7) continue;
+            deleteHalfPlayerResources(player);
+        }
+    }
+
+    private void deleteHalfPlayerResources(Player player) {
+        List<Integer> nonZeroIndices = new ArrayList<>();
+        int totalResources = 0;
+        int[] resources = player.getResources();
+        for (int i = 0; i < resources.length; i++) {
+            if (resources[i] > 0) {
+                nonZeroIndices.add(i);
+                totalResources += resources[i];
+            }
+        }
+        totalResources /= 2;
+        int[] resourceAdjustment = new int[5];
+        while (totalResources > 0) {
+            int randomIndex = nonZeroIndices.get(random.nextInt(nonZeroIndices.size()));
+            if ((resourceAdjustment[randomIndex] * -1) == resources[randomIndex]) continue;
+            resourceAdjustment[randomIndex] -= 1;
+            totalResources--;
+        }
+        player.adjustResources(resourceAdjustment);
     }
 
     private void sendCurrentGameStateToPlayers() {
@@ -201,13 +291,13 @@ public class GameLogicController {
         for (Player player : (isSetupPhase) ? setupPhaseTurnOrder : turnOrder) {
             playerDtos.add(player.toInGamePlayerDto());
         }
-    return playerDtos;
+        return playerDtos;
     }
 
     private List<ConnectionDto> getConnectionDtoList() {
         List<ConnectionDto> connectionDtos = new ArrayList<>();
         Map<String, Boolean> visitedConnections = new HashMap<>();
-        
+
         for (int i = 0; i < board.getAdjacencyMatrix().length; i++) {
             for (int j = i + 1; j < board.getAdjacencyMatrix()[i].length; j++) {
                 Connection connection = board.getAdjacencyMatrix()[i][j];
@@ -220,7 +310,7 @@ public class GameLogicController {
         }
         Comparator<ConnectionDto> connectionDtoComparator = Comparator.comparingInt(ConnectionDto::getId);
         connectionDtos.sort(connectionDtoComparator);
-        
+
         return connectionDtos;
     }
 
