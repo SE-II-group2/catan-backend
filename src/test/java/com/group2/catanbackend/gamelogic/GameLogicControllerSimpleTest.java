@@ -248,13 +248,40 @@ public class GameLogicControllerSimpleTest {
         player1.adjustResources(resourcesProgressCard);
         gameLogicController.setSetupPhase(false);
         gameLogicController.makeMove(buyProgressCardDto, player1);
-        assertEquals(player1.getProgressCards().size(),1);
+        assertEquals(1, player1.getProgressCards().size());
     }
 
     @Test
     public void testBuyProgressCardResourceNotSufficient(){
         BuyProgressCardDto buyProgressCardDto = new BuyProgressCardDto();
         gameLogicController.setSetupPhase(false);
+        assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(buyProgressCardDto, player1));
+    }
+
+    @Test
+    public void testResourceIndexesValidHexagons(){
+        assertEquals(0, ResourceDistribution.FIELDS.getResourceIndex());
+        assertEquals(1, ResourceDistribution.PASTURE.getResourceIndex());
+        assertEquals(2, ResourceDistribution.FOREST.getResourceIndex());
+        assertEquals(3, ResourceDistribution.HILLS.getResourceIndex());
+        assertEquals(4, ResourceDistribution.MOUNTAINS.getResourceIndex());
+    }
+
+    @Test
+    public void testResourceIndexInvalidHexagons(){
+        IllegalStateException thrown = assertThrows(
+                IllegalStateException.class,
+                ResourceDistribution.DESERT::getResourceIndex,
+                "Expected getResourceIndex() to throw, but it didn't"
+        );
+
+        assertTrue(thrown.getMessage().contains("No valid resource index found."));
+    }
+
+    @Test
+    public void testBuyProgressCardDuringSetupPhaseThrowsException() {
+        BuyProgressCardDto buyProgressCardDto = new BuyProgressCardDto();
+        gameLogicController.setSetupPhase(true);
         assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(buyProgressCardDto, player1));
     }
 }
