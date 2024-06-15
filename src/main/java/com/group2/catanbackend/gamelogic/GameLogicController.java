@@ -181,8 +181,6 @@ public class GameLogicController {
         }
         player.useProgressCard(progressCardType);
         switch(progressCardType) {
-            case KNIGHT -> {
-            }
             case YEAR_OF_PLENTY -> computeYearOfPlentyCardMove(useProgressCardDto, player);
             case ROAD_BUILDING -> computeRoadBuildingCardMove(player);
             case MONOPOLY -> computeMonopolyCardMove(useProgressCardDto, player);
@@ -237,7 +235,6 @@ public class GameLogicController {
 
     private void computeVictoryPointCardMove(Player player){
         player.increaseVictoryPoints(1);
-        // TODO: outsource win-condition-check to method
         if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
             gameover = true;
             messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
