@@ -18,13 +18,12 @@ public enum ResourceDistribution {
         return distribution;
     }
 
-    public int getResourceIndex(){
+    public int getResourceIndex() {
         for (int i = 0; i < distribution.length; i++) {
             if (distribution[i] == 1) {
                 return i;
             }
         }
-        return -1;
-        //TODO: throw
+        throw new IllegalStateException("No valid resource index found.");
     }
 }

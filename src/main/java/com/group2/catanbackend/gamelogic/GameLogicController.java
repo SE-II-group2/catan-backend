@@ -98,8 +98,7 @@ public class GameLogicController {
                 if(isSetupPhase){
                     throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_USE_PROGRESS_CARDS_IN_SETUP);
                 }
-                BuyProgressCardDto buyProgressCardDto = (BuyProgressCardDto) gameMove;
-                makeBuyProgressCardMove(buyProgressCardDto, player);
+                makeBuyProgressCardMove(player);
                 sendCurrentGameStateToPlayers();
             }
 
@@ -182,26 +181,19 @@ public class GameLogicController {
         }
         player.useProgressCard(progressCardType);
         switch(progressCardType) {
-            // set knight to different hexagon and steal 1 resource from someone from this hex
             case KNIGHT -> {
-                // TODO: Implement when possible
             }
-            // choose 2 free resources from the bank
             case YEAR_OF_PLENTY -> computeYearOfPlentyCardMove(useProgressCardDto, player);
-            // build 2 roads for free
             case ROAD_BUILDING -> computeRoadBuildingCardMove(player);
-            // grants you all the resources from the type you have chosen from all other players
             case MONOPOLY -> computeMonopolyCardMove(useProgressCardDto, player);
-            // grants you 1 victory point
             case VICTORY_POINT -> computeVictoryPointCardMove(player);
         }
     }
 
-    private void makeBuyProgressCardMove(BuyProgressCardDto buyProgressCardDto, Player player) {
+    private void makeBuyProgressCardMove(Player player) {
         if (!player.resourcesSufficient(ResourceCost.DEVELOPMENT_CARD.getCost())){
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES);
         }
-        Random random = new Random();
         ProgressCardType[] values = ProgressCardType.values();
         int randomIndex = random.nextInt(values.length);
         player.addProgressCard(values[randomIndex]);

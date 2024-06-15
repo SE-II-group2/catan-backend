@@ -16,13 +16,9 @@ public class UseProgressCardDto extends GameMoveDto {
         this.progressCardType = progressCardType;
         this.chosenResources = chosenResources;
         this.monopolyResource = monopolyResource;
-        //this.robberPosition = robberPosition;
         this.setEventType(GameMoveType.USEPROGRESSCARD);
     }
-
-    // TODO: Implement Robber when ready on Board
-    public ProgressCardType progressCardType;
-    public List<ResourceDistribution> chosenResources;
-    public ResourceDistribution monopolyResource;
-    //private Robber position
+    private ProgressCardType progressCardType;
+    private List<ResourceDistribution> chosenResources;
+    private ResourceDistribution monopolyResource;
 }
