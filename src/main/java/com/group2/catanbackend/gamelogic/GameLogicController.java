@@ -288,7 +288,8 @@ public class GameLogicController {
         List<IntersectionDto> intersectionDtos = getIntersectionDtoList();
         List<ConnectionDto> connectionDtos = getConnectionDtoList();
         List<IngamePlayerDto> playerDtos = getIngamePlayerDtoList();
-        messagingService.notifyGameProgress(gameId, new CurrentGameStateDto(hexagonDtos, intersectionDtos, connectionDtos, playerDtos, isSetupPhase));
+        IngamePlayerDto currentPlayer = getActivePlayer().toInGamePlayerDto();
+        messagingService.notifyGameProgress(gameId, new CurrentGameStateDto(hexagonDtos, intersectionDtos, connectionDtos, playerDtos, currentPlayer, isSetupPhase));
     }
 
     private List<IngamePlayerDto> getIngamePlayerDtoList() {
