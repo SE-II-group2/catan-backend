@@ -28,6 +28,7 @@ public class GameLogicController {
     private static final int VICTORYPOINTSFORVICTORY = 10;
     @Getter
     private boolean gameover = false;
+    private TradeOfferDto currentTrade = null;
 
     private int[] playerColors = {-65536, -16776961, -16711936, -154624}; //Red, Blue, Green, Orange
 
@@ -74,6 +75,7 @@ public class GameLogicController {
                 turnOrder.add(player);
                 sendCurrentGameStateToPlayers();
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto((isSetupPhase) ? setupPhaseTurnOrder.get(0).toInGamePlayerDto() : turnOrder.get(0).toInGamePlayerDto())));
+                this.currentTrade = null;
             }
 
             //TODO To implement other moves create MoveDto and include it here
@@ -91,33 +93,59 @@ public class GameLogicController {
         //if (isSetupPhase) throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_ROLL_IN_SETUP);
         if (turnOrder.get(0) != player)
             throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+        if(tradeMove.getToPlayer().length != players.size()-1)
+            throw new NotActivePlayerException(ErrorCode.ERROR_INVALID_CONFIGURATION);
         if (!player.resourcesSufficient(tradeMove.getGiveResources()))
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(tradeMove.getClass().getSimpleName()));
         /*
         if(tradeMove.getWaitTime()<1)
             throw new InvalidConfigurationException(ErrorCode.ERROR_INVALID_CONFIGURATION);
          */
-        if(isempty(tradeMove.getToPlayer())){
+        if(tradeMove.getToPlayer().length==0||isempty(tradeMove.getToPlayer())){
             computeTradeMoveBank(tradeMove, player);
         }
         else computeTradeMove(tradeMove, player);
     }
-    public boolean isempty(boolean[] toPlayer){
-        // maybe change length dynamically dependent on Game
-        if(toPlayer.length != 4){
-            throw new NotActivePlayerException(ErrorCode.ERROR_INVALID_CONFIGURATION);
-        }
-        for(boolean b : toPlayer){
-            if(b){//b==true
+    private boolean isempty(int[] toPlayer){
+        for(int b : toPlayer){
+            if(b!=-1){
                 return false;
             }
         }
         return true;
     }
-    private void computeTradeMoveBank(TradeMoveDto tradeMove, Player player){}
+    private void computeTradeMoveBank(TradeMoveDto tradeMove, Player player){
+        int countGive = -Arrays.stream(tradeMove.getGiveResources()).sum();//get positive value
+        int countGet = Arrays.stream(tradeMove.getGetResources()).sum();
+        if(countGive%4!=0)
+            throw new InvalidGameMoveException(ErrorCode.ERROR_INVALID_CONFIGURATION);
+        if(countGive/4!=countGet)
+            throw new InvalidGameMoveException(ErrorCode.ERROR_INVALID_CONFIGURATION);
+        // 4 to 1 trade
+        player.adjustResources(tradeMove.getGiveResources());
+        player.adjustResources(tradeMove.getGetResources());
+        sendCurrentGameStateToPlayers();
+        //send new GameProgressDto? but with what content?
+    }
     private void computeTradeMove(TradeMoveDto tradeMove, Player player){
-        //messagingService.notifyUser(player.getToken(), new NotifyUserDto("Trade got sent!"));
-        messagingService.notifyGameProgress(gameId, new TradeOfferDto(tradeMove.getGetResources(), tradeMove.getGiveResources()));
+        this.currentTrade = new TradeOfferDto(tradeMove.getGetResources(), tradeMove.getGiveResources(), player.getInGameID());
+        for(int i=0;i<tradeMove.getToPlayer().length;i++){
+            int playerID = tradeMove.getToPlayer()[i];
+            if(playerID!=-1){
+                String toToken = findPlayerToken(playerID);
+                if(toToken==null)//no Token found
+                    throw new InvalidGameMoveException(ErrorCode.ERROR_INVALID_CONFIGURATION);
+                messagingService.notifyUser(toToken, new TradeOfferDto(tradeMove.getGetResources(), tradeMove.getGiveResources(), player.getInGameID()));
+            }
+        }
+    }
+    private String findPlayerToken(int playerID){
+        for(Player p : players){
+            if(p.getInGameID()==playerID){
+                return p.getToken();
+            }
+        }
+        return null;
     }
 
     private void makeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {

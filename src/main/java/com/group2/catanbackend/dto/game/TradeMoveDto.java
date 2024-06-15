@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class TradeMoveDto extends GameMoveDto{
-    public TradeMoveDto(int[] giveResources, int [] getResources, boolean[] toPlayer) {
+    public TradeMoveDto(int[] giveResources, int [] getResources, int[] toPlayer) {
         this.giveResources = giveResources;
         this.getResources = getResources;
         this.toPlayer = toPlayer;
@@ -18,7 +18,7 @@ public class TradeMoveDto extends GameMoveDto{
 
     private int[] giveResources;
     private int[] getResources;
-    private boolean[] toPlayer;//change to PlayerID[]
+    private int[] toPlayer;//change to PlayerID[]
 
 
 }
