@@ -7,14 +7,16 @@ import com.group2.catanbackend.exception.NoSuchGameException;
 import com.group2.catanbackend.exception.NoSuchTokenException;
 import com.group2.catanbackend.exception.NotAuthorizedException;
 import com.group2.catanbackend.model.Player;
+import com.group2.catanbackend.model.PlayerState;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.configuration.IMockitoConfiguration;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -97,5 +99,32 @@ class GameServiceTest {
         Mockito.when(tokenService.getPlayerByToken(response2.getToken())).thenReturn(new Player(response2.getToken(), response2.getPlayerName(), response2.getGameID()));
 
         assertThrows(NotAuthorizedException.class, () -> {gameService.startGame(response2.getToken());});
+    }
+
+    @Test
+    void gameRemovedOnceGameOverByDisconnect(){
+        Player p1 = new Player("token1", "player1", "1");
+        p1.setInGameID(0);
+        Player p2 = new Player("token2", "player2", "1");
+        p2.setInGameID(1);
+
+        p1.setPlayerState(PlayerState.CONNECTED);
+        p2.setPlayerState(PlayerState.CONNECTED);
+        RunningInstanceService s = new RunningInstanceService(messagingService);
+        s.setGameId("1");
+        s.addPlayers(List.of(p1, p2));
+        gameService.getRunningGames().put("1", s);
+        s.start();
+
+        Mockito.when(tokenService.getPlayerByToken("token1")).thenReturn(p1);
+        Mockito.when(tokenService.getPlayerByToken("token2")).thenReturn(p2);
+
+        gameService.handleConnectionLost("token1");
+        gameService.handleConnectionLost("token2");
+
+        assertFalse(gameService.getRunningGames().containsKey("1"));
+
+        Mockito.verify(tokenService).revokeAll("1");
+
     }
 }

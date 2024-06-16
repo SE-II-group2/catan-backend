@@ -337,5 +337,15 @@ public class GameLogicControllerSimpleTest {
         assertEquals(player1, gameLogicController.getActivePlayer());
     }
 
+    @Test
+    void testGameOverOnceNoOneConnected(){
+        player1.setPlayerState(PlayerState.DISCONNECTED);
+        gameLogicController.handleDisconnect(player1);
+        assertFalse(gameLogicController.isGameover());
+        player2.setPlayerState(PlayerState.DISCONNECTED);
+        gameLogicController.handleDisconnect(player2);
+        assertTrue(gameLogicController.isGameover());
+    }
+
 
 }

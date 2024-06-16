@@ -60,6 +60,10 @@ public class RunningInstanceService {
         gameLogicController.handleDisconnect(p);
     }
 
+    public boolean isGameOver(){
+        return gameLogicController.isGameover();
+    }
+
     public void notifyGameStart() {
         GameStartedDto dto = new GameStartedDto();
         messagingService.notifyLobby(gameId, dto);

@@ -387,7 +387,21 @@ public class GameLogicController {
         }
     }
 
+    private boolean atLeastOneConnected(){
+        for(Player p : players){
+            if(p.getPlayerState() == PlayerState.CONNECTED)
+                return true;
+        }
+        return false;
+    }
+
     public void handleDisconnect(Player p){
+        if(!atLeastOneConnected()){
+            gameover = true;
+            messagingService.notifyGameProgress(gameId, new GameoverDto(null));
+            return;
+        }
+
         if(!isSetupPhase && activePlayer == p){
             setNextPlayerTurn();
             lastCheatingPlayer = null;
