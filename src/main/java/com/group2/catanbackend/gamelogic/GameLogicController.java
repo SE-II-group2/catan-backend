@@ -2,7 +2,9 @@ package com.group2.catanbackend.gamelogic;
 
 import com.group2.catanbackend.dto.game.*;
 import com.group2.catanbackend.exception.*;
+import com.group2.catanbackend.gamelogic.enums.ProgressCardType;
 import com.group2.catanbackend.gamelogic.enums.ResourceCost;
+import com.group2.catanbackend.gamelogic.enums.ResourceDistribution;
 import com.group2.catanbackend.gamelogic.objects.Building;
 import com.group2.catanbackend.gamelogic.objects.Connection;
 import com.group2.catanbackend.gamelogic.objects.Hexagon;
@@ -11,6 +13,7 @@ import com.group2.catanbackend.model.Player;
 import com.group2.catanbackend.service.MessagingService;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.*;
 
@@ -25,6 +28,7 @@ public class GameLogicController {
     private ArrayList<Player> setupPhaseTurnOrder;
     @Getter
     private ArrayList<Player> turnOrder;
+    @Setter
     private boolean isSetupPhase = true;
     private static final int VICTORYPOINTSFORVICTORY = 10;
     @Getter
@@ -83,6 +87,21 @@ public class GameLogicController {
                 sendCurrentGameStateToPlayers();
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto((isSetupPhase) ? setupPhaseTurnOrder.get(0).toInGamePlayerDto() : turnOrder.get(0).toInGamePlayerDto())));
             }
+            case "UseProgressCardDto" -> {
+                if (isSetupPhase) {
+                   throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_USE_PROGRESS_CARDS_IN_SETUP);
+                }
+                UseProgressCardDto useProgressCardDto = (UseProgressCardDto) gameMove;
+                makeUseProgressCardMove(useProgressCardDto, player);
+            }
+            case "BuyProgressCardDto" -> {
+                if(isSetupPhase){
+                    throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_USE_PROGRESS_CARDS_IN_SETUP);
+                }
+                makeBuyProgressCardMove(player);
+                sendCurrentGameStateToPlayers();
+            }
+
             case "MoveRobberDto" -> {
                 if (isSetupPhase)
                     throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_MOVE_ROBBER_SETUP_PHASE);
@@ -153,6 +172,74 @@ public class GameLogicController {
             computeBuildVillageMoveSetupPhase(buildVillageMove, player);
         } else computeBuildVillageMove(buildVillageMove, player);
 
+    }
+
+    private void makeUseProgressCardMove(UseProgressCardDto useProgressCardDto, Player player) {
+        ProgressCardType progressCardType = useProgressCardDto.getProgressCardType();
+        if (!player.getProgressCards().contains(progressCardType)){
+            throw new InvalidGameMoveException(ErrorCode.ERROR_CARD_TYPE_NOT_IN_POSSESSION);
+        }
+        player.useProgressCard(progressCardType);
+        switch(progressCardType) {
+            case YEAR_OF_PLENTY -> computeYearOfPlentyCardMove(useProgressCardDto, player);
+            case ROAD_BUILDING -> computeRoadBuildingCardMove(player);
+            case MONOPOLY -> computeMonopolyCardMove(useProgressCardDto, player);
+            case VICTORY_POINT -> computeVictoryPointCardMove(player);
+        }
+    }
+
+    private void makeBuyProgressCardMove(Player player) {
+        if (!player.resourcesSufficient(ResourceCost.DEVELOPMENT_CARD.getCost())){
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES);
+        }
+        ProgressCardType[] values = ProgressCardType.values();
+        int randomIndex = random.nextInt(values.length);
+        player.addProgressCard(values[randomIndex]);
+        sendCurrentGameStateToPlayers();
+    }
+
+    private void computeYearOfPlentyCardMove(UseProgressCardDto useProgressCardDto, Player player){
+        List<ResourceDistribution> chosenResources = useProgressCardDto.getChosenResources();
+        player.adjustResources(chosenResources.get(0).getDistribution());
+        player.adjustResources(chosenResources.get(1).getDistribution());
+        sendCurrentGameStateToPlayers();
+    }
+
+    private void computeRoadBuildingCardMove(Player player) {
+        for (int i = 0; i < 2; i++){
+            player.adjustResources(ResourceDistribution.FOREST.getDistribution());
+            player.adjustResources(ResourceDistribution.HILLS.getDistribution());
+        }
+        sendCurrentGameStateToPlayers();
+    }
+
+    private void computeMonopolyCardMove(UseProgressCardDto useProgressCardDto, Player player){
+        ResourceDistribution monopolyResource = useProgressCardDto.getMonopolyResource();
+        int resourceIndex = monopolyResource.getResourceIndex();
+        int amountCollected = 0;
+        for (Player otherPlayer : players) {
+            if (otherPlayer != player) {
+                int[] otherPlayerResources = otherPlayer.getResources();
+                int amountToCollect = otherPlayerResources[resourceIndex];
+                amountCollected += amountToCollect;
+                int[] resourceAdjustment = new int[5];
+                resourceAdjustment[resourceIndex] = -amountToCollect;
+                otherPlayer.adjustResources(resourceAdjustment);
+            }
+        }
+        int[] playerResourceAdjustment = new int[5];
+        playerResourceAdjustment[resourceIndex] = amountCollected;
+        player.adjustResources(playerResourceAdjustment);
+        sendCurrentGameStateToPlayers();
+    }
+
+    private void computeVictoryPointCardMove(Player player){
+        player.increaseVictoryPoints(1);
+        if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
+            gameover = true;
+            messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
+        }
+        sendCurrentGameStateToPlayers();
     }
 
     private void computeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {

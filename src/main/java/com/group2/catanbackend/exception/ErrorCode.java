@@ -18,4 +18,6 @@ public class ErrorCode {
     public static final String ERROR_CANT_MOVE_ROBBER = "Cannot move the Robber to an invalid field";
     public static final String ERROR_CANT_MOVE_ROBBER_SETUP_PHASE = "Cannot move the Robber during setup phase";
     public static final String ERROR_IS_SETUP_PHASE = "Not possible during Setup phase!";
+    public static final String ERROR_CANT_USE_PROGRESS_CARDS_IN_SETUP = "Progress-cards can't be used during setup phase";
+    public static final String ERROR_CARD_TYPE_NOT_IN_POSSESSION = "User doesnt have the progress-card type";
 }
