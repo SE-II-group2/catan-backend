@@ -7,4 +7,5 @@ public interface GameMoveType {
     String ENTTURNMOVE = "END_TURN_MOVE";
     String ROLLDICEMOVE = "ROLL_DICE_MOVE";
     String TRADEMOVE = "TRADE_MOVE";
+    String ACCEPTMOVE = "ACCEPT_MOVE";
 }

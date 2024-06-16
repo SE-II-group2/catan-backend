@@ -84,9 +84,37 @@ public class GameLogicController {
                 TradeMoveDto tradeMove = (TradeMoveDto) gameMove;
                 makeTradeMove(tradeMove, player);
             }
+            case "AcceptMoveDto" -> {
+                AcceptMoveDto acceptMove = (AcceptMoveDto) gameMove;
+                makeAcceptMove(acceptMove, player);
+            }
 
             default -> throw new UnsupportedGameMoveException("Unknown DTO Format");
         }
+    }
+    private void makeAcceptMove(AcceptMoveDto acceptMove, Player player){
+        if(isSetupPhase)
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+        if(currentTrade==null)//trade is gone
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(acceptMove.getClass().getSimpleName()));
+        if(turnOrder.get(0).getInGameID()!=acceptMove.getTradeOfferDto().getPlayerID())
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(acceptMove.getClass().getSimpleName()));
+        if(!currentTrade.equals(acceptMove.getTradeOfferDto()))
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(acceptMove.getClass().getSimpleName()));//TradeOfferDtos are not the same
+        if (!player.resourcesSufficient(acceptMove.getTradeOfferDto().getGiveResources()))
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(acceptMove.getClass().getSimpleName()));
+        if(!turnOrder.get(0).resourcesSufficient(negateAllValues(acceptMove.getTradeOfferDto().getGetResources())))
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(acceptMove.getClass().getSimpleName()));//trader does not have enough resources
+        computeAcceptMove(acceptMove.getTradeOfferDto(), player);
+    }
+    private void computeAcceptMove(TradeOfferDto tradeOffer, Player player){//more
+        turnOrder.get(0).adjustResources(negateAllValues(tradeOffer.getGetResources()));
+        turnOrder.get(0).adjustResources(negateAllValues(tradeOffer.getGiveResources()));
+        player.adjustResources(tradeOffer.getGiveResources());
+        player.adjustResources(tradeOffer.getGetResources());
+        this.currentTrade=null;
+        sendCurrentGameStateToPlayers();
+        //send new GameProgressDto? but with what content?
     }
 
     private void makeTradeMove(TradeMoveDto tradeMove, Player player){
@@ -128,16 +156,24 @@ public class GameLogicController {
         //send new GameProgressDto? but with what content?
     }
     private void computeTradeMove(TradeMoveDto tradeMove, Player player){
-        this.currentTrade = new TradeOfferDto(tradeMove.getGetResources(), tradeMove.getGiveResources(), player.getInGameID());
+        this.currentTrade = new TradeOfferDto(negateAllValues(tradeMove.getGetResources()), negateAllValues(tradeMove.getGiveResources()), player.getInGameID());
         for(int i=0;i<tradeMove.getToPlayer().length;i++){
             int playerID = tradeMove.getToPlayer()[i];
             if(playerID!=-1){
                 String toToken = findPlayerToken(playerID);
                 if(toToken==null)//no Token found
                     throw new InvalidGameMoveException(ErrorCode.ERROR_INVALID_CONFIGURATION);
-                messagingService.notifyUser(toToken, new TradeOfferDto(tradeMove.getGetResources(), tradeMove.getGiveResources(), player.getInGameID()));
+                // check if player has enough resources to even accept
+                messagingService.notifyUser(toToken, currentTrade);
             }
         }
+    }
+    private int[] negateAllValues(int[] input){
+        int[] result = new int[input.length];
+        for(int i=0;i<input.length;i++){
+            result[i]=-input[i];
+        }
+        return result;
     }
     private String findPlayerToken(int playerID){
         for(Player p : players){
