@@ -1,8 +1,8 @@
 package com.group2.catanbackend.service;
 
-import com.group2.catanbackend.dto.game.*;
+import com.group2.catanbackend.dto.game.GameMoveDto;
+import com.group2.catanbackend.dto.game.GameStartedDto;
 import com.group2.catanbackend.exception.ErrorCode;
-import com.group2.catanbackend.exception.GameException;
 import com.group2.catanbackend.exception.InvalidGameMoveException;
 import com.group2.catanbackend.exception.NoSuchGameException;
 import com.group2.catanbackend.gamelogic.GameLogicController;
@@ -55,12 +55,13 @@ public class RunningInstanceService {
     }
 
     //Players are not removed once the game is started.
-    public void removePlayer(Player p) {
+    public void playerDisconnect(Player p) {
         p.setPlayerState(PlayerState.DISCONNECTED);
-        PlayersInLobbyDto dto = new PlayersInLobbyDto();
-        dto.setPlayers(players.stream().map(Player::toPlayerDto).toList());
-        dto.setAdmin(null);
-        messagingService.notifyLobby(gameId, dto);
+        gameLogicController.handleDisconnect(p);
+    }
+
+    public boolean isGameOver(){
+        return gameLogicController.isGameover();
     }
 
     public void notifyGameStart() {

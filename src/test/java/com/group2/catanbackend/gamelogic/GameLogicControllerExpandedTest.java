@@ -119,7 +119,7 @@ public class GameLogicControllerExpandedTest {
         assertNotNull(argument.getConnections().get(36).getOwner());
         assertEquals(player1.getDisplayName(), argument.getConnections().get(36).getOwner().getDisplayName());
 
-        assertArrayEquals(new int[]{1, 2, 1, 3, 2}, argument.getPlayerOrder().get(0).getResources());
+        assertArrayEquals(new int[]{1, 2, 1, 3, 2}, argument.getActivePlayer().getResources());
     }
 
     @Test
