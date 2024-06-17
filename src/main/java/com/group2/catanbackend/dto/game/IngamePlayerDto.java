@@ -19,4 +19,5 @@ public class IngamePlayerDto {
     private int color;
     private int inGameID;
     private List<ProgressCardType> progressCards;
+    private boolean connected;
 }
