@@ -64,9 +64,8 @@ public class GameLogicController {
         }
         switch (gameMove.getClass().getSimpleName()) {
             case "RollDiceDto" -> {
-                if (isSetupPhase) throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_ROLL_IN_SETUP);
-                if (activePlayer != player)
-                    throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(activePlayer.getDisplayName()));
+                throwIfSetupPhase();
+                throwIfNotActivePlayer(player);
                 RollDiceDto rollDiceMove = (RollDiceDto) gameMove;
                 makeRollDiceMove(rollDiceMove);
             }
@@ -83,26 +82,20 @@ public class GameLogicController {
                 makeBuildCityMove(buildCityMoveDto, player);
             }
             case "EndTurnMoveDto" -> {
-                if (activePlayer != player)
-                    throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(activePlayer.getDisplayName()));
-                if (isSetupPhase)
-                    throw new InvalidGameMoveException(ErrorCode.ERROR_IS_SETUP_PHASE);
+                throwIfNotActivePlayer(player);
+                throwIfSetupPhase();
                 genericNextTurn();
                 lastCheatingPlayer = null;
                 sendCurrentGameStateToPlayers();
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(activePlayer.toInGamePlayerDto())));
             }
             case "UseProgressCardDto" -> {
-                if (isSetupPhase) {
-                   throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_USE_PROGRESS_CARDS_IN_SETUP);
-                }
+                throwIfSetupPhase();
                 UseProgressCardDto useProgressCardDto = (UseProgressCardDto) gameMove;
                 makeUseProgressCardMove(useProgressCardDto, player);
             }
             case "BuyProgressCardDto" -> {
-                if(isSetupPhase){
-                    throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_USE_PROGRESS_CARDS_IN_SETUP);
-                }
+                throwIfSetupPhase();
                 makeBuyProgressCardMove(player);
                 sendCurrentGameStateToPlayers();
             }
@@ -192,6 +185,7 @@ public class GameLogicController {
             case ROAD_BUILDING -> computeRoadBuildingCardMove(player);
             case MONOPOLY -> computeMonopolyCardMove(useProgressCardDto, player);
             case VICTORY_POINT -> computeVictoryPointCardMove(player);
+            case KNIGHT -> throw new NotImplementedException("Night Move not implemented yet"); //TODO: Implement
         }
     }
 
@@ -508,4 +502,15 @@ public class GameLogicController {
         sendCurrentGameStateToPlayers();
         messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(activePlayer.toInGamePlayerDto())));
     }
+
+    private void throwIfSetupPhase() throws InvalidGameMoveException {
+        if(isSetupPhase)
+            throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_ROLL_IN_SETUP);
+    }
+
+    private void throwIfNotActivePlayer(Player player) throws NotActivePlayerException {
+        if(activePlayer != player)
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(activePlayer.getDisplayName()));
+    }
+
 }
