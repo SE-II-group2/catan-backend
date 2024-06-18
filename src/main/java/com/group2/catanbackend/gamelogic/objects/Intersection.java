@@ -22,35 +22,29 @@ public class Intersection {
         return false;
     }
 
-    public boolean notNextToBuilding(Board board, int row, int col){
+    public boolean notNextToBuilding(Board board, int row, int col) {
         Intersection[][] intersections = board.getIntersections();
 
+        return !isNextToHorizontalBuilding(intersections, row, col) && !isNextToVerticalBuilding(intersections, row, col);
+    }
+
+    private boolean isNextToHorizontalBuilding(Intersection[][] intersections, int row, int col) {
+        if (col > 0 && intersections[row][col - 1] instanceof Building) {
+            return true;
+        }
+        return col < intersections[0].length - 1 && intersections[row][col + 1] instanceof Building;
+    }
+
+    private boolean isNextToVerticalBuilding(Intersection[][] intersections, int row, int col) {
         boolean evenCol = col % 2 == 0;
         boolean evenRow = row % 2 == 0;
-        boolean nextToBuilding;
 
-        if(col == 0){
-            nextToBuilding = (intersections[row][col + 1] instanceof Building);
-        } else if (col == intersections[0].length-1) {
-            nextToBuilding = (intersections[row][col - 1] instanceof Building);
-        }else nextToBuilding = (intersections[row][col - 1] instanceof Building || intersections[row][col + 1] instanceof Building);
-
-        if(nextToBuilding) {
-            return false;
+        if ((evenRow && evenCol) || (!evenRow && !evenCol)) {
+            return row < intersections.length - 1 && intersections[row + 1][col] instanceof Building;
+        } else {
+            return row > 0 && intersections[row - 1][col] instanceof Building;
         }
-
-        //if even even or uneven uneven check below, else above if there is a building
-        if((evenRow && evenCol) || (!evenRow && !evenCol)){
-            if(row != intersections.length-1 && intersections[row + 1][col] instanceof Building){
-                nextToBuilding = true;
-            }
-        } else{
-            if(row != 0 && intersections[row - 1][col] instanceof Building) {
-                nextToBuilding = true;
-            }
-        }
-
-        return !nextToBuilding;
     }
+
 
 }
