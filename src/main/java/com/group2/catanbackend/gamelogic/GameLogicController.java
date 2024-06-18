@@ -2,11 +2,15 @@ package com.group2.catanbackend.gamelogic;
 
 import com.group2.catanbackend.dto.game.*;
 import com.group2.catanbackend.exception.*;
+import com.group2.catanbackend.gamelogic.enums.ProgressCardType;
 import com.group2.catanbackend.gamelogic.enums.ResourceCost;
+import com.group2.catanbackend.gamelogic.enums.ResourceDistribution;
+import com.group2.catanbackend.gamelogic.objects.Building;
 import com.group2.catanbackend.gamelogic.objects.Connection;
 import com.group2.catanbackend.gamelogic.objects.Hexagon;
 import com.group2.catanbackend.gamelogic.objects.Intersection;
 import com.group2.catanbackend.model.Player;
+import com.group2.catanbackend.model.PlayerState;
 import com.group2.catanbackend.service.MessagingService;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -21,28 +25,37 @@ public class GameLogicController {
     @Getter
     private final String gameId;
     @Getter
-    private ArrayList<Player> setupPhaseTurnOrder;
+    private LinkedList<Player> setupPhaseTurnOrder;
     @Getter
-    private ArrayList<Player> turnOrder;
+    private LinkedList<Player> turnOrder;
+    @Getter
+    private Player activePlayer;
+
     private boolean isSetupPhase = true;
     private static final int VICTORYPOINTSFORVICTORY = 10;
     @Getter
     private boolean gameover = false;
     private TradeOfferDto currentTrade = null;
-
-    private int[] playerColors = {-65536, -16776961, -16711936, -154624}; //Red, Blue, Green, Orange
+    private Player lastCheatingPlayer = null;
+    private int lastLegalRobberPlace = -1;
+    private final Random random = new Random();
 
     public GameLogicController(@NotNull List<Player> players, @NotNull MessagingService messagingService, @NotNull String gameId) {
         this.players = players;
         this.messagingService = messagingService;
         this.gameId = gameId;
         board = new Board();
-        for (int i = 0; i<players.size(); i++) {
+        int[] playerColors = {-65536, -16776961, -16711936, -154624}; //Red, Blue, Green, Orange
+        for (int i = 0; i < players.size(); i++) {
             players.get(i).setColor(playerColors[i]);
         }
-        generateSetupPhaseTurnOrder(players.size());
+        initializeTurnOrder(players.size());
         //Send the starting gamestate to all playérs
         sendCurrentGameStateToPlayers();
+    }
+
+    public void setSetupPhase(boolean isSetupPhase){
+        this.isSetupPhase = isSetupPhase;
     }
 
 
@@ -52,9 +65,8 @@ public class GameLogicController {
         }
         switch (gameMove.getClass().getSimpleName()) {
             case "RollDiceDto" -> {
-                if (isSetupPhase) throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_ROLL_IN_SETUP);
-                if (turnOrder.get(0) != player)
-                    throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+                throwIfSetupPhase();
+                throwIfNotActivePlayer(player);
                 RollDiceDto rollDiceMove = (RollDiceDto) gameMove;
                 makeRollDiceMove(rollDiceMove);
             }
@@ -66,19 +78,36 @@ public class GameLogicController {
                 BuildVillageMoveDto buildVillageMove = (BuildVillageMoveDto) gameMove;
                 makeBuildVillageMove(buildVillageMove, player);
             }
+            case "BuildCityMoveDto" -> {
+                BuildCityMoveDto buildCityMoveDto = (BuildCityMoveDto) gameMove;
+                makeBuildCityMove(buildCityMoveDto, player);
+            }
             case "EndTurnMoveDto" -> {
-                if (isSetupPhase)
-                    throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
-                if (turnOrder.get(0) != player)
-                    throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
-                turnOrder.remove(0);
-                turnOrder.add(player);
+                throwIfNotActivePlayer(player);
+                throwIfSetupPhase();
+                genericNextTurn();
+                lastCheatingPlayer = null;
                 sendCurrentGameStateToPlayers();
-                messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto((isSetupPhase) ? setupPhaseTurnOrder.get(0).toInGamePlayerDto() : turnOrder.get(0).toInGamePlayerDto())));
+                messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(activePlayer.toInGamePlayerDto())));
                 this.currentTrade = null;
             }
+            case "UseProgressCardDto" -> {
+                throwIfSetupPhase();
+                UseProgressCardDto useProgressCardDto = (UseProgressCardDto) gameMove;
+                makeUseProgressCardMove(useProgressCardDto, player);
+            }
+            case "BuyProgressCardDto" -> {
+                throwIfSetupPhase();
+                makeBuyProgressCardMove(player);
+                sendCurrentGameStateToPlayers();
+            }
 
-            //TODO To implement other moves create MoveDto and include it here
+            case "MoveRobberDto" -> {
+                if (isSetupPhase)
+                    throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_MOVE_ROBBER_SETUP_PHASE);
+                makeRobberMove((MoveRobberDto) gameMove, player);
+            }
+            case "AccuseCheatingDto" -> makeAccuseCheatingMove((AccuseCheatingDto) gameMove, player);
 
             case "TradeMoveDto" -> {
                 TradeMoveDto tradeMove = (TradeMoveDto) gameMove;
@@ -88,9 +117,56 @@ public class GameLogicController {
                 AcceptMoveDto acceptMove = (AcceptMoveDto) gameMove;
                 makeAcceptMove(acceptMove, player);
             }
-
-            default -> throw new UnsupportedGameMoveException("Unknown DTO Format");
+            default -> throw new UnsupportedGameMoveException(ErrorCode.ERROR_NOT_IMPLEMENTED);
         }
+    }
+
+    private void makeAccuseCheatingMove(AccuseCheatingDto gameMove, Player player) {
+        if(lastCheatingPlayer == null) deleteHalfPlayerResources(player);
+        else {
+            deleteHalfPlayerResources(lastCheatingPlayer);
+            board.moveRobber(lastLegalRobberPlace);
+        }
+        messagingService.notifyGameProgress(gameId, new GameProgressDto(gameMove));
+        sendCurrentGameStateToPlayers();
+    }
+
+    private void makeRobberMove(MoveRobberDto gameMove, Player player) {
+        if (gameMove.getHexagonID() < 0 || gameMove.getHexagonID() > 18)
+            throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_MOVE_ROBBER);
+        board.moveRobber(gameMove.getHexagonID());
+        if(gameMove.isLegal()) {
+            for (Building building : board.getHexagonList().get(gameMove.getHexagonID()).getBuildings()) {
+                if (building != null && building.getPlayer() != player && stealResource(building.getPlayer(), player)) {
+                    break;
+                }
+            }
+            lastLegalRobberPlace = gameMove.getHexagonID();
+        } else {
+            lastCheatingPlayer = player;
+        }
+        sendCurrentGameStateToPlayers();
+    }
+
+    private boolean stealResource(Player playerToStealFrom, Player playerToGiveTo) {
+        List<Integer> nonZeroIndices = new ArrayList<>();
+        int[] opponentResources = playerToStealFrom.getResources();
+        for (int i = 0; i < opponentResources.length; i++) {
+            if (opponentResources[i] > 0) {
+                nonZeroIndices.add(i);
+            }
+        }
+        if (!nonZeroIndices.isEmpty()) {
+            int randomIndex = nonZeroIndices.get(random.nextInt(nonZeroIndices.size()));
+            int[] resourceAdjustment = new int[5];
+            resourceAdjustment[randomIndex] = -1;
+            playerToStealFrom.adjustResources(resourceAdjustment);
+
+            resourceAdjustment[randomIndex] = 1;
+            playerToGiveTo.adjustResources(resourceAdjustment);
+            return true;
+        }
+        return false;
     }
     private void makeAcceptMove(AcceptMoveDto acceptMove, Player player){
         if(isSetupPhase)
@@ -185,23 +261,91 @@ public class GameLogicController {
     }
 
     private void makeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
-        if (isSetupPhase) {
+        if (isSetupPhase)
             computeBuildRoadMoveSetupPhase(buildRoadMove, player);
-        }
-        else computeBuildRoadMove(buildRoadMove, player);
+        else
+            computeBuildRoadMove(buildRoadMove, player);
     }
 
     private void makeBuildVillageMove(BuildVillageMoveDto buildVillageMove, Player player) {
-        if (isSetupPhase) {
+        if (isSetupPhase)
             computeBuildVillageMoveSetupPhase(buildVillageMove, player);
-        }
-        else computeBuildVillageMove(buildVillageMove, player);
+        else
+            computeBuildVillageMove(buildVillageMove, player);
 
     }
 
+    private void makeUseProgressCardMove(UseProgressCardDto useProgressCardDto, Player player) {
+        ProgressCardType progressCardType = useProgressCardDto.getProgressCardType();
+        if (!player.getProgressCards().contains(progressCardType)){
+            throw new InvalidGameMoveException(ErrorCode.ERROR_CARD_TYPE_NOT_IN_POSSESSION);
+        }
+        player.useProgressCard(progressCardType);
+        switch(progressCardType) {
+            case YEAR_OF_PLENTY -> computeYearOfPlentyCardMove(useProgressCardDto, player);
+            case ROAD_BUILDING -> computeRoadBuildingCardMove(player);
+            case MONOPOLY -> computeMonopolyCardMove(useProgressCardDto, player);
+            case VICTORY_POINT -> computeVictoryPointCardMove(player);
+            case KNIGHT -> throw new NotImplementedException("Night Move not implemented yet"); //TODO: Implement
+        }
+    }
+
+    private void makeBuyProgressCardMove(Player player) {
+        if (!player.resourcesSufficient(ResourceCost.DEVELOPMENT_CARD.getCost())){
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES);
+        }
+        ProgressCardType[] values = ProgressCardType.values();
+        int randomIndex = random.nextInt(values.length);
+        player.addProgressCard(values[randomIndex]);
+        sendCurrentGameStateToPlayers();
+    }
+
+    private void computeYearOfPlentyCardMove(UseProgressCardDto useProgressCardDto, Player player){
+        List<ResourceDistribution> chosenResources = useProgressCardDto.getChosenResources();
+        player.adjustResources(chosenResources.get(0).getDistribution());
+        player.adjustResources(chosenResources.get(1).getDistribution());
+        sendCurrentGameStateToPlayers();
+    }
+
+    private void computeRoadBuildingCardMove(Player player) {
+        for (int i = 0; i < 2; i++){
+            player.adjustResources(ResourceDistribution.FOREST.getDistribution());
+            player.adjustResources(ResourceDistribution.HILLS.getDistribution());
+        }
+        sendCurrentGameStateToPlayers();
+    }
+
+    private void computeMonopolyCardMove(UseProgressCardDto useProgressCardDto, Player player){
+        ResourceDistribution monopolyResource = useProgressCardDto.getMonopolyResource();
+        int resourceIndex = monopolyResource.getResourceIndex();
+        int amountCollected = 0;
+        for (Player otherPlayer : players) {
+            if (otherPlayer != player) {
+                int[] otherPlayerResources = otherPlayer.getResources();
+                int amountToCollect = otherPlayerResources[resourceIndex];
+                amountCollected += amountToCollect;
+                int[] resourceAdjustment = new int[5];
+                resourceAdjustment[resourceIndex] = -amountToCollect;
+                otherPlayer.adjustResources(resourceAdjustment);
+            }
+        }
+        int[] playerResourceAdjustment = new int[5];
+        playerResourceAdjustment[resourceIndex] = amountCollected;
+        player.adjustResources(playerResourceAdjustment);
+        sendCurrentGameStateToPlayers();
+    }
+
+    private void computeVictoryPointCardMove(Player player){
+        player.increaseVictoryPoints(1);
+        if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
+            gameover = true;
+            messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
+        }
+        sendCurrentGameStateToPlayers();
+    }
 
     private void computeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
-        if (turnOrder.get(0) != player)
+        if (activePlayer != player)
             throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
 
         if (!player.resourcesSufficient(ResourceCost.ROAD.getCost()))
@@ -214,50 +358,67 @@ public class GameLogicController {
     }
 
     private void computeBuildRoadMoveSetupPhase(BuildRoadMoveDto buildRoadMove, Player player) {
-        if (!(setupPhaseTurnOrder.get(0) == player))
-            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+        //if (setupPhaseTurnOrder.isEmpty())
+        //    throw new InternalGameException(ErrorCode.ERROR_INTERNAL_ERROR.formatted("Called setup Phase handler with no players left"));
+
+        if (activePlayer != player)
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(activePlayer.getDisplayName()));
 
         if (!board.addNewRoad(player, buildRoadMove.getConnectionID()))
             throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildRoadMove.getClass().getSimpleName()));
-        setupPhaseTurnOrder.remove(0); //after you set down your road your turn ends during the setup phase
-        if (setupPhaseTurnOrder.isEmpty()) {
-            isSetupPhase = false;
-            board.setSetupPhase(false);
-            messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(turnOrder.get(0).toInGamePlayerDto())));
-        } else
-            messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(setupPhaseTurnOrder.get(0).toInGamePlayerDto())));
+
+        genericNextTurn();
+        messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(activePlayer.toInGamePlayerDto())));
         sendCurrentGameStateToPlayers();
     }
 
     private void computeBuildVillageMove(BuildVillageMoveDto buildVillageMove, Player player) {
-
-        if (turnOrder.get(0) != player)
+        if (activePlayer != player)
             throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
-
-        if (player.resourcesSufficient(ResourceCost.VILLAGE.getCost())) {
-            if (board.addNewVillage(player, buildVillageMove.getIntersectionID())) {
-                player.adjustResources(ResourceCost.VILLAGE.getCost());
-                player.increaseVictoryPoints(1);
-                sendCurrentGameStateToPlayers();
-
-                if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
-                    gameover = true;
-                    messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
-                }
-            } else {
-                throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildVillageMove.getClass().getSimpleName()));
-            }
-        } else
+        if (!player.resourcesSufficient(ResourceCost.VILLAGE.getCost()))
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(buildVillageMove.getClass().getSimpleName()));
+        if (!board.addNewVillage(player, buildVillageMove.getIntersectionID()))
+            throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildVillageMove.getClass().getSimpleName()));
+
+        player.adjustResources(ResourceCost.VILLAGE.getCost());
+        player.increaseVictoryPoints(1);
+        sendCurrentGameStateToPlayers();
+
+        if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
+            gameover = true;
+            messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
+        }
+    }
+
+    private void makeBuildCityMove(BuildCityMoveDto buildCityMoveDto, Player player) {
+        if (isSetupPhase)
+            throw new InvalidGameMoveException(ErrorCode.ERROR_IS_SETUP_PHASE);
+        if (activePlayer != player)
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+        if (!player.resourcesSufficient(ResourceCost.CITY.getCost()))
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(buildCityMoveDto.getClass().getSimpleName()));
+        if (!board.addNewCity(player, buildCityMoveDto.getIntersectionID()))
+            throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildCityMoveDto.getClass().getSimpleName()));
+
+        player.adjustResources(ResourceCost.CITY.getCost());
+        player.increaseVictoryPoints(1);
+        sendCurrentGameStateToPlayers();
+
+        if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
+            gameover = true;
+            messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
+        }
     }
 
     private void computeBuildVillageMoveSetupPhase(BuildVillageMoveDto buildVillageMove, Player player) {
-        if (!(setupPhaseTurnOrder.get(0) == player))
-            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+        //if (setupPhaseTurnOrder.isEmpty())
+        //    throw new InternalGameException(ErrorCode.ERROR_INTERNAL_ERROR.formatted("Called setup Phase handler with no players left"));
+        if (activePlayer != player)
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(activePlayer.getDisplayName()));
 
         if (board.addNewVillage(player, buildVillageMove.getIntersectionID())) {
             player.increaseVictoryPoints(1);
-            board.distributeResourcesSetupPhase(player,buildVillageMove.getIntersectionID());
+            board.distributeResourcesSetupPhase(player, buildVillageMove.getIntersectionID());
             sendCurrentGameStateToPlayers();
         } else
             throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildVillageMove.getClass().getSimpleName()));
@@ -267,9 +428,43 @@ public class GameLogicController {
     private void makeRollDiceMove(RollDiceDto rollDiceDto) {
         if (rollDiceDto.getDiceRoll() < 2 || rollDiceDto.getDiceRoll() > 12)
             throw new InvalidGameMoveException(ErrorCode.ERROR_INVALID_DICE_ROLL);
-        board.distributeResourcesByDiceRoll(rollDiceDto.getDiceRoll());
+        if (rollDiceDto.getDiceRoll() == 7) {
+            deleteHalfResourcesIfMoreThan7();
+        } else board.distributeResourcesByDiceRoll(rollDiceDto.getDiceRoll());
         messagingService.notifyGameProgress(gameId, new GameProgressDto(rollDiceDto));
         sendCurrentGameStateToPlayers();
+    }
+
+    private void deleteHalfResourcesIfMoreThan7() {
+        for (Player player : turnOrder) {
+            int totalResources = 0;
+            for (int resource : player.getResources()) {
+                totalResources += resource;
+            }
+            if (totalResources <= 7) continue;
+            deleteHalfPlayerResources(player);
+        }
+    }
+
+    private void deleteHalfPlayerResources(Player player) {
+        List<Integer> nonZeroIndices = new ArrayList<>();
+        int totalResources = 0;
+        int[] resources = player.getResources();
+        for (int i = 0; i < resources.length; i++) {
+            if (resources[i] > 0) {
+                nonZeroIndices.add(i);
+                totalResources += resources[i];
+            }
+        }
+        totalResources /= 2;
+        int[] resourceAdjustment = new int[5];
+        while (totalResources > 0) {
+            int randomIndex = nonZeroIndices.get(random.nextInt(nonZeroIndices.size()));
+            if ((resourceAdjustment[randomIndex] * -1) == resources[randomIndex]) continue;
+            resourceAdjustment[randomIndex] -= 1;
+            totalResources--;
+        }
+        player.adjustResources(resourceAdjustment);
     }
 
     private void sendCurrentGameStateToPlayers() {
@@ -277,22 +472,23 @@ public class GameLogicController {
         List<IntersectionDto> intersectionDtos = getIntersectionDtoList();
         List<ConnectionDto> connectionDtos = getConnectionDtoList();
         List<IngamePlayerDto> playerDtos = getIngamePlayerDtoList();
-        messagingService.notifyGameProgress(gameId, new CurrentGameStateDto(hexagonDtos, intersectionDtos, connectionDtos, playerDtos, isSetupPhase));
+        IngamePlayerDto currentPlayer = getActivePlayer().toInGamePlayerDto();
+        messagingService.notifyGameProgress(gameId, new CurrentGameStateDto(hexagonDtos, intersectionDtos, connectionDtos, playerDtos, currentPlayer, isSetupPhase));
     }
 
     private List<IngamePlayerDto> getIngamePlayerDtoList() {
         List<IngamePlayerDto> playerDtos = new ArrayList<>();
 
-        for (Player player : (isSetupPhase) ? setupPhaseTurnOrder : turnOrder) {
+        for (Player player : players) {
             playerDtos.add(player.toInGamePlayerDto());
         }
-    return playerDtos;
+        return playerDtos;
     }
 
     private List<ConnectionDto> getConnectionDtoList() {
         List<ConnectionDto> connectionDtos = new ArrayList<>();
         Map<String, Boolean> visitedConnections = new HashMap<>();
-        
+
         for (int i = 0; i < board.getAdjacencyMatrix().length; i++) {
             for (int j = i + 1; j < board.getAdjacencyMatrix()[i].length; j++) {
                 Connection connection = board.getAdjacencyMatrix()[i][j];
@@ -305,7 +501,7 @@ public class GameLogicController {
         }
         Comparator<ConnectionDto> connectionDtoComparator = Comparator.comparingInt(ConnectionDto::getId);
         connectionDtos.sort(connectionDtoComparator);
-        
+
         return connectionDtos;
     }
 
@@ -330,9 +526,9 @@ public class GameLogicController {
         return hexagonDtos;
     }
 
-    private void generateSetupPhaseTurnOrder(int numOfPlayers) {
-        setupPhaseTurnOrder = new ArrayList<>();
-        turnOrder = new ArrayList<>();
+    private void initializeTurnOrder(int numOfPlayers) {
+        setupPhaseTurnOrder = new LinkedList<>();
+        turnOrder = new LinkedList<>();
         for (int i = 0; i < numOfPlayers; i++) {
             setupPhaseTurnOrder.add(players.get(i));
             turnOrder.add(players.get(i));
@@ -340,5 +536,82 @@ public class GameLogicController {
         for (int i = numOfPlayers - 1; i >= 0; i--) {
             setupPhaseTurnOrder.add(players.get(i));
         }
+        activePlayer = setupPhaseTurnOrder.remove();
     }
+
+    /**
+     * Sets the next Player depending on whether he is connected.
+     * if he is not connected, he is skipped
+     */
+    private void setNextPlayerTurn(){
+        Player newActive = turnOrder.remove();
+
+        int infiniteLoopGuard = 0;
+        assert newActive != null;
+        while(newActive.getPlayerState() != PlayerState.CONNECTED && infiniteLoopGuard < players.size()){
+            turnOrder.add(newActive);
+            newActive = turnOrder.remove();
+            infiniteLoopGuard++;
+        }
+        activePlayer = newActive;
+        turnOrder.add(newActive);
+    }
+
+    private void genericNextTurn(){
+        if(isSetupPhase){
+            if(setupPhaseTurnOrder.isEmpty()){
+                board.setSetupPhase(false);
+                isSetupPhase = false;
+                setNextPlayerTurn();
+            }else {
+                activePlayer = setupPhaseTurnOrder.remove();
+            }
+        }else {
+            setNextPlayerTurn();
+        }
+    }
+
+    private boolean atLeastOneConnected(){
+        for(Player p : players){
+            if(p.getPlayerState() == PlayerState.CONNECTED)
+                return true;
+        }
+        return false;
+    }
+
+    public void handleDisconnect(Player p){
+        if(!atLeastOneConnected()){
+            gameover = true;
+            messagingService.notifyGameProgress(gameId, new GameoverDto(null));
+            return;
+        }
+
+        if(!isSetupPhase && activePlayer == p){
+            setNextPlayerTurn();
+            lastCheatingPlayer = null;
+        }
+        if(isSetupPhase){
+            turnOrder.remove(p); //will never become active again.
+
+            boolean forceNextPlayer = activePlayer == p;
+            while(true){
+                if(!setupPhaseTurnOrder.remove(p)) break;
+            }
+            if(forceNextPlayer)
+                genericNextTurn();
+        }
+        sendCurrentGameStateToPlayers();
+        messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(activePlayer.toInGamePlayerDto())));
+    }
+
+    private void throwIfSetupPhase() throws InvalidGameMoveException {
+        if(isSetupPhase)
+            throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_ROLL_IN_SETUP);
+    }
+
+    private void throwIfNotActivePlayer(Player player) throws NotActivePlayerException {
+        if(activePlayer != player)
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(activePlayer.getDisplayName()));
+    }
+
 }

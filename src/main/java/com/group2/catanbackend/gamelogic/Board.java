@@ -55,7 +55,6 @@ public class Board {
     }
 
     public boolean addNewRoad(Player player, int connectionID){
-
         int[] connectionIntersections = translateConnectionToIntersections(connectionID);
         int fromIntersection = connectionIntersections[0];
         int toIntersection = connectionIntersections[1];
@@ -70,7 +69,6 @@ public class Board {
     }
 
     private boolean checkPossibleRoad(Player player, int connectionID){
-
         int[] connectionIntersections = translateConnectionToIntersections(connectionID);
         int fromIntersection = connectionIntersections[0];
         int toIntersection = connectionIntersections[1];
@@ -81,11 +79,8 @@ public class Board {
             return true;
         }
 
-        if(connection != null && !(connection instanceof Road) // check if null or road already
-                && (connection.isNextToOwnRoad(this,player,fromIntersection) || connection.isNextToOwnRoad(this,player,toIntersection))){ //check if a road is next to one of the intersections
-            return true;
-        }
-        return false;
+        return connection != null && !(connection instanceof Road) // check if null or road already
+                && (connection.isNextToOwnRoad(this, player, fromIntersection) || connection.isNextToOwnRoad(this, player, toIntersection));
     }
 
     public boolean addNewVillage(Player player, int intersectionID){
@@ -104,8 +99,8 @@ public class Board {
 
     public void moveRobber(int hexagonIDTarget){
         for(Hexagon hexagon : hexagonList){
-            if(hexagon.getId()==hexagonIDTarget)hexagon.setHasRobber(true);
             if(hexagon.isHasRobber())hexagon.setHasRobber(false);
+            if(hexagon.getId()==hexagonIDTarget)hexagon.setHasRobber(true);
         }
     }
 

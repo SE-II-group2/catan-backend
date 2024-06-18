@@ -2,7 +2,12 @@ package com.group2.catanbackend.model;
 
 import com.group2.catanbackend.dto.game.IngamePlayerDto;
 import com.group2.catanbackend.dto.game.PlayerDto;
+import com.group2.catanbackend.gamelogic.enums.ProgressCardType;
+import com.group2.catanbackend.gamelogic.enums.ResourceCost;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 public class Player {
@@ -20,6 +25,8 @@ public class Player {
     @Getter
     @Setter
     private int color;
+    @Getter
+    private final List<ProgressCardType> progressCards = new ArrayList<>();
 
     public Player(String token, String displayName, String gameID){
         this.token = token;
@@ -32,7 +39,7 @@ public class Player {
     }
 
     public IngamePlayerDto toInGamePlayerDto() {
-        return new IngamePlayerDto(displayName, resources, victoryPoints, color, inGameID);
+        return new IngamePlayerDto(displayName, resources, victoryPoints, color, inGameID, progressCards, this.playerState == PlayerState.CONNECTED);
     }
     public void adjustResources(int[] resources){
         if(resources!=null&&resources.length == 5){
@@ -53,5 +60,14 @@ public class Player {
 
     public void increaseVictoryPoints(int amount){
         victoryPoints+=amount;
+    }
+
+    public void addProgressCard(ProgressCardType progressCardType){
+        progressCards.add(progressCardType);
+        adjustResources(ResourceCost.DEVELOPMENT_CARD.getCost());
+    }
+
+    public void useProgressCard(ProgressCardType progressCardType){
+        progressCards.remove(progressCardType);
     }
 }

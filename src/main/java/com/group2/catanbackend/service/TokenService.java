@@ -4,6 +4,7 @@ import com.group2.catanbackend.model.Player;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,6 +26,15 @@ public class TokenService {
         Player player = registeredTokens.get(token);
         return player != null && player.getGameID().equals(gameID);
 
+    }
+
+    public void revokeAll(String gameID){
+        Collection<Player> players = registeredTokens.values();
+        for(Player p : players){
+            if(p.getGameID().equals(gameID)){
+                revokeToken(p.getToken());
+            }
+        }
     }
 
     public void revokeToken(String token){

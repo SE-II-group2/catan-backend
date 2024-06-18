@@ -66,4 +66,11 @@ public class GameControllerAdvice extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(new ErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY.value(), ex.getMessage()));
     }
+
+    @ExceptionHandler(InternalGameException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public @ResponseBody ResponseEntity<ErrorResponse> handleGameException(InternalGameException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage()));
+    }
 }

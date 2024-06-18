@@ -103,18 +103,18 @@ public class GameService {
         //As a running Game is a service, the notification is handled by it.
         if(game != null){
             tokenService.revokeToken(token);
-            game.removePlayer(player);
+            game.playerDisconnect(player);
         }
     }
 
     public void handleConnectionEstablished(String token){
         Player p = tokenService.getPlayerByToken(token);
         GameDescriptor gameDescriptor = registeredGames.get(p.getGameID());
+        p.setPlayerState(PlayerState.CONNECTED);
         if(gameDescriptor != null){
-            p.setPlayerState(PlayerState.CONNECTED);
             notifyPlayersChanged(gameDescriptor);
         }
-        //TODO: for running game;
+        //Nothing to do for running game. Player will be able to perform moves as soon as it is his turn.
     }
 
     public void handleConnectionLost(String token){
@@ -122,8 +122,14 @@ public class GameService {
         if(p == null) return; //no information cannot process
         if (registeredGames.get(p.getGameID()) != null) {
             leaveGame(token); //connection loss in lobby state is equivalent to leaving
+            return;
         }
-
+        RunningInstanceService runningGame = runningGames.get(p.getGameID());
+        if(runningGame != null){
+            runningGame.playerDisconnect(p);
+            if(runningGame.isGameOver())
+                cleanupFinishedGame(runningGame);
+        }
     }
 
     public GameMoveValidResponseDto makeMove(String token, GameMoveDto gameMove){
@@ -135,6 +141,8 @@ public class GameService {
         if(game == null)
             throw new NoSuchGameException(ErrorCode.ERROR_GAME_NOT_FOUND.formatted(player.getGameID()));
         game.makeMove(gameMove, player);
+        if(game.isGameOver())
+            cleanupFinishedGame(game);
         return new GameMoveValidResponseDto("Move Ok!");
     }
 
@@ -143,6 +151,12 @@ public class GameService {
                 .stream()
                 .map(gameDescriptor -> new LobbyDto(gameDescriptor.getId(), gameDescriptor.getPlayerCount()))
                 .toList();
+    }
+
+    private void cleanupFinishedGame(RunningInstanceService gameService){
+        tokenService.revokeAll(gameService.getGameId());
+        runningGames.remove(gameService.getGameId());
+        log.debug("cleaning up game");
     }
 
     private void notifyPlayersChanged(GameDescriptor gameDescriptor){
