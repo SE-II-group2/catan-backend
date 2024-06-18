@@ -351,8 +351,7 @@ public class GameLogicController {
         Collections.shuffle(resourceIndexes);
         int[] resourceAdjustment = new int[5];
         while (totalResources > 0) {
-            int randomIndex = resourceIndexes.get(0);
-            resourceIndexes.remove(0);
+            int randomIndex =  resourceIndexes.remove(0);
             resourceAdjustment[randomIndex] -= 1;
             totalResources--;
         }
