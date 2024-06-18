@@ -48,6 +48,12 @@ public class GameLogicController {
         for (int i = 0; i < players.size(); i++) {
             players.get(i).setColor(playerColors[i]);
         }
+        for( Hexagon hexagon : board.getHexagonList()){
+            if(hexagon.isHasRobber()){
+                lastLegalRobberPlace = hexagon.getId();
+                break;
+            }
+        }
         initializeTurnOrder(players.size());
         //Send the starting gamestate to all playérs
         sendCurrentGameStateToPlayers();

@@ -34,7 +34,7 @@ public class HexagonUnitTest {
 
     @Test
     public void testDistributeResources() {
-        // Create a mock object for Buildinggit add .
+        // Create a mock object for Building
 
         buildingMock = mock(Building.class);
 
