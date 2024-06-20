@@ -48,6 +48,12 @@ public class GameLogicController {
         for (int i = 0; i < players.size(); i++) {
             players.get(i).setColor(playerColors[i]);
         }
+        for( Hexagon hexagon : board.getHexagonList()){
+            if(hexagon.isHasRobber()){
+                lastLegalRobberPlace = hexagon.getId();
+                break;
+            }
+        }
         initializeTurnOrder(players.size());
         //Send the starting gamestate to all playérs
         sendCurrentGameStateToPlayers();
@@ -106,7 +112,6 @@ public class GameLogicController {
                 makeRobberMove((MoveRobberDto) gameMove, player);
             }
             case "AccuseCheatingDto" -> makeAccuseCheatingMove((AccuseCheatingDto) gameMove, player);
-            //TODO To implement other moves create MoveDto and include it here
             default -> throw new UnsupportedGameMoveException(ErrorCode.ERROR_NOT_IMPLEMENTED);
         }
     }
@@ -193,6 +198,7 @@ public class GameLogicController {
         if (!player.resourcesSufficient(ResourceCost.DEVELOPMENT_CARD.getCost())){
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES);
         }
+
         ProgressCardType[] values = ProgressCardType.values();
         int randomIndex = random.nextInt(values.length);
         player.addProgressCard(values[randomIndex]);
@@ -244,9 +250,7 @@ public class GameLogicController {
     }
 
     private void computeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
-        if (activePlayer != player)
-            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
-
+        throwIfNotActivePlayer(player);
         if (!player.resourcesSufficient(ResourceCost.ROAD.getCost()))
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(buildRoadMove.getClass().getSimpleName()));
         if (board.addNewRoad(player, buildRoadMove.getConnectionID())) {
@@ -257,12 +261,7 @@ public class GameLogicController {
     }
 
     private void computeBuildRoadMoveSetupPhase(BuildRoadMoveDto buildRoadMove, Player player) {
-        //if (setupPhaseTurnOrder.isEmpty())
-        //    throw new InternalGameException(ErrorCode.ERROR_INTERNAL_ERROR.formatted("Called setup Phase handler with no players left"));
-
-        if (activePlayer != player)
-            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(activePlayer.getDisplayName()));
-
+        throwIfNotActivePlayer(player);
         if (!board.addNewRoad(player, buildRoadMove.getConnectionID()))
             throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_BUILD_HERE.formatted(buildRoadMove.getClass().getSimpleName()));
 
@@ -272,8 +271,7 @@ public class GameLogicController {
     }
 
     private void computeBuildVillageMove(BuildVillageMoveDto buildVillageMove, Player player) {
-        if (activePlayer != player)
-            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+        throwIfNotActivePlayer(player);
         if (!player.resourcesSufficient(ResourceCost.VILLAGE.getCost()))
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(buildVillageMove.getClass().getSimpleName()));
         if (!board.addNewVillage(player, buildVillageMove.getIntersectionID()))
@@ -290,10 +288,8 @@ public class GameLogicController {
     }
 
     private void makeBuildCityMove(BuildCityMoveDto buildCityMoveDto, Player player) {
-        if (isSetupPhase)
-            throw new InvalidGameMoveException(ErrorCode.ERROR_IS_SETUP_PHASE);
-        if (activePlayer != player)
-            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+        throwIfSetupPhase();
+        throwIfNotActivePlayer(player);
         if (!player.resourcesSufficient(ResourceCost.CITY.getCost()))
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(buildCityMoveDto.getClass().getSimpleName()));
         if (!board.addNewCity(player, buildCityMoveDto.getIntersectionID()))
@@ -310,11 +306,7 @@ public class GameLogicController {
     }
 
     private void computeBuildVillageMoveSetupPhase(BuildVillageMoveDto buildVillageMove, Player player) {
-        //if (setupPhaseTurnOrder.isEmpty())
-        //    throw new InternalGameException(ErrorCode.ERROR_INTERNAL_ERROR.formatted("Called setup Phase handler with no players left"));
-        if (activePlayer != player)
-            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(activePlayer.getDisplayName()));
-
+        throwIfNotActivePlayer(player);
         if (board.addNewVillage(player, buildVillageMove.getIntersectionID())) {
             player.increaseVictoryPoints(1);
             board.distributeResourcesSetupPhase(player, buildVillageMove.getIntersectionID());
@@ -346,20 +338,20 @@ public class GameLogicController {
     }
 
     private void deleteHalfPlayerResources(Player player) {
-        List<Integer> nonZeroIndices = new ArrayList<>();
+        List<Integer> resourceIndexes = new ArrayList<>();
         int totalResources = 0;
         int[] resources = player.getResources();
         for (int i = 0; i < resources.length; i++) {
-            if (resources[i] > 0) {
-                nonZeroIndices.add(i);
-                totalResources += resources[i];
+            for(int j = 0; j < resources[i]; j++){
+                resourceIndexes.add(i);
             }
+            totalResources+=resources[i];
         }
         totalResources /= 2;
+        Collections.shuffle(resourceIndexes);
         int[] resourceAdjustment = new int[5];
         while (totalResources > 0) {
-            int randomIndex = nonZeroIndices.get(random.nextInt(nonZeroIndices.size()));
-            if ((resourceAdjustment[randomIndex] * -1) == resources[randomIndex]) continue;
+            int randomIndex =  resourceIndexes.remove(0);
             resourceAdjustment[randomIndex] -= 1;
             totalResources--;
         }

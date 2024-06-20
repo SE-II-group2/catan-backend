@@ -34,7 +34,9 @@ public class HexagonUnitTest {
 
     @Test
     public void testDistributeResources() {
-        buildingMock = mock(Building.class); // Create a mock object for Building}
+        // Create a mock object for Building
+
+        buildingMock = mock(Building.class);
 
         Hexagon hexagon = new Hexagon(HexagonType.HILLS, ResourceDistribution.HILLS, 4, 1, false);
         hexagon.addBuilding(buildingMock);
