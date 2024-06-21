@@ -191,7 +191,7 @@ public class GameLogicController {
             case MONOPOLY -> computeMonopolyCardMove(useProgressCardDto, player);
             case VICTORY_POINT -> computeVictoryPointCardMove(player);
             case KNIGHT -> computeKnightCardMove(useProgressCardDto, player);
-            default -> throw new IllegalArgumentException("Progress Card type not acceptable");
+            default -> throw new InvalidGameMoveException("Progress Card type not acceptable");
         }
     }
 
