@@ -22,8 +22,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 
 public class GameLogicControllerSimpleTest {
@@ -392,7 +391,7 @@ public class GameLogicControllerSimpleTest {
     }
 
     @Test
-    public void testVictoryPointCard(){
+    public void testVictoryPointCardWon(){
         player1.increaseVictoryPoints(9);
         player1.addProgressCard(ProgressCardType.VICTORY_POINT);
         UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.VICTORY_POINT, null, null, 0);
@@ -402,7 +401,23 @@ public class GameLogicControllerSimpleTest {
         assertTrue(gameLogicController.isGameover());
         verify(messagingService).notifyGameProgress(anyString(), any(GameoverDto.class));
     }
-
+    @Test
+    public void testVictoryPointCardNotWon(){
+        player1.addProgressCard(ProgressCardType.VICTORY_POINT);
+        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.VICTORY_POINT, null, null, 0);
+        gameLogicController.setSetupPhase(false);
+        gameLogicController.makeMove(useProgressCardDto, player1);
+        assertEquals(1, player1.getVictoryPoints());
+    }
+    @Test
+    public void testKnightCard(){
+        int hexagonID = 1;
+        player1.addProgressCard(ProgressCardType.KNIGHT);
+        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.KNIGHT, null, null, hexagonID);
+        gameLogicController.setSetupPhase(false);
+        gameLogicController.makeMove(useProgressCardDto, player1);
+        assertTrue(gameLogicController.getBoard().getHexagonList().get(hexagonID).isHasRobber());
+    }
     @Test
     public void testUseProgressCardsNotInPossession(){
         UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.YEAR_OF_PLENTY, null, null, 0);
@@ -459,5 +474,12 @@ public class GameLogicControllerSimpleTest {
         BuyProgressCardDto buyProgressCardDto = new BuyProgressCardDto();
         gameLogicController.setSetupPhase(true);
         assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(buyProgressCardDto, player1));
+    }
+
+    @Test void testWrongCardTypeThrows(){
+        UseProgressCardDto useProgressCardDto = mock(UseProgressCardDto.class);
+        ProgressCardType invalidType = mock(ProgressCardType.class);
+        when(useProgressCardDto.getProgressCardType()).thenReturn(invalidType);
+        assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(useProgressCardDto, player1));
     }
 }
