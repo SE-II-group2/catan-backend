@@ -362,7 +362,7 @@ public class GameLogicControllerSimpleTest {
         player1.addProgressCard(ProgressCardType.YEAR_OF_PLENTY);
         player1.adjustResources(resourcesProgressCard);
         List<ResourceDistribution> chosenResources = Arrays.asList(ResourceDistribution.FIELDS, ResourceDistribution.FOREST);
-        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.YEAR_OF_PLENTY, chosenResources, null);
+        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.YEAR_OF_PLENTY, chosenResources, null, 0);
         gameLogicController.setSetupPhase(false);
         gameLogicController.makeMove(useProgressCardDto, player1);
         assertArrayEquals(new int[]{1,0,1,0,0}, player1.getResources());
@@ -372,7 +372,7 @@ public class GameLogicControllerSimpleTest {
     public void testMonopolyCard(){
         player1.addProgressCard(ProgressCardType.MONOPOLY);
         player1.adjustResources(resourcesProgressCard);
-        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.MONOPOLY, null, ResourceDistribution.FIELDS);
+        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.MONOPOLY, null, ResourceDistribution.FIELDS, 0);
         player2.adjustResources(ResourceDistribution.FIELDS.getDistribution());
         player2.adjustResources(ResourceDistribution.FIELDS.getDistribution());
         gameLogicController.setSetupPhase(false);
@@ -385,7 +385,7 @@ public class GameLogicControllerSimpleTest {
     public void testRoadBuildingCard(){
        player1.addProgressCard(ProgressCardType.ROAD_BUILDING);
        player1.adjustResources(resourcesProgressCard);
-       UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.ROAD_BUILDING, null, null);
+       UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.ROAD_BUILDING, null, null, 0);
        gameLogicController.setSetupPhase(false);
        gameLogicController.makeMove(useProgressCardDto, player1);
        assertArrayEquals(new int[]{0,0,2,2,0}, player1.getResources());
@@ -395,7 +395,7 @@ public class GameLogicControllerSimpleTest {
     public void testVictoryPointCard(){
         player1.increaseVictoryPoints(9);
         player1.addProgressCard(ProgressCardType.VICTORY_POINT);
-        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.VICTORY_POINT, null, null);
+        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.VICTORY_POINT, null, null, 0);
         gameLogicController.setSetupPhase(false);
         gameLogicController.makeMove(useProgressCardDto, player1);
         assertEquals(VICTORYPOINTSFORVICTORY, player1.getVictoryPoints());
@@ -405,7 +405,7 @@ public class GameLogicControllerSimpleTest {
 
     @Test
     public void testUseProgressCardsNotInPossession(){
-        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.YEAR_OF_PLENTY, null, null);
+        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.YEAR_OF_PLENTY, null, null, 0);
         gameLogicController.setSetupPhase(false);
         assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(useProgressCardDto, player1));
     }
@@ -413,7 +413,7 @@ public class GameLogicControllerSimpleTest {
     @Test
     public void testUseProgressCardDuringSetupPhase() {
         player1.addProgressCard(ProgressCardType.YEAR_OF_PLENTY);
-        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.YEAR_OF_PLENTY, null, null);
+        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.YEAR_OF_PLENTY, null, null, 0);
         gameLogicController.setSetupPhase(true);
         assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(useProgressCardDto, player1));
     }
