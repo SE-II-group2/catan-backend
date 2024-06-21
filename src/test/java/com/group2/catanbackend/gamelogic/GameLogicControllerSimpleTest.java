@@ -477,9 +477,9 @@ public class GameLogicControllerSimpleTest {
     }
 
     @Test void testWrongCardTypeThrows(){
-        UseProgressCardDto useProgressCardDto = mock(UseProgressCardDto.class);
         ProgressCardType invalidType = mock(ProgressCardType.class);
-        when(useProgressCardDto.getProgressCardType()).thenReturn(invalidType);
+        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(invalidType, null, null, 0);
+        player1.addProgressCard(ProgressCardType.ROAD_BUILDING);
         assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(useProgressCardDto, player1));
     }
 }
