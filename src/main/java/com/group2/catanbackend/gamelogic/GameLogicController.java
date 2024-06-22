@@ -87,9 +87,9 @@ public class GameLogicController {
                 throwIfSetupPhase();
                 genericNextTurn();
                 lastCheatingPlayer = null;
+                currentTrade = null;
                 sendCurrentGameStateToPlayers();
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(activePlayer.toInGamePlayerDto())));
-                this.currentTrade = null;
             }
             case "UseProgressCardDto" -> {
                 throwIfSetupPhase();
@@ -172,20 +172,20 @@ public class GameLogicController {
         if(isSetupPhase)
             throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
         if(currentTrade==null)//trade is gone
-            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(acceptMove.getClass().getSimpleName()));
-        if(turnOrder.get(0).getInGameID()!=acceptMove.getTradeOfferDto().getPlayerID())
-            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(acceptMove.getClass().getSimpleName()));
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted("current trade(forced)"));
+        if(activePlayer.getInGameID()!=acceptMove.getTradeOfferDto().getFromPlayer().getInGameID())
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted("active player"));
         if(!currentTrade.equals(acceptMove.getTradeOfferDto()))
-            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(acceptMove.getClass().getSimpleName()));//TradeOfferDtos are not the same
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted("current trade not accepting trade"));//TradeOfferDtos are not the same
         if (!player.resourcesSufficient(acceptMove.getTradeOfferDto().getGiveResources()))
-            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(acceptMove.getClass().getSimpleName()));
-        if(!turnOrder.get(0).resourcesSufficient(negateAllValues(acceptMove.getTradeOfferDto().getGetResources())))
-            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(acceptMove.getClass().getSimpleName()));//trader does not have enough resources
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted("the REAL resources sufficient"));
+        if(!activePlayer.resourcesSufficient(negateAllValues(acceptMove.getTradeOfferDto().getGetResources())))
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted("receiving player resources"));//trader does not have enough resources
         computeAcceptMove(acceptMove.getTradeOfferDto(), player);
     }
     private void computeAcceptMove(TradeOfferDto tradeOffer, Player player){//more
-        turnOrder.get(0).adjustResources(negateAllValues(tradeOffer.getGetResources()));
-        turnOrder.get(0).adjustResources(negateAllValues(tradeOffer.getGiveResources()));
+        activePlayer.adjustResources(negateAllValues(tradeOffer.getGetResources()));
+        activePlayer.adjustResources(negateAllValues(tradeOffer.getGiveResources()));
         player.adjustResources(tradeOffer.getGiveResources());
         player.adjustResources(tradeOffer.getGetResources());
         this.currentTrade=null;
@@ -195,7 +195,7 @@ public class GameLogicController {
 
     private void makeTradeMove(TradeMoveDto tradeMove, Player player){
         //if (isSetupPhase) throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_ROLL_IN_SETUP);
-        if (turnOrder.get(0) != player)
+        if (activePlayer != player)
             throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
         if(tradeMove.getToPlayer().length != players.size()-1)
             throw new NotActivePlayerException(ErrorCode.ERROR_INVALID_CONFIGURATION);
@@ -232,7 +232,7 @@ public class GameLogicController {
         //send new GameProgressDto? but with what content?
     }
     private void computeTradeMove(TradeMoveDto tradeMove, Player player){
-        this.currentTrade = new TradeOfferDto(negateAllValues(tradeMove.getGetResources()), negateAllValues(tradeMove.getGiveResources()), player.getInGameID());
+        this.currentTrade = new TradeOfferDto(negateAllValues(tradeMove.getGetResources()), negateAllValues(tradeMove.getGiveResources()), player.toInGamePlayerDto());
         for(int i=0;i<tradeMove.getToPlayer().length;i++){
             int playerID = tradeMove.getToPlayer()[i];
             if(playerID!=-1){
@@ -591,14 +591,16 @@ public class GameLogicController {
             lastCheatingPlayer = null;
         }
         if(isSetupPhase){
-            turnOrder.remove(p); //will never become active again.
-
+            //turnOrder.remove(p); //will never become active again.
             boolean forceNextPlayer = activePlayer == p;
             while(true){
                 if(!setupPhaseTurnOrder.remove(p)) break;
             }
-            if(forceNextPlayer)
+            if(forceNextPlayer) {
+                lastCheatingPlayer = null;
+                currentTrade = null;
                 genericNextTurn();
+            }
         }
         sendCurrentGameStateToPlayers();
         messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(activePlayer.toInGamePlayerDto())));

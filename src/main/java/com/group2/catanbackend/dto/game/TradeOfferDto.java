@@ -9,16 +9,16 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class TradeOfferDto extends MessageDto{
-    public TradeOfferDto(int[] tradeMove_getResources, int[] tradeMove_giveResources, int playerID) {
+    public TradeOfferDto(int[] tradeMove_getResources, int[] tradeMove_giveResources, IngamePlayerDto fromPlayer) {
         this.getResources=tradeMove_giveResources;
         this.giveResources=tradeMove_getResources;
-        this.playerID = playerID;
+        this.fromPlayer = fromPlayer;
         this.setEventType(MessageType.PLAYER_NOTIFY);
     }
     //order swapped!!!
     private int[] getResources;
     private int[] giveResources;
-    private int playerID;
+    private IngamePlayerDto fromPlayer;
 
 
     public boolean equals(TradeOfferDto compare){
@@ -34,6 +34,6 @@ public class TradeOfferDto extends MessageDto{
         }
         if(this.getEventType().equals(compare.getEventType()))
             return false;
-        return this.getPlayerID() == compare.getPlayerID();
+        return this.fromPlayer.getInGameID() == compare.fromPlayer.getInGameID();
     }
 }
