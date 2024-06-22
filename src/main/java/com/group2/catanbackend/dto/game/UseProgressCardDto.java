@@ -12,13 +12,15 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class UseProgressCardDto extends GameMoveDto {
-    public UseProgressCardDto(ProgressCardType progressCardType, List<ResourceDistribution> chosenResources, ResourceDistribution monopolyResource){
+    public UseProgressCardDto(ProgressCardType progressCardType, List<ResourceDistribution> chosenResources, ResourceDistribution monopolyResource, int hexagonID){
         this.progressCardType = progressCardType;
         this.chosenResources = chosenResources;
         this.monopolyResource = monopolyResource;
+        this.hexagonID = hexagonID;
         this.setEventType(GameMoveType.USEPROGRESSCARD);
     }
     private ProgressCardType progressCardType;
     private List<ResourceDistribution> chosenResources;
     private ResourceDistribution monopolyResource;
+    private int hexagonID;
 }

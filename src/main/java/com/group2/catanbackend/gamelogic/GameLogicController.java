@@ -190,7 +190,8 @@ public class GameLogicController {
             case ROAD_BUILDING -> computeRoadBuildingCardMove(player);
             case MONOPOLY -> computeMonopolyCardMove(useProgressCardDto, player);
             case VICTORY_POINT -> computeVictoryPointCardMove(player);
-            case KNIGHT -> throw new NotImplementedException("Night Move not implemented yet"); //TODO: Implement
+            case KNIGHT -> computeKnightCardMove(useProgressCardDto, player);
+            default -> throw new InvalidGameMoveException("Progress Card type not acceptable");
         }
     }
 
@@ -247,6 +248,11 @@ public class GameLogicController {
             messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
         }
         sendCurrentGameStateToPlayers();
+    }
+
+    private void computeKnightCardMove(UseProgressCardDto useProgressCardDto, Player player) {
+        MoveRobberDto moveRobberDto = new MoveRobberDto(useProgressCardDto.getHexagonID(), true);
+        makeRobberMove(moveRobberDto, player);
     }
 
     private void computeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
