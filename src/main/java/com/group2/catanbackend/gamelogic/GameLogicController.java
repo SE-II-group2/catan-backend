@@ -168,11 +168,12 @@ public class GameLogicController {
         }
         return false;
     }
+    //TODO: error messages @daniel
     private void makeAcceptMove(AcceptMoveDto acceptMove, Player player){
         if(isSetupPhase)
-            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(activePlayer.getDisplayName()));
         if(currentTrade==null)//trade is gone
-            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted("current trade(forced)"));
+            throw new InvalidGameMoveException(ErrorCode.ERROR_TRADE_NOT_AVAILABLE);
         if(activePlayer.getInGameID()!=acceptMove.getTradeOfferDto().getFromPlayer().getInGameID())
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted("active player"));
         if(!currentTrade.equals(acceptMove.getTradeOfferDto()))
@@ -193,10 +194,11 @@ public class GameLogicController {
         //send new GameProgressDto? but with what content?
     }
 
+    //TODO: rethink checks. I did not until now
     private void makeTradeMove(TradeMoveDto tradeMove, Player player){
         //if (isSetupPhase) throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_ROLL_IN_SETUP);
         if (activePlayer != player)
-            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(activePlayer.getDisplayName()));
         if(tradeMove.getToPlayers().size() != players.size()-1)
             throw new NotActivePlayerException(ErrorCode.ERROR_INVALID_CONFIGURATION);
         if (!player.resourcesSufficient(tradeMove.getGiveResources()))

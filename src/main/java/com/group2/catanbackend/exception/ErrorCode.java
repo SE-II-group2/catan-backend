@@ -21,4 +21,5 @@ public class ErrorCode {
     public static final String ERROR_CANT_USE_PROGRESS_CARDS_IN_SETUP = "Progress-cards can't be used during setup phase";
     public static final String ERROR_CARD_TYPE_NOT_IN_POSSESSION = "User doesnt have the progress-card type";
     public static final String ERROR_INVALID_CONFIGURATION = "Given Configuration does not fit the standard";
+    public static final String ERROR_TRADE_NOT_AVAILABLE = "This trade is not available anymore";
 }
