@@ -592,7 +592,7 @@ public class GameLogicController {
             lastCheatingPlayer = null;
         }
         if(isSetupPhase){
-            //turnOrder.remove(p); //will never become active again.
+            turnOrder.remove(p); //will never become active again.
             boolean forceNextPlayer = activePlayer == p;
             while(true){
                 if(!setupPhaseTurnOrder.remove(p)) break;
