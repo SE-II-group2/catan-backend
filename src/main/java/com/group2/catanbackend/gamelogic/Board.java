@@ -10,9 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-// fixme this class is very low-level
-//  many magic constants in arrays and operations on primitive datatypes
-//  is there a way to improve the design with oop?
 public class Board {
 
     @Getter
