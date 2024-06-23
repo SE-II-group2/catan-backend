@@ -197,7 +197,7 @@ public class GameLogicController {
         //if (isSetupPhase) throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_ROLL_IN_SETUP);
         if (activePlayer != player)
             throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(players.get(0).getDisplayName()));
-        if(tradeMove.getToPlayer().length != players.size()-1)
+        if(tradeMove.getToPlayers().size() != players.size()-1)
             throw new NotActivePlayerException(ErrorCode.ERROR_INVALID_CONFIGURATION);
         if (!player.resourcesSufficient(tradeMove.getGiveResources()))
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(tradeMove.getClass().getSimpleName()));
@@ -205,12 +205,12 @@ public class GameLogicController {
         if(tradeMove.getWaitTime()<1)
             throw new InvalidConfigurationException(ErrorCode.ERROR_INVALID_CONFIGURATION);
          */
-        if(tradeMove.getToPlayer().length==0||isempty(tradeMove.getToPlayer())){
+        if(tradeMove.getToPlayers().isEmpty() ||isempty(tradeMove.getToPlayers())){
             computeTradeMoveBank(tradeMove, player);
         }
         else computeTradeMove(tradeMove, player);
     }
-    private boolean isempty(int[] toPlayer){
+    private boolean isempty(List<Integer> toPlayer){
         for(int b : toPlayer){
             if(b!=-1){
                 return false;
@@ -233,8 +233,8 @@ public class GameLogicController {
     }
     private void computeTradeMove(TradeMoveDto tradeMove, Player player){
         this.currentTrade = new TradeOfferDto(negateAllValues(tradeMove.getGetResources()), negateAllValues(tradeMove.getGiveResources()), player.toInGamePlayerDto());
-        for(int i=0;i<tradeMove.getToPlayer().length;i++){
-            int playerID = tradeMove.getToPlayer()[i];
+        for(int i = 0; i<tradeMove.getToPlayers().size(); i++){
+            int playerID = tradeMove.getToPlayers().get(i);
             if(playerID!=-1){
                 String toToken = findPlayerToken(playerID);
                 if(toToken==null)//no Token found
