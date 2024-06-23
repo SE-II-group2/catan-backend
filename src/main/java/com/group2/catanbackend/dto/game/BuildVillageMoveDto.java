@@ -13,6 +13,6 @@ public class BuildVillageMoveDto extends GameMoveDto {
         this.intersectionID = intersectionID;
         this.setEventType(GameMoveType.BUILDVILLAGEMOVE);
     }
-    public int intersectionID;
+    private int intersectionID;
 }
 

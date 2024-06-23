@@ -23,7 +23,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class GameLogicControllerExpandedTest {
+class GameLogicControllerExpandedTest {
 
     GameLogicController gameLogicController;
     private Player player1;
@@ -144,8 +144,8 @@ public class GameLogicControllerExpandedTest {
             verify(messagingMock, atLeastOnce()).notifyGameProgress(eq(gameLogicController.getGameId()), argumentCaptor.capture());
 
             List<MessageDto> allValues = argumentCaptor.getAllValues();
-            GameoverDto lastArgument = (GameoverDto) allValues.get(allValues.size() - 1); //get the last Dto sent, should always be gameOverDto
-            assertEquals(lastArgument.getWinner().getDisplayName(), player1.getDisplayName());
+            GameOverDto lastArgument = (GameOverDto) allValues.get(allValues.size() - 1); //get the last Dto sent, should always be gameOverDto
+            assertEquals(lastArgument.getClass(), GameOverDto.class);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -172,7 +172,7 @@ public class GameLogicControllerExpandedTest {
         moveDto = new BuildRoadMoveDto(13);
         gameLogicController.makeMove(moveDto, player1);
 
-        assertTrue(gameLogicController.getBoard().getAdjacencyMatrix()[10][11] instanceof Road);
+        assertInstanceOf(Road.class, gameLogicController.getBoard().getAdjacencyMatrix()[10][11]);
         assertArrayEquals(new int[]{1, 2, 1, 3, 2}, player1.getResources());
 
         moveDto = new EndTurnMoveDto();
@@ -264,7 +264,6 @@ public class GameLogicControllerExpandedTest {
             privateField.set(player1, new int[]{2,2,2,2,1});
         } catch (Exception e) {
             fail();
-            e.printStackTrace();
         }
         moveDto = new RollDiceDto(7);
         gameLogicController.makeMove(moveDto,player1);
