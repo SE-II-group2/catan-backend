@@ -1,31 +1,29 @@
 package com.group2.catanbackend.gamelogic;
 
-import com.group2.catanbackend.gamelogic.enums.BuildingType;
 import com.group2.catanbackend.gamelogic.enums.ResourceDistribution;
-import com.group2.catanbackend.gamelogic.objects.Building;
 import com.group2.catanbackend.model.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class PlayerUnitTests {
+class PlayerUnitTests {
 
     private Player player1;
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         player1 = new Player("player1", "player1", "1");
     }
 
     @Test
-    public void testAdjustResources() {
+    void testAdjustResources() {
         player1.adjustResources(ResourceDistribution.FOREST.getDistribution());
 
         assertArrayEquals(ResourceDistribution.FOREST.getDistribution(), player1.getResources());
     }
 
     @Test
-    public void testVictoryPoints() {
+    void testVictoryPoints() {
         player1.increaseVictoryPoints(2);
         assertEquals(2,player1.getVictoryPoints());
 
@@ -34,7 +32,7 @@ public class PlayerUnitTests {
     }
 
     @Test
-    public void testResourceSufficient() {
+    void testResourceSufficient() {
         player1.adjustResources(ResourceDistribution.FOREST.getDistribution());
 
         int[] costs1 = new int[]{0, 0, -1, 0, 0}; // -FOREST

@@ -13,14 +13,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 
-public class HexagonUnitTest {
+class HexagonUnitTest {
     private Player player1;
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         player1 = new Player("player1", "player1", "1");
     }
     @Test
-    public void testAddBuilding() {
+    void testAddBuilding() {
         Hexagon hexagon = new Hexagon(HexagonType.FOREST, ResourceDistribution.FOREST, 6, 1, false);
         Building building1 = new Building(player1, BuildingType.VILLAGE, 1);
         hexagon.addBuilding(building1);
@@ -33,7 +33,7 @@ public class HexagonUnitTest {
     private Building buildingMock;
 
     @Test
-    public void testDistributeResources() {
+    void testDistributeResources() {
         // Create a mock object for Building
 
         buildingMock = mock(Building.class);

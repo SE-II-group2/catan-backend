@@ -1,5 +1,8 @@
 package com.group2.catanbackend.gamelogic.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum ResourceDistribution {
     FIELDS(new int[]{1, 0, 0, 0, 0}),
     PASTURE(new int[]{0, 1, 0, 0, 0}),
@@ -12,10 +15,6 @@ public enum ResourceDistribution {
 
     ResourceDistribution(int[] distribution) {
         this.distribution = distribution;
-    }
-
-    public int[] getDistribution() {
-        return distribution;
     }
 
     public int getResourceIndex() {

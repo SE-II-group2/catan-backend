@@ -7,15 +7,15 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ConnectionUnitTest {
+class ConnectionUnitTest {
     private Player player1;
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         player1 = new Player("player1", "player1", "1");
     }
 
     @Test
-    public void testRoadOwner() {
+    void testRoadOwner() {
         Connection connection = new Road(player1, 1);
         assertEquals(player1, connection.getPlayer());
     }

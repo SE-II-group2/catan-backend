@@ -25,21 +25,20 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 
-public class GameLogicControllerSimpleTest {
+class GameLogicControllerSimpleTest {
 
     GameLogicController gameLogicController;
     private Player player1;
     private Player player2;
     GameMoveDto moveDto;
     private final ArrayList<Player> playersList = new ArrayList<>();
-    private final int VICTORYPOINTSFORVICTORY = 10;
     private final int[] resourcesProgressCard = {1, 1, 0, 0, 1};
 
     @Mock
     MessagingService messagingService;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         player1 = new Player("Token1", "Player One(1)", "this");
         player1.setInGameID(1);
         player1.setPlayerState(PlayerState.CONNECTED);
@@ -54,7 +53,7 @@ public class GameLogicControllerSimpleTest {
     }
 
     @Test
-    public void testAddSingleSimpleVillageAndRoad(){
+    void testAddSingleSimpleVillageAndRoad(){
         moveDto = new BuildVillageMoveDto(0);
         gameLogicController.makeMove(moveDto, player1);
 
@@ -62,15 +61,15 @@ public class GameLogicControllerSimpleTest {
         gameLogicController.makeMove(moveDto, player1);
         Board board = gameLogicController.getBoard();
 
-        assertTrue(board.getAdjacencyMatrix()[0][1] instanceof Road);
-        assertTrue(board.getIntersections()[0][2] instanceof Building);
+        assertInstanceOf(Road.class, board.getAdjacencyMatrix()[0][1]);
+        assertInstanceOf(Building.class, board.getIntersections()[0][2]);
         assertEquals(gameLogicController.getSetupPhaseTurnOrder().get(0), player2);
 
 
     }
 
     @Test
-    public void testAddTwoRoadsThrowsError(){
+    void testAddTwoRoadsThrowsError(){
         moveDto = new BuildVillageMoveDto(0);
         gameLogicController.makeMove(moveDto,player1);
         moveDto = new BuildRoadMoveDto(0);
@@ -80,7 +79,7 @@ public class GameLogicControllerSimpleTest {
     }
 
     @Test
-    public void testFullSetUpPhase(){
+    void testFullSetUpPhase(){
         moveDto = new BuildVillageMoveDto(0);
         gameLogicController.makeMove(moveDto, player1);
         moveDto = new BuildRoadMoveDto(0);
@@ -117,7 +116,7 @@ public class GameLogicControllerSimpleTest {
     }
 
     @Test
-    public void testTurnOrderSetupPhaseExceptionThrow(){
+    void testTurnOrderSetupPhaseExceptionThrow(){
         moveDto = new BuildVillageMoveDto(0);
         gameLogicController.makeMove(moveDto, player1);
 
@@ -135,7 +134,7 @@ public class GameLogicControllerSimpleTest {
     }
 
     @Test
-    public void testRollDiceDuringSetupPhase() {
+    void testRollDiceDuringSetupPhase() {
         moveDto = new RollDiceDto(7);
         assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(moveDto, player1));
     }
@@ -357,7 +356,7 @@ public class GameLogicControllerSimpleTest {
 
 
     @Test
-    public void testYearOfPlentyCard(){
+    void testYearOfPlentyCard(){
         player1.addProgressCard(ProgressCardType.YEAR_OF_PLENTY);
         player1.adjustResources(resourcesProgressCard);
         List<ResourceDistribution> chosenResources = Arrays.asList(ResourceDistribution.FIELDS, ResourceDistribution.FOREST);
@@ -368,7 +367,7 @@ public class GameLogicControllerSimpleTest {
     }
 
     @Test
-    public void testMonopolyCard(){
+    void testMonopolyCard(){
         player1.addProgressCard(ProgressCardType.MONOPOLY);
         player1.adjustResources(resourcesProgressCard);
         UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.MONOPOLY, null, ResourceDistribution.FIELDS, 0);
@@ -381,7 +380,7 @@ public class GameLogicControllerSimpleTest {
     }
 
     @Test
-    public void testRoadBuildingCard(){
+    void testRoadBuildingCard(){
        player1.addProgressCard(ProgressCardType.ROAD_BUILDING);
        player1.adjustResources(resourcesProgressCard);
        UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.ROAD_BUILDING, null, null, 0);
@@ -391,18 +390,19 @@ public class GameLogicControllerSimpleTest {
     }
 
     @Test
-    public void testVictoryPointCardWon(){
+    void testVictoryPointCardWon(){
         player1.increaseVictoryPoints(9);
         player1.addProgressCard(ProgressCardType.VICTORY_POINT);
         UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.VICTORY_POINT, null, null, 0);
         gameLogicController.setSetupPhase(false);
         gameLogicController.makeMove(useProgressCardDto, player1);
-        assertEquals(VICTORYPOINTSFORVICTORY, player1.getVictoryPoints());
+        int VICTORY_POINTS_FOR_VICTORY = 10;
+        assertEquals(VICTORY_POINTS_FOR_VICTORY, player1.getVictoryPoints());
         assertTrue(gameLogicController.isGameover());
-        verify(messagingService).notifyGameProgress(anyString(), any(GameoverDto.class));
+        verify(messagingService).notifyGameProgress(anyString(), any(GameOverDto.class));
     }
     @Test
-    public void testVictoryPointCardNotWon(){
+    void testVictoryPointCardNotWon(){
         player1.addProgressCard(ProgressCardType.VICTORY_POINT);
         UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.VICTORY_POINT, null, null, 0);
         gameLogicController.setSetupPhase(false);
@@ -410,7 +410,7 @@ public class GameLogicControllerSimpleTest {
         assertEquals(1, player1.getVictoryPoints());
     }
     @Test
-    public void testKnightCard(){
+    void testKnightCard(){
         int hexagonID = 1;
         player1.addProgressCard(ProgressCardType.KNIGHT);
         UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.KNIGHT, null, null, hexagonID);
@@ -419,14 +419,14 @@ public class GameLogicControllerSimpleTest {
         assertTrue(gameLogicController.getBoard().getHexagonList().get(hexagonID).isHasRobber());
     }
     @Test
-    public void testUseProgressCardsNotInPossession(){
+    void testUseProgressCardsNotInPossession(){
         UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.YEAR_OF_PLENTY, null, null, 0);
         gameLogicController.setSetupPhase(false);
         assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(useProgressCardDto, player1));
     }
 
     @Test
-    public void testUseProgressCardDuringSetupPhase() {
+    void testUseProgressCardDuringSetupPhase() {
         player1.addProgressCard(ProgressCardType.YEAR_OF_PLENTY);
         UseProgressCardDto useProgressCardDto = new UseProgressCardDto(ProgressCardType.YEAR_OF_PLENTY, null, null, 0);
         gameLogicController.setSetupPhase(true);
@@ -434,7 +434,7 @@ public class GameLogicControllerSimpleTest {
     }
 
     @Test
-    public void testBuyProgressCard(){
+    void testBuyProgressCard(){
         BuyProgressCardDto buyProgressCardDto = new BuyProgressCardDto();
         player1.adjustResources(resourcesProgressCard);
         gameLogicController.setSetupPhase(false);
@@ -443,14 +443,14 @@ public class GameLogicControllerSimpleTest {
     }
 
     @Test
-    public void testBuyProgressCardResourceNotSufficient(){
+    void testBuyProgressCardResourceNotSufficient(){
         BuyProgressCardDto buyProgressCardDto = new BuyProgressCardDto();
         gameLogicController.setSetupPhase(false);
         assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(buyProgressCardDto, player1));
     }
 
     @Test
-    public void testResourceIndexesValidHexagons(){
+    void testResourceIndexesValidHexagons(){
         assertEquals(0, ResourceDistribution.FIELDS.getResourceIndex());
         assertEquals(1, ResourceDistribution.PASTURE.getResourceIndex());
         assertEquals(2, ResourceDistribution.FOREST.getResourceIndex());
@@ -459,7 +459,7 @@ public class GameLogicControllerSimpleTest {
     }
 
     @Test
-    public void testResourceIndexInvalidHexagons(){
+    void testResourceIndexInvalidHexagons(){
         IllegalStateException thrown = assertThrows(
                 IllegalStateException.class,
                 ResourceDistribution.DESERT::getResourceIndex,
@@ -470,7 +470,7 @@ public class GameLogicControllerSimpleTest {
     }
 
     @Test
-    public void testBuyProgressCardDuringSetupPhaseThrowsException() {
+    void testBuyProgressCardDuringSetupPhaseThrowsException() {
         BuyProgressCardDto buyProgressCardDto = new BuyProgressCardDto();
         gameLogicController.setSetupPhase(true);
         assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(buyProgressCardDto, player1));

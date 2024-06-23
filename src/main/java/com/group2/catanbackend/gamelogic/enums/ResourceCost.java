@@ -1,5 +1,8 @@
 package com.group2.catanbackend.gamelogic.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum ResourceCost {
     VILLAGE(new int[]{-1, -1, -1, -1, 0}), // Requires 1 of each resource except Mountain
     CITY(new int[]{-2, 0, 0, 0, -3}), // Requires 3 Mountain and 2 Fields
@@ -12,8 +15,5 @@ public enum ResourceCost {
         this.cost = cost;
     }
 
-    public int[] getCost() {
-        return cost;
-    }
 }
 
