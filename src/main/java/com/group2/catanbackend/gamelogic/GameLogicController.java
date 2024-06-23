@@ -245,7 +245,7 @@ public class GameLogicController {
         player.increaseVictoryPoints(1);
         if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
             gameover = true;
-            messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
+            messagingService.notifyGameProgress(gameId, new GameOverDto());
         }
         sendCurrentGameStateToPlayers();
     }
@@ -289,7 +289,7 @@ public class GameLogicController {
 
         if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
             gameover = true;
-            messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
+            messagingService.notifyGameProgress(gameId, new GameOverDto());
         }
     }
 
@@ -307,7 +307,7 @@ public class GameLogicController {
 
         if (player.getVictoryPoints() >= VICTORYPOINTSFORVICTORY) {
             gameover = true;
-            messagingService.notifyGameProgress(gameId, new GameoverDto(player.toInGamePlayerDto()));
+            messagingService.notifyGameProgress(gameId, new GameOverDto());
         }
     }
 
@@ -479,7 +479,7 @@ public class GameLogicController {
     public void handleDisconnect(Player p){
         if(!atLeastOneConnected()){
             gameover = true;
-            messagingService.notifyGameProgress(gameId, new GameoverDto(null));
+            messagingService.notifyGameProgress(gameId, new GameOverDto());
             return;
         }
 

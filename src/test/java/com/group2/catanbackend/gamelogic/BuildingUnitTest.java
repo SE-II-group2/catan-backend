@@ -8,15 +8,15 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class BuildingUnitTest {
+class BuildingUnitTest {
     private Player player1;
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         player1 = new Player("player1", "player1", "1");
     }
 
     @Test
-    public void testBuildingPlayerID() {
+    void testBuildingPlayerID() {
         Building building1 = new Building(player1, BuildingType.VILLAGE, 1);
         Building building2 = new Building(player1, BuildingType.CITY, 2);
 

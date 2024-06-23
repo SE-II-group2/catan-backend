@@ -140,11 +140,7 @@ public class Board {
         int row = intersectionCoordinates[0];
         int col = intersectionCoordinates[1];
 
-        if (intersections[row][col].getType() == BuildingType.VILLAGE && intersections[row][col].getPlayer() == player) {
-            return true;
-        }
-
-        return false;
+        return intersections[row][col].getType() == BuildingType.VILLAGE && intersections[row][col].getPlayer() == player;
     }
 
     public void removeBuildingFromSurroundingHexagons(int intersection, Building building) {

@@ -6,20 +6,14 @@ import com.group2.catanbackend.model.Player;
 import lombok.Getter;
 import lombok.Setter;
 
+@Getter
 public class Hexagon {
-    @Getter
     private final int id;
-    @Getter
     private final HexagonType hexagonType;
-    @Getter
     private final ResourceDistribution distribution;
-    @Getter
     private final int rollValue;
-    @Getter
     private final Building[] buildings;
-    @Getter
     private int numOfAdjacentBuildings = 0;
-    @Getter
     @Setter
     private boolean hasRobber = false;
     public Hexagon(HexagonType type, ResourceDistribution distribution, int rollValue, int id, boolean hasRobber) {

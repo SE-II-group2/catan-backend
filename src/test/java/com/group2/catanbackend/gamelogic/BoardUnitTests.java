@@ -15,31 +15,30 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class BoardUnitTests {
+class BoardUnitTests {
 
     private Board board;
     private Player player1;
-    private Player player2;
 
     @Mock
     private Building buildingMock;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         player1 = new Player("Token1", "Player One(1)", "this");
-        player2 = new Player("Token2", "Player Two(2)", "this");
+        Player player2 = new Player("Token2", "Player Two(2)", "this");
         board = new Board();
         buildingMock = mock(Building.class); // Create a mock object for Building
     }
 
     @Test
-    public void testGenerateHexagonsSize() {
+    void testGenerateHexagonsSize() {
         assertNotNull(board.getHexagonList());
         assertEquals(19, board.getHexagonList().size()); // Check if 19 hexagons are generated
     }
 
     @Test
-    public void testGenerateHexagonsDistribution() {
+    void testGenerateHexagonsDistribution() {
         List<HexagonType> locationsWanted = new ArrayList<>();
         List<Integer> valuesWanted = new ArrayList<>();
 
@@ -66,7 +65,7 @@ public class BoardUnitTests {
     }
 
     @Test
-    public void testGenerateHexagonsDesertTileCorrectness() {
+    void testGenerateHexagonsDesertTileCorrectness() {
         boolean hasDesertTile = false;
         for (Hexagon hexagon : board.getHexagonList()) {
             if (hexagon.getHexagonType().equals(HexagonType.DESERT)) {
@@ -79,7 +78,7 @@ public class BoardUnitTests {
     }
 
     @Test
-    public void testDistributeResourcesByDiceRoll() {
+    void testDistributeResourcesByDiceRoll() {
         for (Hexagon hexagon : board.getHexagonList()) {
             hexagon.addBuilding(buildingMock);
         }
@@ -89,7 +88,7 @@ public class BoardUnitTests {
     }
 
     @Test
-    public void testAddVillageNormalCase() {
+    void testAddVillageNormalCase() {
         board.addNewRoad(player1,14);
         board.addNewRoad(player1,28);
         board.addNewRoad(player1,29);
@@ -114,7 +113,7 @@ public class BoardUnitTests {
     }
 
     @Test
-    public void testAddVillageEdgeOfBoard() {
+    void testAddVillageEdgeOfBoard() {
         board.addNewRoad(player1,18);
         board.addNewRoad(player1,23);
 
@@ -127,7 +126,7 @@ public class BoardUnitTests {
     }
 
     @Test
-    public void testAddVillageSetupUpPhase(){
+    void testAddVillageSetupUpPhase(){
         assertTrue(board.addNewVillage(player1, 16));
         assertTrue(board.addNewRoad(player1,23));
 
@@ -139,7 +138,7 @@ public class BoardUnitTests {
     }
 
     @Test
-    public void testAddCityToVillage() {
+    void testAddCityToVillage() {
         board.addNewVillage(player1,19);
         board.addNewRoad(player1,26);
         board.addNewRoad(player1,27);
@@ -154,7 +153,7 @@ public class BoardUnitTests {
     }
 
     @Test
-    public void testAddCityNormalCase() {
+    void testAddCityNormalCase() {
         board.addNewRoad(player1,14);
         board.addNewRoad(player1,28);
         board.addNewRoad(player1,29);
@@ -173,14 +172,14 @@ public class BoardUnitTests {
     }
 
     @Test
-    public void testAddRoad() {
+    void testAddRoad() {
         board.addNewVillage(player1,0);
         assertTrue(board.addNewRoad(player1, 0));
         assertTrue(board.getAdjacencyMatrix()[1][2].isNextToOwnRoad(board,player1,1));
     }
 
     @Test
-    public void testAddRoadInvalidPlacement(){
+    void testAddRoadInvalidPlacement(){
         board.addNewVillage(player1,0);
         assertTrue(board.addNewRoad(player1, 0));
         assertFalse(board.addNewRoad(player1, 0));
@@ -192,7 +191,7 @@ public class BoardUnitTests {
     }
 
     @Test
-    public void testAddVillageNextToVillage(){
+    void testAddVillageNextToVillage(){
         board.addNewRoad(player1,0);
         board.addNewRoad(player1,6);
         board.addNewRoad(player1,1);
