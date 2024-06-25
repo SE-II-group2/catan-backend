@@ -71,7 +71,7 @@ class GameLogicControllerExpandedTest {
         gameLogicController.makeMove(moveDto, player1);
 
         assertArrayEquals(new int[]{1, 2, 2, 4, 2}, player1.getResources());
-        assertArrayEquals(new int[]{1, 1, 3, 2, 0}, player2.getResources());
+        assertArrayEquals(new int[]{1, 1, 2, 2, 0}, player2.getResources());
     }
 
     @Test
@@ -187,7 +187,7 @@ class GameLogicControllerExpandedTest {
         gameLogicController.makeMove(moveDto, player1);
 
         assertArrayEquals(new int[]{2, 2, 2, 4, 2}, player1.getResources());
-        assertArrayEquals(new int[]{1, 1, 3, 2, 0}, player2.getResources());
+        assertArrayEquals(new int[]{1, 1, 2, 2, 0}, player2.getResources());
 
         moveDto = new BuildVillageMoveDto(11);
         gameLogicController.makeMove(moveDto, player1);
@@ -278,9 +278,9 @@ class GameLogicControllerExpandedTest {
         moveDto = new RollDiceDto(7);
         gameLogicController.makeMove(moveDto,player1);
         int totalResources=0;
-        //Player 2 should have exactly 7 resources from the setup phase, so nothing should be reduced
+        //Player 2 should have exactly 6 resources from the setup phase, so nothing should be reduced
         for(Integer i : player2.getResources())totalResources+=i;
-        assertEquals(7, totalResources);
+        assertEquals(6, totalResources);
     }
 
     @Test
@@ -304,9 +304,9 @@ class GameLogicControllerExpandedTest {
         gameLogicController.makeMove(moveDto, player1);
 
         int totalResources=0;
-        //Player 2 should have exactly 7 resources from the setup phase, so nothing should be reduced
+        //Player 2 should have exactly 6 resources from the setup phase, so nothing should be reduced
         for(Integer i : player2.getResources())totalResources+=i;
-        assertEquals(7, totalResources);
+        assertEquals(6, totalResources);
     }
 
     @Test
