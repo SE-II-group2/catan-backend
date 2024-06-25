@@ -184,7 +184,7 @@ public class GameLogicController {
             throw new InvalidGameMoveException(ErrorCode.ERROR_TRADE_NOT_AVAILABLE);
         if(activePlayer.getInGameID()!=acceptMove.getTradeOfferDto().getFromPlayer().getInGameID())
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted("active player"));
-        if(!currentTrade.equals(acceptMove.getTradeOfferDto()))
+        if(!currentTrade.sameAs(acceptMove.getTradeOfferDto()))
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted("current trade not accepting trade"));//TradeOfferDtos are not the same
         if (!player.resourcesSufficient(acceptMove.getTradeOfferDto().getGiveResources()))
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted("the REAL resources sufficient"));

@@ -186,64 +186,69 @@ class GameLogicControllerSimpleTest {
     @Test
     void testDisconnectInSetupPhaseMakesPlayerNeverToBecomeActiveAgain_playerOnTurn(){
         //no exception should be thrown.
-        player1.setPlayerState(PlayerState.DISCONNECTED);
-        gameLogicController.handleDisconnect(player1);
+        assertDoesNotThrow(() -> {
+            player1.setPlayerState(PlayerState.DISCONNECTED);
+            gameLogicController.handleDisconnect(player1);
 
-        moveDto = new BuildVillageMoveDto(0);
-        gameLogicController.makeMove(moveDto, player2);
-        moveDto = new BuildRoadMoveDto(0);
-        gameLogicController.makeMove(moveDto, player2);
+            moveDto = new BuildVillageMoveDto(0);
+            gameLogicController.makeMove(moveDto, player2);
+            moveDto = new BuildRoadMoveDto(0);
+            gameLogicController.makeMove(moveDto, player2);
 
-        moveDto = new BuildVillageMoveDto(12);
-        gameLogicController.makeMove(moveDto, player2);
-        moveDto = new BuildRoadMoveDto(8);
-        gameLogicController.makeMove(moveDto, player2);
+            moveDto = new BuildVillageMoveDto(12);
+            gameLogicController.makeMove(moveDto, player2);
+            moveDto = new BuildRoadMoveDto(8);
+            gameLogicController.makeMove(moveDto, player2);
 
-        moveDto = new RollDiceDto(4);
-        gameLogicController.makeMove(moveDto, player2);
+            moveDto = new RollDiceDto(4);
+            gameLogicController.makeMove(moveDto, player2);
 
-        moveDto = new EndTurnMoveDto();
-        gameLogicController.makeMove(moveDto, player2);
+            moveDto = new EndTurnMoveDto();
+            gameLogicController.makeMove(moveDto, player2);
 
-        moveDto = new RollDiceDto(4);
-        gameLogicController.makeMove(moveDto, player2);
+            moveDto = new RollDiceDto(4);
+            gameLogicController.makeMove(moveDto, player2);
 
-        moveDto = new EndTurnMoveDto();
-        gameLogicController.makeMove(moveDto, player2);
+            moveDto = new EndTurnMoveDto();
+            gameLogicController.makeMove(moveDto, player2);
+        });
     }
     @Test
     void testDisconnectInSetupPhaseMakesPlayerNeverToBecomeActiveAgain_playerNotOnTurn(){
         //no exception should be thrown.
-        moveDto = new BuildVillageMoveDto(1);
-        gameLogicController.makeMove(moveDto, player1);
-        moveDto = new BuildRoadMoveDto(0);
+        assertDoesNotThrow(()-> {
+            ;
+            moveDto = new BuildVillageMoveDto(1);
+            gameLogicController.makeMove(moveDto, player1);
+            moveDto = new BuildRoadMoveDto(0);
 
-        player1.setPlayerState(PlayerState.DISCONNECTED);
-        gameLogicController.handleDisconnect(player1);
+            player1.setPlayerState(PlayerState.DISCONNECTED);
+            gameLogicController.handleDisconnect(player1);
 
-        moveDto = new BuildVillageMoveDto(3);
-        gameLogicController.makeMove(moveDto, player2);
-        moveDto = new BuildRoadMoveDto(3);
-        gameLogicController.makeMove(moveDto, player2);
+            moveDto = new BuildVillageMoveDto(3);
+            gameLogicController.makeMove(moveDto, player2);
+            moveDto = new BuildRoadMoveDto(3);
+            gameLogicController.makeMove(moveDto, player2);
 
-        moveDto = new BuildVillageMoveDto(12);
-        gameLogicController.makeMove(moveDto, player2);
-        moveDto = new BuildRoadMoveDto(8);
-        gameLogicController.makeMove(moveDto, player2);
+            moveDto = new BuildVillageMoveDto(12);
+            gameLogicController.makeMove(moveDto, player2);
+            moveDto = new BuildRoadMoveDto(8);
+            gameLogicController.makeMove(moveDto, player2);
 
-        moveDto = new RollDiceDto(4);
-        gameLogicController.makeMove(moveDto, player2);
+            moveDto = new RollDiceDto(4);
+            gameLogicController.makeMove(moveDto, player2);
 
-        player1.setPlayerState(PlayerState.CONNECTED);
+            player1.setPlayerState(PlayerState.CONNECTED);
 
-        moveDto = new EndTurnMoveDto();
-        gameLogicController.makeMove(moveDto, player2);
+            moveDto = new EndTurnMoveDto();
+            gameLogicController.makeMove(moveDto, player2);
 
-        moveDto = new RollDiceDto(4);
-        gameLogicController.makeMove(moveDto, player2);
+            moveDto = new RollDiceDto(4);
+            gameLogicController.makeMove(moveDto, player2);
 
-        moveDto = new EndTurnMoveDto();
-        gameLogicController.makeMove(moveDto, player2);
+            moveDto = new EndTurnMoveDto();
+            gameLogicController.makeMove(moveDto, player2);
+        });
     }
 
     @Test

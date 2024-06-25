@@ -7,6 +7,7 @@ package com.group2.catanbackend.dto.game;
  */
 
 public class MessageType {
+  private MessageType(){}
   public static final String PLAYERS_CHANGED = "PLAYERS_CHANGED";
   public static final String GAME_STARTED = "GAME_STARTED";
   public static final String GAME_MOVE_NOTIFIER="GAME_MOVE_NOTIFIER";

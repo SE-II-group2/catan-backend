@@ -21,19 +21,19 @@ public class TradeOfferDto extends MessageDto{
     private IngamePlayerDto fromPlayer;
 
 
-    public boolean equals(TradeOfferDto compare){
-        if(this.getResources.length!=compare.getResources.length||this.giveResources.length!=compare.giveResources.length)
+    public boolean sameAs(TradeOfferDto otherTradeOffer){
+        if(this.getResources.length!=otherTradeOffer.getResources.length||this.giveResources.length!=otherTradeOffer.giveResources.length)
             return false;
         for(int i=0;i<getResources.length;i++){
-            if(this.getResources[i]!=compare.getResources[i])
+            if(this.getResources[i]!=otherTradeOffer.getResources[i])
                 return false;
         }
         for(int i=0;i<giveResources.length;i++){
-            if(this.giveResources[i]!=compare.giveResources[i])
+            if(this.giveResources[i]!=otherTradeOffer.giveResources[i])
                 return false;
         }
-        if(this.getEventType().equals(compare.getEventType()))
+        if(this.getEventType().equals(otherTradeOffer.getEventType()))
             return false;
-        return this.fromPlayer.getInGameID() == compare.fromPlayer.getInGameID();
+        return this.fromPlayer.getInGameID() == otherTradeOffer.fromPlayer.getInGameID();
     }
 }

@@ -47,7 +47,7 @@ class WebSocketBrokerIntegrationTest {
     BlockingQueue<String> messages = new LinkedBlockingQueue<>();
 
     @Test
-    public void testProtocolUpgradeAllowedIfValidToken() throws Exception{
+    void testProtocolUpgradeAllowedIfValidToken() throws Exception{
         String token = UUID.randomUUID().toString();
         Player player = new Player(token, "player", "gameID");
         tokenService.pushToken(token, player);
@@ -63,7 +63,7 @@ class WebSocketBrokerIntegrationTest {
     }
 
     @Test
-    public void testProtocolUpgradeNotAllowedIfTokenInvalid(){
+    void testProtocolUpgradeNotAllowedIfTokenInvalid(){
         WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
         headers.add("authorization", "invalidToken");
 
@@ -77,7 +77,7 @@ class WebSocketBrokerIntegrationTest {
     }
 
     @Test
-    public void testProtocolUpgradeNotAllowedIfNoTokenPresent(){
+    void testProtocolUpgradeNotAllowedIfNoTokenPresent(){
         WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
         Assertions.assertThrows(Exception.class, ()-> stompClient.connectAsync(String.format(WEBSOCKET_URI, port),
                         new StompSessionHandlerAdapter() {
@@ -87,7 +87,7 @@ class WebSocketBrokerIntegrationTest {
     }
 
     @Test
-    public void testSubscriptionAllowedIfPlayerIsInGame() throws Exception{
+    void testSubscriptionAllowedIfPlayerIsInGame() throws Exception{
         String gameID = "GameID";
         String token = UUID.randomUUID().toString();
 
@@ -101,7 +101,7 @@ class WebSocketBrokerIntegrationTest {
     }
 
     @Test
-    public void testSubscriptionNotAllowedIfPlayerIsNotInGame() throws Exception{
+    void testSubscriptionNotAllowedIfPlayerIsNotInGame() throws Exception{
         String gameID = "GameID";
 
         String token = UUID.randomUUID().toString();
@@ -115,10 +115,9 @@ class WebSocketBrokerIntegrationTest {
     }
 
     @Test
-    public void testUserCanReceiveMessagesOnPrivateChannel() throws Exception{
+    void testUserCanReceiveMessagesOnPrivateChannel() throws Exception{
         String token = tokenService.generateToken();
         StompSession session = initValidSession("playerName", "gameID", token);
-        BlockingQueue<String> messages = new LinkedBlockingQueue<>();
 
         session.subscribe("/user/queue/messages/", new StompFrameHandlerClientImpl(messages));
 
@@ -129,7 +128,7 @@ class WebSocketBrokerIntegrationTest {
     }
 
     @Test
-    public void testUserACannotReadMessagesFromUserB() throws Exception{
+    void testUserACannotReadMessagesFromUserB() throws Exception{
         String tokenA = tokenService.generateToken();
         StompSession sessionA = initValidSession("userA", "gameID", tokenA);
         BlockingQueue<String> messagesA = new LinkedBlockingQueue<>();
