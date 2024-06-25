@@ -54,6 +54,10 @@ public class RunningInstanceService {
         gameLogicController = new GameLogicController(players, messagingService, gameId);
     }
 
+    public void handleReconnect(){
+        gameLogicController.handleReconnect();
+    }
+
     //Players are not removed once the game is started.
     public void playerDisconnect(Player p) {
         p.setPlayerState(PlayerState.DISCONNECTED);

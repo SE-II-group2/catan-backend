@@ -114,7 +114,10 @@ public class GameService {
         if(gameDescriptor != null){
             notifyPlayersChanged(gameDescriptor);
         }
-        //Nothing to do for running game. Player will be able to perform moves as soon as it is his turn.
+        RunningInstanceService runningGame = getRunningGames().get(p.getGameID());
+        if(runningGame != null){
+            runningGame.handleReconnect();
+        }
     }
 
     public void handleConnectionLost(String token){

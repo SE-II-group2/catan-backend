@@ -179,7 +179,7 @@ public class GameLogicController {
     //TODO: error messages @daniel
     private void makeAcceptMove(AcceptMoveDto acceptMove, Player player){
         if(isSetupPhase)
-            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(activePlayer.getDisplayName()));
+            throw new NotActivePlayerException(ErrorCode.ERROR_IS_SETUP_PHASE);
         if(currentTrade==null)//trade is gone
             throw new InvalidGameMoveException(ErrorCode.ERROR_TRADE_NOT_AVAILABLE);
         if(activePlayer.getInGameID()!=acceptMove.getTradeOfferDto().getFromPlayer().getInGameID())
@@ -222,9 +222,9 @@ public class GameLogicController {
         int countGive = -Arrays.stream(tradeMove.getGiveResources()).sum();//get positive value
         int countGet = Arrays.stream(tradeMove.getGetResources()).sum();
         if(countGive%4!=0)
-            throw new InvalidGameMoveException(ErrorCode.ERROR_INVALID_CONFIGURATION);
+            throw new InvalidGameMoveException(ErrorCode.ERROR_BANK_TRADE_RATIO);
         if(countGive/4!=countGet)
-            throw new InvalidGameMoveException(ErrorCode.ERROR_INVALID_CONFIGURATION);
+            throw new InvalidGameMoveException(ErrorCode.ERROR_BANK_TRADE_RATIO);
         // 4 to 1 trade
         player.adjustResources(tradeMove.getGiveResources());
         player.adjustResources(tradeMove.getGetResources());
@@ -594,6 +594,10 @@ public class GameLogicController {
         }
         sendCurrentGameStateToPlayers();
         messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(activePlayer.toInGamePlayerDto())));
+    }
+
+    public void handleReconnect(){
+        sendCurrentGameStateToPlayers();
     }
 
     private void throwIfSetupPhase() throws InvalidGameMoveException {
