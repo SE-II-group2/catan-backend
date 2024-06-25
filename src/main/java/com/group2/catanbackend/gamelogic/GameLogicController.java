@@ -35,7 +35,9 @@ public class GameLogicController {
     private static final int VICTORYPOINTSFORVICTORY = 10;
     @Getter
     private boolean gameover = false;
+
     private TradeOfferDto currentTrade = null;
+
     private Player lastCheatingPlayer = null;
     private int lastLegalRobberPlace = -1;
     private final Random random = new Random();
@@ -200,32 +202,22 @@ public class GameLogicController {
         //send new GameProgressDto? but with what content?
     }
 
-    //TODO: rethink checks. I did not until now
+    //TODO: rethink checks. I did not until now @daniel
     private void makeTradeMove(TradeMoveDto tradeMove, Player player){
         //if (isSetupPhase) throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_ROLL_IN_SETUP);
         if (activePlayer != player)
             throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(activePlayer.getDisplayName()));
-        if(tradeMove.getToPlayers().size() != players.size()-1)
+        if(tradeMove.getToPlayers().size() > players.size()-1)
             throw new NotActivePlayerException(ErrorCode.ERROR_INVALID_CONFIGURATION);
         if (!player.resourcesSufficient(tradeMove.getGiveResources()))
             throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(tradeMove.getClass().getSimpleName()));
-        /*
-        if(tradeMove.getWaitTime()<1)
-            throw new InvalidConfigurationException(ErrorCode.ERROR_INVALID_CONFIGURATION);
-         */
-        if(tradeMove.getToPlayers().isEmpty() ||isempty(tradeMove.getToPlayers())){
+        if(tradeMove.getToPlayers().isEmpty()){
             computeTradeMoveBank(tradeMove, player);
+        } else {
+            computeTradeMove(tradeMove, player);
         }
-        else computeTradeMove(tradeMove, player);
     }
-    private boolean isempty(List<Integer> toPlayer){
-        for(int b : toPlayer){
-            if(b!=-1){
-                return false;
-            }
-        }
-        return true;
-    }
+
     private void computeTradeMoveBank(TradeMoveDto tradeMove, Player player){
         int countGive = -Arrays.stream(tradeMove.getGiveResources()).sum();//get positive value
         int countGet = Arrays.stream(tradeMove.getGetResources()).sum();
@@ -243,12 +235,9 @@ public class GameLogicController {
         this.currentTrade = new TradeOfferDto(negateAllValues(tradeMove.getGetResources()), negateAllValues(tradeMove.getGiveResources()), player.toInGamePlayerDto());
         for(int i = 0; i<tradeMove.getToPlayers().size(); i++){
             int playerID = tradeMove.getToPlayers().get(i);
-            if(playerID!=-1){
-                String toToken = findPlayerToken(playerID);
-                if(toToken==null)//no Token found
-                    throw new InvalidGameMoveException(ErrorCode.ERROR_INVALID_CONFIGURATION);
-                // check if player has enough resources to even accept
-                messagingService.notifyUser(toToken, currentTrade);
+            Player toPlayer = getPlayerByID(playerID);
+            if(toPlayer!=null){
+                messagingService.notifyPlayer(toPlayer, currentTrade);
             }
         }
     }
@@ -259,10 +248,10 @@ public class GameLogicController {
         }
         return result;
     }
-    private String findPlayerToken(int playerID){
+    private Player getPlayerByID(int playerID){
         for(Player p : players){
             if(p.getInGameID()==playerID){
-                return p.getToken();
+                return p;
             }
         }
         return null;
