@@ -2,6 +2,7 @@ package com.group2.catanbackend.service;
 
 import com.group2.catanbackend.config.Constants;
 import com.group2.catanbackend.dto.game.MessageDto;
+import com.group2.catanbackend.model.Player;
 import org.springframework.context.annotation.Scope;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -28,5 +29,9 @@ public class MessagingService {
     public void notifyUser(String token, MessageDto payload){
         final String destination = Constants.QUEUE_USER_MESSAGE;
         messagingTemplate.convertAndSendToUser(token, destination, payload);
+    }
+    public void notifyPlayer(Player p, MessageDto payload){
+        final String token = p.getToken();
+        notifyUser(token, payload);
     }
 }

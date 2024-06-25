@@ -17,13 +17,11 @@ public class GameDescriptor {
     private final String id;
     @Getter
     private Player admin;
-    private final Date createdAt;
     private final boolean[] availableIDs = new boolean[Constants.MAX_PLAYER_COUNT];
 
     public GameDescriptor(){
         this.players = new LinkedList<>();
         this.id = UUID.randomUUID().toString().substring(0,7);
-        this.createdAt = new Date();
         availableIDs[0] = false;
         Arrays.fill(availableIDs, true);
     }

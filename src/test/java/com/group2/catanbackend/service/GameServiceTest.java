@@ -92,13 +92,14 @@ class GameServiceTest {
     void startGameNotAuthorized() {
         Mockito.when(tokenService.generateToken()).thenReturn("myToken1");
         JoinResponseDto response1 = gameService.createAndJoin(new CreateRequestDto("Player1"));
-        //Mockito.when(tokenService.getPlayerByToken(response1.getToken())).thenReturn(new Player(response1.getToken(), response1.getPlayerName(), response1.getGameID()));
 
         Mockito.when(tokenService.generateToken()).thenReturn("myToken2");
         JoinResponseDto response2 = gameService.joinGame(new JoinRequestDto("Player2", response1.getGameID()));
         Mockito.when(tokenService.getPlayerByToken(response2.getToken())).thenReturn(new Player(response2.getToken(), response2.getPlayerName(), response2.getGameID()));
 
-        assertThrows(NotAuthorizedException.class, () -> {gameService.startGame(response2.getToken());});
+        String token = response2.getToken();
+
+        assertThrows(NotAuthorizedException.class, () -> {gameService.startGame(token);});
     }
 
     @Test

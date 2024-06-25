@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.*;
 
-// fixme oop (see GameMoveDto)
 /**
  * Defines the Basic Structure of a Stomp Message to the client
  */
@@ -18,6 +17,7 @@ import lombok.*;
         @JsonSubTypes.Type(value = GameStartedDto.class, name = MessageType.GAME_STARTED),
         @JsonSubTypes.Type(value = CurrentGameStateDto.class, name = MessageType.GAME_OBJECT),
         @JsonSubTypes.Type(value = GameProgressDto.class, name = MessageType.GAME_MOVE_NOTIFIER),
+        @JsonSubTypes.Type(value = TradeOfferDto.class, name = MessageType.PLAYER_NOTIFY),
         @JsonSubTypes.Type(value = GameOverDto.class, name = MessageType.GAME_OVER)
 })
 @Getter

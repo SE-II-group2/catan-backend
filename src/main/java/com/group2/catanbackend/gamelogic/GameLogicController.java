@@ -35,6 +35,9 @@ public class GameLogicController {
     private static final int VICTORYPOINTSFORVICTORY = 10;
     @Getter
     private boolean gameover = false;
+
+    private TradeOfferDto currentTrade = null;
+
     private Player lastCheatingPlayer = null;
     private int lastLegalRobberPlace = -1;
     private final Random random = new Random();
@@ -92,6 +95,7 @@ public class GameLogicController {
                 throwIfSetupPhase();
                 genericNextTurn();
                 lastCheatingPlayer = null;
+                currentTrade = null;
                 sendCurrentGameStateToPlayers();
                 messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(activePlayer.toInGamePlayerDto())));
             }
@@ -112,6 +116,15 @@ public class GameLogicController {
                 makeRobberMove((MoveRobberDto) gameMove, player);
             }
             case "AccuseCheatingDto" -> makeAccuseCheatingMove((AccuseCheatingDto) gameMove, player);
+
+            case "TradeMoveDto" -> {
+                TradeMoveDto tradeMove = (TradeMoveDto) gameMove;
+                makeTradeMove(tradeMove, player);
+            }
+            case "AcceptMoveDto" -> {
+                AcceptMoveDto acceptMove = (AcceptMoveDto) gameMove;
+                makeAcceptMove(acceptMove, player);
+            }
             default -> throw new UnsupportedGameMoveException(ErrorCode.ERROR_NOT_IMPLEMENTED);
         }
     }
@@ -162,6 +175,86 @@ public class GameLogicController {
             return true;
         }
         return false;
+    }
+    //TODO: error messages @daniel
+    private void makeAcceptMove(AcceptMoveDto acceptMove, Player player){
+        if(isSetupPhase)
+            throw new NotActivePlayerException(ErrorCode.ERROR_IS_SETUP_PHASE);
+        if(currentTrade==null)//trade is gone
+            throw new InvalidGameMoveException(ErrorCode.ERROR_TRADE_NOT_AVAILABLE);
+        if(activePlayer.getInGameID()!=acceptMove.getTradeOfferDto().getFromPlayer().getInGameID())
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted("active player"));
+        if(!currentTrade.sameAs(acceptMove.getTradeOfferDto()))
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted("current trade not accepting trade"));//TradeOfferDtos are not the same
+        if (!player.resourcesSufficient(acceptMove.getTradeOfferDto().getGiveResources()))
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted("the REAL resources sufficient"));
+        if(!activePlayer.resourcesSufficient(negateAllValues(acceptMove.getTradeOfferDto().getGetResources())))
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted("receiving player resources"));//trader does not have enough resources
+        computeAcceptMove(acceptMove.getTradeOfferDto(), player);
+    }
+    private void computeAcceptMove(TradeOfferDto tradeOffer, Player player){//more
+        activePlayer.adjustResources(negateAllValues(tradeOffer.getGetResources()));
+        activePlayer.adjustResources(negateAllValues(tradeOffer.getGiveResources()));
+        player.adjustResources(tradeOffer.getGiveResources());
+        player.adjustResources(tradeOffer.getGetResources());
+        this.currentTrade=null;
+        sendCurrentGameStateToPlayers();
+        //send new GameProgressDto? but with what content?
+    }
+
+    //TODO: rethink checks. I did not until now @daniel
+    private void makeTradeMove(TradeMoveDto tradeMove, Player player){
+        //if (isSetupPhase) throw new InvalidGameMoveException(ErrorCode.ERROR_CANT_ROLL_IN_SETUP);
+        if (activePlayer != player)
+            throw new NotActivePlayerException(ErrorCode.ERROR_NOT_ACTIVE_PLAYER.formatted(activePlayer.getDisplayName()));
+        if(tradeMove.getToPlayers().size() > players.size()-1)
+            throw new NotActivePlayerException(ErrorCode.ERROR_INVALID_CONFIGURATION);
+        if (!player.resourcesSufficient(tradeMove.getGiveResources()))
+            throw new InvalidGameMoveException(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES.formatted(tradeMove.getClass().getSimpleName()));
+        if(tradeMove.getToPlayers().isEmpty()){
+            computeTradeMoveBank(tradeMove, player);
+        } else {
+            computeTradeMove(tradeMove, player);
+        }
+    }
+
+    private void computeTradeMoveBank(TradeMoveDto tradeMove, Player player){
+        int countGive = -Arrays.stream(tradeMove.getGiveResources()).sum();//get positive value
+        int countGet = Arrays.stream(tradeMove.getGetResources()).sum();
+        if(countGive%4!=0)
+            throw new InvalidGameMoveException(ErrorCode.ERROR_BANK_TRADE_RATIO);
+        if(countGive/4!=countGet)
+            throw new InvalidGameMoveException(ErrorCode.ERROR_BANK_TRADE_RATIO);
+        // 4 to 1 trade
+        player.adjustResources(tradeMove.getGiveResources());
+        player.adjustResources(tradeMove.getGetResources());
+        sendCurrentGameStateToPlayers();
+        //send new GameProgressDto? but with what content?
+    }
+    private void computeTradeMove(TradeMoveDto tradeMove, Player player){
+        this.currentTrade = new TradeOfferDto(negateAllValues(tradeMove.getGetResources()), negateAllValues(tradeMove.getGiveResources()), player.toInGamePlayerDto());
+        for(int i = 0; i<tradeMove.getToPlayers().size(); i++){
+            int playerID = tradeMove.getToPlayers().get(i);
+            Player toPlayer = getPlayerByID(playerID);
+            if(toPlayer!=null){
+                messagingService.notifyPlayer(toPlayer, currentTrade);
+            }
+        }
+    }
+    private int[] negateAllValues(int[] input){
+        int[] result = new int[input.length];
+        for(int i=0;i<input.length;i++){
+            result[i]=-input[i];
+        }
+        return result;
+    }
+    private Player getPlayerByID(int playerID){
+        for(Player p : players){
+            if(p.getInGameID()==playerID){
+                return p;
+            }
+        }
+        return null;
     }
 
     private void makeBuildRoadMove(BuildRoadMoveDto buildRoadMove, Player player) {
@@ -489,16 +582,22 @@ public class GameLogicController {
         }
         if(isSetupPhase){
             turnOrder.remove(p); //will never become active again.
-
             boolean forceNextPlayer = activePlayer == p;
             while(true){
                 if(!setupPhaseTurnOrder.remove(p)) break;
             }
-            if(forceNextPlayer)
+            if(forceNextPlayer) {
+                lastCheatingPlayer = null;
+                currentTrade = null;
                 genericNextTurn();
+            }
         }
         sendCurrentGameStateToPlayers();
         messagingService.notifyGameProgress(gameId, new GameProgressDto(new EndTurnMoveDto(activePlayer.toInGamePlayerDto())));
+    }
+
+    public void handleReconnect(){
+        sendCurrentGameStateToPlayers();
     }
 
     private void throwIfSetupPhase() throws InvalidGameMoveException {

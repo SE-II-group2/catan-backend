@@ -19,7 +19,7 @@ public class Player {
     @Setter
     private PlayerState playerState;
     @Getter
-    private final int[] resources = new int[]{0,0,0,0,0};
+    private final int[] resources = new int[]{0,0,0,0,0};//wheat, sheep, wood, brick, stone
     @Getter
     private int victoryPoints = 0;
     @Getter

@@ -39,6 +39,7 @@ public class Hexagon {
         for (Building building : buildings) {
             if (building != null && building.getPlayer() == player) {
                 building.giveResources(distribution);
+                break;
             }
         }
     }

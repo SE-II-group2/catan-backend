@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// fixme does this work with java oop instead of jackson annotations?
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.EXISTING_PROPERTY,
@@ -23,6 +22,8 @@ import lombok.Setter;
         @JsonSubTypes.Type(value = UseProgressCardDto.class, name = GameMoveType.USEPROGRESSCARD),
         @JsonSubTypes.Type(value= MoveRobberDto.class, name = GameMoveType.MOVEROBBERMOVE),
         @JsonSubTypes.Type(value = AccuseCheatingDto.class, name = GameMoveType.ACCUSECHEATINGMOVE),
+        @JsonSubTypes.Type(value = TradeMoveDto.class, name = GameMoveType.TRADEMOVE),
+        @JsonSubTypes.Type(value = AcceptMoveDto.class, name = GameMoveType.ACCEPTMOVE),
 })
 
 //no longer abstract because this causes issues with serialization and deserialization

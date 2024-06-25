@@ -1,6 +1,7 @@
 package com.group2.catanbackend.exception;
 
 public class ErrorCode {
+    private ErrorCode(){}
     public static final String ERROR_GAME_NOT_FOUND = "No game with id %s found";
     public static final String ERROR_GAME_NOT_IN_LOBBY = "Game is not in lobby. id:";
     public static final String ERROR_PLAYER_ALREADY_IN_GAME = "This Player is already in the game";
@@ -20,4 +21,7 @@ public class ErrorCode {
     public static final String ERROR_IS_SETUP_PHASE = "Not possible during Setup phase!";
     public static final String ERROR_CANT_USE_PROGRESS_CARDS_IN_SETUP = "Progress-cards can't be used during setup phase";
     public static final String ERROR_CARD_TYPE_NOT_IN_POSSESSION = "User doesnt have the progress-card type";
+    public static final String ERROR_INVALID_CONFIGURATION = "Given Configuration does not fit the standard";
+    public static final String ERROR_BANK_TRADE_RATIO = "Bank trades requires a 4:1 trade";
+    public static final String ERROR_TRADE_NOT_AVAILABLE = "This trade is not available anymore";
 }
