@@ -333,6 +333,7 @@ class GameLogicControllerExpandedTest {
         ArrayList<Integer> sendToPlayer = new ArrayList<>();
         MakeTradeOfferMoveDto makeTradeOfferMoveDto = new MakeTradeOfferMoveDto(negate(offeredResources), wantedResources, sendToPlayer);
         gameLogicController.setSetupPhase(false);
+        gameLogicController.makeMove(makeTradeOfferMoveDto, player1);
         assertArrayEquals(new int[]{0,4,4,4,5}, player1.getResources());
     }
 
