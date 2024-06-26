@@ -13,7 +13,7 @@ public class TradeOfferDto extends MessageDto{
         this.getResources=tradeMove_giveResources;
         this.giveResources=tradeMove_getResources;
         this.fromPlayer = fromPlayer;
-        this.setEventType(MessageType.PLAYER_NOTIFY);
+        this.setEventType(MessageType.TRADE_OFFERED);
     }
     //order swapped!!!
     private int[] getResources;

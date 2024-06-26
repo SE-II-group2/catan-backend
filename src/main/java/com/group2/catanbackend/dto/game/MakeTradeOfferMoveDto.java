@@ -10,12 +10,12 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class TradeMoveDto extends GameMoveDto{
-    public TradeMoveDto(int[] giveResources, int [] getResources, List<Integer> toPlayers) {
+public class MakeTradeOfferMoveDto extends GameMoveDto{
+    public MakeTradeOfferMoveDto(int[] giveResources, int [] getResources, List<Integer> toPlayers) {
         this.giveResources = giveResources;
         this.getResources = getResources;
         this.toPlayers = toPlayers;
-        this.setEventType(GameMoveType.TRADEMOVE);
+        this.setEventType(GameMoveType.MAKETRADEMOVE);
     }
 
     private int[] giveResources;

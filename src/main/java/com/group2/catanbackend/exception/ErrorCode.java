@@ -24,4 +24,5 @@ public class ErrorCode {
     public static final String ERROR_INVALID_CONFIGURATION = "Given Configuration does not fit the standard";
     public static final String ERROR_BANK_TRADE_RATIO = "Bank trades requires a 4:1 trade";
     public static final String ERROR_TRADE_NOT_AVAILABLE = "This trade is not available anymore";
+    public static final String ERROR_WRONG_TRADE = "Send trade is not the same as the current trade";
 }
