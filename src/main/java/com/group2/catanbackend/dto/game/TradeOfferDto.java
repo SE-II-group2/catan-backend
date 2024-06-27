@@ -7,13 +7,15 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 public class TradeOfferDto extends MessageDto{
+    public TradeOfferDto(){
+        super(MessageType.TRADE_OFFERED);
+    }
     public TradeOfferDto(int[] tradeMove_getResources, int[] tradeMove_giveResources, IngamePlayerDto fromPlayer) {
+        super(MessageType.TRADE_OFFERED);
         this.getResources=tradeMove_giveResources;
         this.giveResources=tradeMove_getResources;
         this.fromPlayer = fromPlayer;
-        this.setEventType(MessageType.TRADE_OFFERED);
     }
     //order swapped!!!
     private int[] getResources;
@@ -32,7 +34,7 @@ public class TradeOfferDto extends MessageDto{
             if(this.giveResources[i]!=otherTradeOffer.giveResources[i])
                 return false;
         }
-        if(this.getEventType().equals(otherTradeOffer.getEventType()))
+        if(!this.getEventType().equals(otherTradeOffer.getEventType()))
             return false;
         return this.fromPlayer.getInGameID() == otherTradeOffer.fromPlayer.getInGameID();
     }

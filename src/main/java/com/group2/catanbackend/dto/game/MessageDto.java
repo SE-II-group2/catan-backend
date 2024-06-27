@@ -21,7 +21,12 @@ import lombok.*;
         @JsonSubTypes.Type(value = GameOverDto.class, name = MessageType.GAME_OVER)
 })
 @Getter
-@Setter
 public abstract class MessageDto {
-    private String eventType;
+    private final String eventType;
+    public MessageDto(String eventType){
+        this.eventType = eventType;
+    }
+    public String getEventType(){
+        return eventType;
+    }
 }

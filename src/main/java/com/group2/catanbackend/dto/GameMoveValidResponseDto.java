@@ -8,7 +8,7 @@ public class GameMoveValidResponseDto extends MessageDto {
     @Getter
     String message;
      public GameMoveValidResponseDto(String message){
-         this.setEventType(MessageType.GAME_MOVE_NOTIFIER);
+         super(MessageType.GAME_MOVE_NOTIFIER);
          this.message=message;
      }
 }

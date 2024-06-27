@@ -7,6 +7,6 @@ import lombok.Setter;
 @Setter
 public class GameStartedDto extends MessageDto{
     public GameStartedDto(){
-        setEventType(MessageType.GAME_STARTED);
+        super(MessageType.GAME_STARTED);
     }
 }
