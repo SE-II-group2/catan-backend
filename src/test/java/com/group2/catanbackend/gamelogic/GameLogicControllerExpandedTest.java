@@ -109,12 +109,10 @@ class GameLogicControllerExpandedTest {
         List<MessageDto> allValues = argumentCaptor.getAllValues();
         CurrentGameStateDto argument = null;
         for (int i = allValues.size() - 1; i >= 0; i--) {
-            /*
-            if (allValues.get(i).getEventType().equalsIgnoreCase("GAME_OBJECT")) {
+            if (allValues.get(i) instanceof CurrentGameStateDto) {
                 argument = (CurrentGameStateDto) allValues.get(i);
                 break;
             }
-             */
         }
         if (argument == null) fail("argument was null, no currentGameState sent to players");
         assertEquals(BuildingType.VILLAGE.name(), argument.getIntersections().get(29).getBuildingType());
@@ -333,8 +331,9 @@ class GameLogicControllerExpandedTest {
         int[] offeredResources = {4,0,0,0,0};
         int[] wantedResources = {0,0,0,0,1};
         ArrayList<Integer> sendToPlayer = new ArrayList<>();
-        MakeTradeOfferMoveDto makeTradeOfferMoveDto = new MakeTradeOfferMoveDto(negate(offeredResources), wantedResources, sendToPlayer);
         gameLogicController.setSetupPhase(false);
+
+        MakeTradeOfferMoveDto makeTradeOfferMoveDto = new MakeTradeOfferMoveDto(offeredResources, wantedResources, sendToPlayer);
         gameLogicController.makeMove(makeTradeOfferMoveDto, player1);
         assertArrayEquals(new int[]{0,4,4,4,5}, player1.getResources());
     }
@@ -346,9 +345,10 @@ class GameLogicControllerExpandedTest {
         int[] wantedResources = {0, 0, 2, 2, 0};
         ArrayList<Integer> sendToPlayer = new ArrayList<>();
         sendToPlayer.add(player2.getInGameID());
+        TradeOfferDto tradeOfferDto = new TradeOfferDto(wantedResources, offeredResources, player1.toInGamePlayerDto());
         gameLogicController.setSetupPhase(false);
-        gameLogicController.makeMove(new MakeTradeOfferMoveDto(negate(offeredResources), wantedResources, sendToPlayer), player1);
-        TradeOfferDto tradeOfferDto = new TradeOfferDto(negate(wantedResources), offeredResources, player1.toInGamePlayerDto());
+
+        gameLogicController.makeMove(new MakeTradeOfferMoveDto(offeredResources, wantedResources, sendToPlayer), player1);
         gameLogicController.makeMove(new AcceptTradeOfferMoveDto(tradeOfferDto), player2);
         assertArrayEquals(new int[]{0,0,3,4,1}, player1.getResources());
         assertArrayEquals(new int[]{2,2,0,0,0}, player2.getResources());
@@ -361,9 +361,10 @@ class GameLogicControllerExpandedTest {
         int[] wantedResources = {2, 2, 0, 0, 0};
         ArrayList<Integer> sendToPlayer = new ArrayList<>();
         sendToPlayer.add(player2.getInGameID());
+        TradeOfferDto tradeOfferDto = new TradeOfferDto(wantedResources, offeredResources, player1.toInGamePlayerDto());
         gameLogicController.setSetupPhase(false);
-        gameLogicController.makeMove(new MakeTradeOfferMoveDto(negate(offeredResources), wantedResources, sendToPlayer), player1);
-        TradeOfferDto tradeOfferDto = new TradeOfferDto(negate(wantedResources), offeredResources, player1.toInGamePlayerDto());
+
+        gameLogicController.makeMove(new MakeTradeOfferMoveDto(offeredResources, wantedResources, sendToPlayer), player1);
         gameLogicController.makeMove(new RollDiceDto(8), player1); // -> p2 =[2,2,2,2,0]
         gameLogicController.makeMove(new AcceptTradeOfferMoveDto(tradeOfferDto), player2);
         assertArrayEquals(new int[]{3,3,0,0,0}, player1.getResources());
@@ -375,19 +376,18 @@ class GameLogicControllerExpandedTest {
         //p1 init with [1,1,1,2,1], p2: [1,1,2,2,0]
         int[] offeredResources = {0, 0, 1, 2, 1};
         int[] wantedResources = {1, 1, 0, 0, 0};
-        ArrayList<Integer> sendToPlayer = new ArrayList<>();
-        sendToPlayer.add(player2.getInGameID());
-        gameLogicController.setSetupPhase(false);
-        gameLogicController.makeMove(new MakeTradeOfferMoveDto(negate(offeredResources), wantedResources, sendToPlayer), player1);
         int[] offeredResources2 = {1, 0, 0, 0, 0};
         int[] wantedResources2 = {0, 0, 0, 2, 0};
-        gameLogicController.makeMove(new MakeTradeOfferMoveDto(negate(offeredResources2), wantedResources2, sendToPlayer), player1);
+        ArrayList<Integer> sendToPlayer = new ArrayList<>();
+        sendToPlayer.add(player2.getInGameID());
+        TradeOfferDto tradeOfferDto = new TradeOfferDto(wantedResources, offeredResources, player1.toInGamePlayerDto());
+        TradeOfferDto tradeOfferDto2 = new TradeOfferDto(wantedResources2, offeredResources2, player1.toInGamePlayerDto());
+        gameLogicController.setSetupPhase(false);
 
-        TradeOfferDto tradeOfferDto = new TradeOfferDto(negate(wantedResources), offeredResources, player1.toInGamePlayerDto());
+        gameLogicController.makeMove(new MakeTradeOfferMoveDto(offeredResources, wantedResources, sendToPlayer), player1);
+        gameLogicController.makeMove(new MakeTradeOfferMoveDto(offeredResources2, wantedResources2, sendToPlayer), player1);
         Exception exception = assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(new AcceptTradeOfferMoveDto(tradeOfferDto), player2));
         assertEquals(ErrorCode.ERROR_WRONG_TRADE, exception.getMessage());
-
-        TradeOfferDto tradeOfferDto2 = new TradeOfferDto(negate(wantedResources2), offeredResources2, player1.toInGamePlayerDto());
         gameLogicController.makeMove(new AcceptTradeOfferMoveDto(tradeOfferDto2), player2);
         assertArrayEquals(new int[]{0,1,1,4,1}, player1.getResources());
         assertArrayEquals(new int[]{2,1,2,0,0}, player2.getResources());
@@ -460,13 +460,4 @@ class GameLogicControllerExpandedTest {
             e.printStackTrace();
         }
     }
-    public int[] negate(int[] input){
-        int[] result = new int[input.length];
-        for (int i=0;i<input.length;i++) {
-            result[i] = -input[i];
-        }
-        return result;
-    }
-
-
 }

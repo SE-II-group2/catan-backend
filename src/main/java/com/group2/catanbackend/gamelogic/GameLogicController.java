@@ -124,7 +124,6 @@ public class GameLogicController {
                 makeTradeOfferMove(tradeMove, player);
             }
             case "AcceptTradeOfferMoveDto" -> {
-                throwIfSetupPhase();
                 AcceptTradeOfferMoveDto acceptMove = (AcceptTradeOfferMoveDto) gameMove;
                 makeAcceptTradeOfferMove(acceptMove, player);
                 sendCurrentGameStateToPlayers();
