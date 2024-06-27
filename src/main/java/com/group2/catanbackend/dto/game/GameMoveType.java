@@ -12,5 +12,5 @@ public class GameMoveType {
     public static final String MOVEROBBERMOVE = "MOVE_ROBBER_MOVE";
     public static final String ACCUSECHEATINGMOVE="ACCUSE_CHEATING_MOVE";
     public static final String MAKETRADEMOVE = "MAKE_TRADE_MOVE";
-    public static final String ACCEPTRADETMOVE = "ACCEPT_TRADE_MOVE";
+    public static final String ACCEPTTRADEMOVE = "ACCEPT_TRADE_MOVE";
 }
