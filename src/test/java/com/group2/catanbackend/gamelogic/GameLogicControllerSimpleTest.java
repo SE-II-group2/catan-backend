@@ -556,7 +556,6 @@ class GameLogicControllerSimpleTest {
         gameLogicController.setSetupPhase(false);
         gameLogicController.makeMove(new MakeTradeOfferMoveDto(negate(offeredResources), wantedResources, sendToPlayer), player1);
         TradeOfferDto tradeOfferDto = new TradeOfferDto(negate(wantedResources), offeredResources, player1.toInGamePlayerDto());
-        tradeOfferDto.setEventType(null);
         gameLogicController.makeMove(new AcceptTradeOfferMoveDto(tradeOfferDto), player2);
         verify(messagingService, times(2)).notifyGameProgress(anyString(), any(CurrentGameStateDto.class));
     }
@@ -572,7 +571,6 @@ class GameLogicControllerSimpleTest {
         gameLogicController.setSetupPhase(false);
         sendToPlayer.add(player2.getInGameID());
         TradeOfferDto tradeOfferDto = new TradeOfferDto(negate(wantedResources), offeredResources, player1.toInGamePlayerDto());
-        tradeOfferDto.setEventType(null);
 
         exception = assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(new AcceptTradeOfferMoveDto(tradeOfferDto), player2));
         assertEquals(ErrorCode.ERROR_TRADE_NOT_AVAILABLE, exception.getMessage());
@@ -591,7 +589,6 @@ class GameLogicControllerSimpleTest {
         IngamePlayerDto ingamePlayerDto = player1.toInGamePlayerDto();
         ingamePlayerDto.setInGameID(player1.getInGameID()+1);
         final TradeOfferDto tradeOfferDto1 = new TradeOfferDto(negate(wantedResources), offeredResources, ingamePlayerDto);
-        tradeOfferDto1.setEventType(null);
         exception = assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(new AcceptTradeOfferMoveDto(tradeOfferDto1), player2));
         assertEquals(ErrorCode.ERROR_WRONG_TRADE, exception.getMessage());
 
@@ -605,14 +602,12 @@ class GameLogicControllerSimpleTest {
 
         final int[] wantedResources2 = new int[] {0, 0, 0, 0, 2};
         final TradeOfferDto tradeOfferDto3 = new TradeOfferDto(negate(wantedResources2), offeredResources, player1.toInGamePlayerDto());
-        tradeOfferDto3.setEventType(null);
         gameLogicController.makeMove(new MakeTradeOfferMoveDto(negate(offeredResources), wantedResources2, sendToPlayer), player1);
         exception = assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(new AcceptTradeOfferMoveDto(tradeOfferDto3), player2));
         assertEquals(ErrorCode.ERROR_NOT_ENOUGH_RESOURCES, exception.getMessage());
 
         final int[] offeredResources3 = new int[] {5, 0, 0, 0, 0};
         final TradeOfferDto tradeOfferDto4 = new TradeOfferDto(negate(wantedResources), offeredResources3, player1.toInGamePlayerDto());
-        tradeOfferDto4.setEventType(null);
         gameLogicController.makeMove(new MakeTradeOfferMoveDto(negate(offeredResources3), wantedResources, sendToPlayer), player1);
         player1.adjustResources(new int[]{-3, 0 ,0 ,0 ,0});
         exception = assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(new AcceptTradeOfferMoveDto(tradeOfferDto4), player2));

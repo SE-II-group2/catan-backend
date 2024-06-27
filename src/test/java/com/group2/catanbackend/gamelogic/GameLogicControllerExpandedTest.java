@@ -109,10 +109,12 @@ class GameLogicControllerExpandedTest {
         List<MessageDto> allValues = argumentCaptor.getAllValues();
         CurrentGameStateDto argument = null;
         for (int i = allValues.size() - 1; i >= 0; i--) {
+            /*
             if (allValues.get(i).getEventType().equalsIgnoreCase("GAME_OBJECT")) {
                 argument = (CurrentGameStateDto) allValues.get(i);
                 break;
             }
+             */
         }
         if (argument == null) fail("argument was null, no currentGameState sent to players");
         assertEquals(BuildingType.VILLAGE.name(), argument.getIntersections().get(29).getBuildingType());
@@ -347,7 +349,6 @@ class GameLogicControllerExpandedTest {
         gameLogicController.setSetupPhase(false);
         gameLogicController.makeMove(new MakeTradeOfferMoveDto(negate(offeredResources), wantedResources, sendToPlayer), player1);
         TradeOfferDto tradeOfferDto = new TradeOfferDto(negate(wantedResources), offeredResources, player1.toInGamePlayerDto());
-        tradeOfferDto.setEventType(null);
         gameLogicController.makeMove(new AcceptTradeOfferMoveDto(tradeOfferDto), player2);
         assertArrayEquals(new int[]{0,0,3,4,1}, player1.getResources());
         assertArrayEquals(new int[]{2,2,0,0,0}, player2.getResources());
@@ -363,7 +364,6 @@ class GameLogicControllerExpandedTest {
         gameLogicController.setSetupPhase(false);
         gameLogicController.makeMove(new MakeTradeOfferMoveDto(negate(offeredResources), wantedResources, sendToPlayer), player1);
         TradeOfferDto tradeOfferDto = new TradeOfferDto(negate(wantedResources), offeredResources, player1.toInGamePlayerDto());
-        tradeOfferDto.setEventType(null);
         gameLogicController.makeMove(new RollDiceDto(8), player1); // -> p2 =[2,2,2,2,0]
         gameLogicController.makeMove(new AcceptTradeOfferMoveDto(tradeOfferDto), player2);
         assertArrayEquals(new int[]{3,3,0,0,0}, player1.getResources());
@@ -384,12 +384,10 @@ class GameLogicControllerExpandedTest {
         gameLogicController.makeMove(new MakeTradeOfferMoveDto(negate(offeredResources2), wantedResources2, sendToPlayer), player1);
 
         TradeOfferDto tradeOfferDto = new TradeOfferDto(negate(wantedResources), offeredResources, player1.toInGamePlayerDto());
-        tradeOfferDto.setEventType(null);
         Exception exception = assertThrows(InvalidGameMoveException.class, () -> gameLogicController.makeMove(new AcceptTradeOfferMoveDto(tradeOfferDto), player2));
         assertEquals(ErrorCode.ERROR_WRONG_TRADE, exception.getMessage());
 
         TradeOfferDto tradeOfferDto2 = new TradeOfferDto(negate(wantedResources2), offeredResources2, player1.toInGamePlayerDto());
-        tradeOfferDto2.setEventType(null);
         gameLogicController.makeMove(new AcceptTradeOfferMoveDto(tradeOfferDto2), player2);
         assertArrayEquals(new int[]{0,1,1,4,1}, player1.getResources());
         assertArrayEquals(new int[]{2,1,2,0,0}, player2.getResources());

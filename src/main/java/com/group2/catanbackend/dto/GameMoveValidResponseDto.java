@@ -8,7 +8,6 @@ public class GameMoveValidResponseDto extends MessageDto {
     @Getter
     String message;
      public GameMoveValidResponseDto(String message){
-         super(MessageType.GAME_MOVE_NOTIFIER);
          this.message=message;
      }
 }

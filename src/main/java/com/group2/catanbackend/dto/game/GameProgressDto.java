@@ -9,11 +9,8 @@ import java.util.List;
 @Getter
 @Setter
 public class GameProgressDto extends MessageDto{
-    public GameProgressDto() {
-        super(MessageType.GAME_MOVE_NOTIFIER);
-    }
+
     public GameProgressDto(GameMoveDto gameMoveDto) {
-        super(MessageType.GAME_MOVE_NOTIFIER);
         this.gameMoveDto=gameMoveDto;
 
     }
