@@ -17,7 +17,6 @@ public class UseProgressCardDto extends GameMoveDto {
         this.chosenResources = chosenResources;
         this.monopolyResource = monopolyResource;
         this.hexagonID = hexagonID;
-        this.setEventType(GameMoveType.USEPROGRESSCARD);
     }
     private ProgressCardType progressCardType;
     private List<ResourceDistribution> chosenResources;

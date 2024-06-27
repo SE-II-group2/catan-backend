@@ -11,6 +11,6 @@ public class GameMoveType {
     public static final String BUYPROGRESSCARD = "BUY_PROGRESS_CARD";
     public static final String MOVEROBBERMOVE = "MOVE_ROBBER_MOVE";
     public static final String ACCUSECHEATINGMOVE="ACCUSE_CHEATING_MOVE";
-    public static final String TRADEMOVE = "TRADE_MOVE";
-    public static final String ACCEPTMOVE = "ACCEPT_MOVE";
+    public static final String MAKETRADEMOVE = "MAKE_TRADE_MOVE";
+    public static final String ACCEPTTRADEMOVE = "ACCEPT_TRADE_MOVE";
 }

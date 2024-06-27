@@ -8,10 +8,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AcceptMoveDto extends GameMoveDto{
-    public AcceptMoveDto(TradeOfferDto tradeOfferDto) {
+public class AcceptTradeOfferMoveDto extends GameMoveDto{
+
+    public AcceptTradeOfferMoveDto(TradeOfferDto tradeOfferDto) {
         this.tradeOfferDto = tradeOfferDto;
-        this.setEventType(GameMoveType.ACCEPTMOVE);
     }
 
     private TradeOfferDto tradeOfferDto;

@@ -6,16 +6,16 @@ import lombok.Setter;
 
 import java.util.List;
 
-@NoArgsConstructor
 @Getter
 @Setter
+@NoArgsConstructor
 public class CurrentGameStateDto extends MessageDto{
+
     public CurrentGameStateDto(List<HexagonDto> hexagons, List<IntersectionDto> intersections, List<ConnectionDto> connections, List<IngamePlayerDto> players, IngamePlayerDto activePlayer,  boolean isSetupPhase) {
         this.hexagons = hexagons;
         this.intersections=intersections;
         this.connections = connections;
         this.players=players;
-        this.setEventType(MessageType.GAME_OBJECT);
         this.isSetupPhase=isSetupPhase;
         this.activePlayer = activePlayer;
     }

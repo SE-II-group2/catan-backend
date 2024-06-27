@@ -10,7 +10,6 @@ import lombok.Setter;
 public class BuildCityMoveDto extends GameMoveDto {
     public BuildCityMoveDto(int intersectionID) {
         this.intersectionID = intersectionID;
-        this.setEventType(GameMoveType.BUILDCITYMOVE);
     }
     public int intersectionID;
 }

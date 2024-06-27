@@ -9,7 +9,7 @@ import lombok.*;
  */
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.EXISTING_PROPERTY,
+        include = JsonTypeInfo.As.PROPERTY,
         property = "eventType"
 )
 @JsonSubTypes({
@@ -17,11 +17,11 @@ import lombok.*;
         @JsonSubTypes.Type(value = GameStartedDto.class, name = MessageType.GAME_STARTED),
         @JsonSubTypes.Type(value = CurrentGameStateDto.class, name = MessageType.GAME_OBJECT),
         @JsonSubTypes.Type(value = GameProgressDto.class, name = MessageType.GAME_MOVE_NOTIFIER),
-        @JsonSubTypes.Type(value = TradeOfferDto.class, name = MessageType.PLAYER_NOTIFY),
+        @JsonSubTypes.Type(value = TradeOfferDto.class, name = MessageType.TRADE_OFFERED),
         @JsonSubTypes.Type(value = GameOverDto.class, name = MessageType.GAME_OVER)
 })
 @Getter
 @Setter
 public abstract class MessageDto {
-    private String eventType;
+
 }

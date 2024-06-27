@@ -8,12 +8,10 @@ import java.util.List;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class GameProgressDto extends MessageDto{
-    public GameProgressDto() {
-        this.setEventType(MessageType.GAME_MOVE_NOTIFIER);
-    }
+
     public GameProgressDto(GameMoveDto gameMoveDto) {
-        this.setEventType(MessageType.GAME_MOVE_NOTIFIER);
         this.gameMoveDto=gameMoveDto;
 
     }
