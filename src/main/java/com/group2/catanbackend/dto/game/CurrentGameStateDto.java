@@ -8,6 +8,7 @@ import java.util.List;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class CurrentGameStateDto extends MessageDto{
 
     public CurrentGameStateDto(List<HexagonDto> hexagons, List<IntersectionDto> intersections, List<ConnectionDto> connections, List<IngamePlayerDto> players, IngamePlayerDto activePlayer,  boolean isSetupPhase) {

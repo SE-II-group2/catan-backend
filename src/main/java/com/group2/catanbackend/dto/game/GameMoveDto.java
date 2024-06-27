@@ -9,7 +9,7 @@ import lombok.Setter;
 
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.EXISTING_PROPERTY,
+        include = JsonTypeInfo.As.PROPERTY,
         property = "eventType"
 )
 @JsonSubTypes({
@@ -27,11 +27,6 @@ import lombok.Setter;
 })
 
 //no longer abstract because this causes issues with serialization and deserialization
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class GameMoveDto {
-    private String eventType;
+public abstract class GameMoveDto {
 }
 

@@ -9,9 +9,9 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class AcceptTradeOfferMoveDto extends GameMoveDto{
+
     public AcceptTradeOfferMoveDto(TradeOfferDto tradeOfferDto) {
         this.tradeOfferDto = tradeOfferDto;
-        this.setEventType(GameMoveType.ACCEPTTRADEMOVE);
     }
 
     private TradeOfferDto tradeOfferDto;

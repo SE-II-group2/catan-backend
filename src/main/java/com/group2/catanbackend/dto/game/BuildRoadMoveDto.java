@@ -12,7 +12,6 @@ public class BuildRoadMoveDto extends GameMoveDto{
 
     public BuildRoadMoveDto(int connectionID) {
         this.connectionID = connectionID;
-        this.setEventType(GameMoveType.BUILDROADMOVE);
     }
     private int connectionID;
 }

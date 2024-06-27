@@ -8,6 +8,7 @@ import java.util.List;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class GameProgressDto extends MessageDto{
 
     public GameProgressDto(GameMoveDto gameMoveDto) {

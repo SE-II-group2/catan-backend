@@ -7,6 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class TradeOfferDto extends MessageDto{
 
     public TradeOfferDto(int[] tradeMove_getResources, int[] tradeMove_giveResources, IngamePlayerDto fromPlayer) {

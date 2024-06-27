@@ -15,7 +15,6 @@ public class MakeTradeOfferMoveDto extends GameMoveDto{
         this.giveResources = giveResources;
         this.getResources = getResources;
         this.toPlayers = toPlayers;
-        this.setEventType(GameMoveType.MAKETRADEMOVE);
     }
 
     private int[] giveResources;
