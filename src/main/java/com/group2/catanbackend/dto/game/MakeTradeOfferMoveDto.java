@@ -20,7 +20,7 @@ public class MakeTradeOfferMoveDto extends GameMoveDto{
 
     private int[] giveResources;
     private int[] getResources;
-    private List<Integer> toPlayers;//change to PlayerID[]
+    private List<Integer> toPlayers;
 
 
 }
